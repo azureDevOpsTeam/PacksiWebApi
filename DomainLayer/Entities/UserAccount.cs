@@ -4,7 +4,7 @@ namespace DomainLayer.Entities
 {
     public class UserAccount : BaseEntityModel, IAuditableEntity
     {
-        public long TelegramId { get; set; }
+        public long? TelegramId { get; set; }
 
         public string UserName { get; set; }
 
