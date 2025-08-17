@@ -1,0 +1,34 @@
+﻿using ApplicationLayer.BusinessLogic.Interfaces;
+using ApplicationLayer.CQRS.Requests.Command;
+using ApplicationLayer.Extensions.ServiceMessages;
+using ApplicationLayer.Extensions.SmartEnums;
+using DomainLayer.Entities;
+using MediatR;
+
+namespace ApplicationLayer.CQRS.Requests.Handler;
+
+public class CreateRequestHandler(IRequestServices requestServices, IUnitOfWork unitOfWork) : IRequestHandler<CreateRequestCommand, HandlerResult>
+{
+    private readonly IRequestServices _requestServices = requestServices;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+
+    public async Task<HandlerResult> Handle(CreateRequestCommand request, CancellationToken cancellationToken)
+    {
+        var resultAddRequest = await _requestServices.AddRequestAsync(request.Model, cancellationToken);
+
+        if (resultAddRequest.RequestStatus != RequestStatus.Successful)
+            return new HandlerResult { RequestStatus = resultAddRequest.RequestStatus, Message = resultAddRequest.Message };
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var requestObj = (Request)resultAddRequest.Data;
+        var resultAddStatus = await _requestServices.AddRequestSelectionAsync(requestObj.Id, cancellationToken);
+
+        if (resultAddStatus.RequestStatus != RequestStatus.Successful)
+            return new HandlerResult { RequestStatus = resultAddStatus.RequestStatus, Message = resultAddStatus.Message };
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return new HandlerResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
+    }
+}
