@@ -54,7 +54,7 @@ jobs:
           
           # Create backup of current deployment
           sudo mkdir -p /var/www/packsi/backup
-          sudo cp -r /var/www/packsi/publish /var/www/packsi/backup/publish-$(date +%Y%m%d-%H%M%S) || true
+          sudo cp -r /var/www/packsi /var/www/packsi/backup/publish-$(date +%Y%m%d-%H%M%S) || true
           
           # Clean the publish directory
           sudo rm -rf /var/www/packsi/publish/*
@@ -71,7 +71,7 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT || 22 }}
         source: "./publish/*"
-        target: "/var/www/packsi/publish"
+        target: "/var/www/packsi"
         strip_components: 1
         
     - name: Start application
@@ -83,8 +83,8 @@ jobs:
         port: ${{ secrets.SERVER_PORT || 22 }}
         script: |
           # Set proper permissions
-          sudo chown -R www-data:www-data /var/www/packsi/publish
-          sudo chmod +x /var/www/packsi/publish/PresentationApp
+          sudo chown -R www-data:www-data /var/www/packsi
+          sudo chmod +x /var/www/packsi/PresentationApp
           
           # Start the application service
           sudo systemctl start packsi-api
