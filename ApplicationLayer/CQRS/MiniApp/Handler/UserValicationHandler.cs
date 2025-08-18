@@ -1,33 +1,73 @@
 using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.CQRS.MiniApp.Query;
+using ApplicationLayer.Extensions;
+using ApplicationLayer.Extensions.ServiceMessages;
 using ApplicationLayer.Extensions.SmartEnums;
+using AutoMapper;
+using DomainLayer.Entities;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class UserValicationHandler(IMiniAppServices miniAppServices, IConfiguration configuration, ILogger<UserValicationHandler> logger) : IRequestHandler<UserValicationQuery, HandlerResult>
+public class UserValicationHandler(IUnitOfWork unitOfWork, IMiniAppServices miniAppServices, IConfiguration configuration, IUserAccountServices userAccountServices, ILogger<UserValicationHandler> logger, IMapper mapper) : IRequestHandler<UserValicationQuery, HandlerResult>
 {
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMiniAppServices _miniAppServices = miniAppServices;
+    private readonly IUserAccountServices _userAccountServices = userAccountServices;
     private readonly IConfiguration _configuration = configuration;
     private readonly ILogger<UserValicationHandler> _logger = logger;
+    private readonly IMapper _mapper = mapper;
 
     public async Task<HandlerResult> Handle(UserValicationQuery request, CancellationToken cancellationToken)
     {
-        var botToken = _configuration["TelegramBot:Token"];
-        if (string.IsNullOrWhiteSpace(botToken))
+        try
         {
-            _logger.LogError("Telegram bot token is not configured");
-            return new HandlerResult { RequestStatus = RequestStatus.Failed, Message = "تنظیمات ربات تلگرام یافت نشد" };
-        }
+            await _unitOfWork.BeginTransactionAsync();
 
-        var user = await _miniAppServices.ValidateTelegramMiniAppUserAsync(request.Model.InitData, botToken);
-        if (user.IsFailure)
+            var validationResult = await _miniAppServices.ValidateTelegramMiniAppUserAsync();
+            if (validationResult.IsFailure)
+            {
+                await _unitOfWork.RollbackAsync();
+                return validationResult.ToHandlerResult();
+            }
+
+            if (!validationResult.Value.ExistUser)
+            {
+                var userAccont = await _userAccountServices.MiniApp_AddUserAccountAsync(validationResult.Value.User);
+                if (userAccont.RequestStatus != RequestStatus.Successful)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return new HandlerResult { RequestStatus = userAccont.RequestStatus, Message = userAccont.Message };
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+
+                var userProfile = _mapper.Map<UserProfile>(request.Model);
+                var userAccount = (UserAccount)userAccont.Data;
+                userProfile.UserAccountId = userAccount.Id;
+                var resultUserProfile = await _userAccountServices.MiniApp_AddProfileAsync(userProfile);
+                if (resultUserProfile.RequestStatus != RequestStatus.Successful)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return new HandlerResult { RequestStatus = resultUserProfile.RequestStatus, Message = resultUserProfile.Message };
+                }
+                await _unitOfWork.SaveChangesAsync();
+            }
+            await _unitOfWork.CommitAsync();
+
+            return new HandlerResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
+        }
+        catch (Exception exception)
         {
-            return new HandlerResult { RequestStatus = RequestStatus.Failed, Message = user.Error.Message };
+            _logger.LogError(exception.Message);
+            await _unitOfWork.RollbackAsync();
+            return new HandlerResult
+            {
+                RequestStatus = RequestStatus.Failed,
+                Message = CommonMessages.Failed
+            };
         }
-
-        return new HandlerResult { RequestStatus = RequestStatus.Successful, ObjectResult = user.Value };
     }
 }

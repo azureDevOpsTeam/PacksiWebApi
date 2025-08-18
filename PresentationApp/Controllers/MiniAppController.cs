@@ -11,7 +11,6 @@ namespace PresentationApp.Controllers;
 [ApiController]
 [ApiExplorerSettings(GroupName = "Users")]
 [AllowAnonymous]
-
 public class MiniAppController(IMediator mediator) : ControllerBase
 {
     private readonly IMediator _mediator = mediator;
@@ -24,5 +23,10 @@ public class MiniAppController(IMediator mediator) : ControllerBase
     [HttpPost]
     [Route("Create")]
     public async Task<IActionResult> CreateAsync(CreateRequestTMACommand model)
+    => await ResultHelper.GetResultAsync(_mediator, model);
+
+    [HttpPost]
+    [Route("SendConnectionCode")]
+    public async Task<IActionResult> SendConnectionCodeAsync(CreateRequestTMACommand model)
     => await ResultHelper.GetResultAsync(_mediator, model);
 }

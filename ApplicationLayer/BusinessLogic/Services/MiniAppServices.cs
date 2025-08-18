@@ -1,66 +1,63 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.DTOs;
 using ApplicationLayer.DTOs.TelegramApis;
-using ApplicationLayer.Extensions.ServiceMessages;
-using ApplicationLayer.Extensions.SmartEnums;
 using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+using Telegram.Bot;
 
 namespace ApplicationLayer.BusinessLogic.Services;
 
 [InjectAsScoped]
-public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRepository, ILogger<MiniAppServices> logger) : IMiniAppServices
+public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger) : IMiniAppServices
 {
     private readonly IRepository<TelegramUserInformation> _telegramUserRepository = telegramUserRepository;
+    private readonly IRepository<UserAccount> _userAccountRepository = userAccountRepository;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
+    private readonly TelegramBotClient _botClient = new(configuration["TelegramBot:Token"] ?? throw new InvalidOperationException("TelegramBot:Token configuration is missing"));
 
-    public async Task<Result<TelegramMiniAppValidationResultDto>> ValidateTelegramMiniAppUserAsync(string initData, string botToken)
+    public async Task<Result<TelegramMiniAppValidationResultDto>> ValidateTelegramMiniAppUserAsync()
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(initData))
+            var botToken = _configuration["TelegramBot:Token"];
+            var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
+            if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
-                return Result<TelegramMiniAppValidationResultDto>.ValidationFailure("داده‌های اولیه نمی‌تواند خالی باشد");
+                _logger.LogWarning("InitData is missing or empty");
+                return Result<TelegramMiniAppValidationResultDto>.ValidationFailure("اطلاعات نامعتبر");
             }
 
-            if (string.IsNullOrWhiteSpace(botToken))
-            {
-                return Result<TelegramMiniAppValidationResultDto>.ValidationFailure("توکن ربات نمی‌تواند خالی باشد");
-            }
-            
-            return await Task.Run(() =>
+            return await Task.Run(async () =>
             {
                 var parsedData = ParseInitData(initData);
                 if (parsedData == null)
-                {
                     return Result<TelegramMiniAppValidationResultDto>.ValidationFailure("فرمت داده‌های اولیه نامعتبر است");
-                }
 
                 var isValidSignature = ValidateSignature(initData, botToken);
                 if (!isValidSignature)
-                {
                     return Result<TelegramMiniAppValidationResultDto>.AuthenticationFailure("امضای دیجیتال نامعتبر است");
-                }
 
-                // بررسی زمان انقضا (معمولاً 24 ساعت)
                 var authDate = DateTimeOffset.FromUnixTimeSeconds(parsedData.AuthDate).DateTime;
                 if (DateTime.UtcNow.Subtract(authDate).TotalHours > 24)
-                {
                     return Result<TelegramMiniAppValidationResultDto>.AuthenticationFailure("داده‌های اعتبارسنجی منقضی شده‌اند");
-                }
 
                 var validationResult = new TelegramMiniAppValidationResultDto
                 {
                     IsValid = true,
                     User = parsedData.User,
                     AuthDate = authDate,
-                    Hash = parsedData.Hash
+                    Hash = parsedData.Hash,
+                    ExistUser = await _userAccountRepository.GetDbSet().AnyAsync(current => current.TelegramId == parsedData.User.Id)
                 };
 
                 return Result<TelegramMiniAppValidationResultDto>.Success(validationResult);
@@ -146,6 +143,28 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         {
             _logger.LogError(exception, "خطا در بررسی وجود کاربر با شناسه تلگرام {TelegramUserId}", telegramUserId);
             return Result<TelegramInfoDto>.GeneralFailure("خطای داخلی سرور");
+        }
+    }
+
+    public async Task<Result<bool>> SendMessageAsync(long chatId)
+    {
+        try
+        {
+            var random = new Random();
+            var code = random.Next(100000, 999999).ToString();
+
+            var sentMessage = await _botClient.SendMessage(
+                chatId: chatId,
+                text: code
+            );
+
+            _logger.LogInformation("پیام با موفقیت به چت {ChatId} ارسال شد", chatId);
+            return Result<bool>.Success(true);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در ارسال پیام به چت {ChatId}", chatId);
+            return Result<bool>.GeneralFailure("خطا در ارسال پیام");
         }
     }
 

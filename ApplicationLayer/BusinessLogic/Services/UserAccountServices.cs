@@ -1,5 +1,6 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.DTOs.Identity;
+using ApplicationLayer.DTOs.TelegramApis;
 using ApplicationLayer.DTOs.User;
 using ApplicationLayer.Extensions;
 using ApplicationLayer.Extensions.ServiceMessages;
@@ -228,5 +229,48 @@ namespace ApplicationLayer.BusinessLogic.Services
             int number = BitConverter.ToInt32(bytes, 0) & 0x7FFFFFFF;
             return 10000 + (number % 90000);
         }
+
+        #region Mini App
+
+        public async Task<ServiceResult> MiniApp_AddUserAccountAsync(TelegramMiniAppUserDto model)
+        {
+            try
+            {
+                var existUser = await _userAccountRepository.AnyAsync(current => current.TelegramId == model.Id);
+                if (existUser)
+                    return new ServiceResult { RequestStatus = RequestStatus.Exists, Data = model, Message = CommonMessages.Exist };
+
+                UserAccount userAccount = new()
+                {
+                    TelegramId = model.Id,
+                    TelegramUserName = model.Username,
+                };
+
+                await _userAccountRepository.AddAsync(userAccount);
+                return new ServiceResult { RequestStatus = RequestStatus.Successful, Data = userAccount, Message = CommonMessages.Successful };
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(message: exception.Message, CommonMessages.Failed);
+                return new ServiceResult { RequestStatus = RequestStatus.Failed, Data = model, Message = CommonMessages.Failed };
+            }
+        }
+
+        public async Task<ServiceResult> MiniApp_AddProfileAsync(UserProfile model)
+        {
+            try
+            {
+                model.IsActive = true;
+                await _userProfileRepository.AddAsync(model);
+                return new ServiceResult { RequestStatus = RequestStatus.Successful, Data = model, Message = CommonMessages.Successful };
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(message: exception.Message, CommonMessages.Failed);
+                return new ServiceResult { RequestStatus = RequestStatus.Failed, Data = model, Message = CommonMessages.Failed };
+            }
+        }
+
+        #endregion Mini App
     }
 }

@@ -9,5 +9,7 @@ public interface IMiniAppServices
 
     Task<Result<TelegramMiniAppUserDto>> ExtractUserInfoFromInitDataAsync(string initData);
 
-    Task<Result<TelegramMiniAppValidationResultDto>> ValidateTelegramMiniAppUserAsync(string initData, string botToken);
+    Task<Result<TelegramMiniAppValidationResultDto>> ValidateTelegramMiniAppUserAsync();
+
+    Task<Result<bool>> SendMessageAsync(long chatId);
 }
