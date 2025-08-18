@@ -1,0 +1,98 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Test
+      run: dotnet test --no-build --verbosity normal --configuration Release
+      
+    - name: Publish
+      run: dotnet publish PresentationApp/PresentationApp.csproj --configuration Release --output ./publish --no-restore
+      
+    - name: Copy service file to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT || 22 }}
+        source: "packsi-api.service"
+        target: "/tmp/"
+        
+    - name: Deploy to Server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT || 22 }}
+        script: |
+          # Stop the application service if running
+          sudo systemctl stop packsi-api || true
+          
+          # Create backup of current deployment
+          sudo mkdir -p /var/www/packsi/backup
+          sudo cp -r /var/www/packsi/publish /var/www/packsi/backup/publish-$(date +%Y%m%d-%H%M%S) || true
+          
+          # Clean the publish directory
+          sudo rm -rf /var/www/packsi/publish/*
+          
+          # Update systemd service file if needed
+          sudo cp /tmp/packsi-api.service /etc/systemd/system/
+          sudo systemctl daemon-reload
+          
+    - name: Copy files to server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT || 22 }}
+        source: "./publish/*"
+        target: "/var/www/packsi/"
+        strip_components: 1
+        
+    - name: Start application
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: ${{ secrets.SERVER_PORT || 22 }}
+        script: |
+          # Set proper permissions
+          sudo chown -R www-data:www-data /var/www/packsi/publish
+          sudo chmod +x /var/www/packsi/publish/PresentationApp
+          
+          # Start the application service
+          sudo systemctl start packsi-api
+          sudo systemctl enable packsi-api
+          
+          # Restart nginx to ensure proper routing
+          sudo systemctl reload nginx
+          
+          # Check if application is running
+          sleep 5
+          sudo systemctl status packsi-api --no-pager
