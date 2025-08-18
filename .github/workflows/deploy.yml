@@ -57,7 +57,7 @@ jobs:
           sudo cp -r /var/www/packsi /var/www/packsi/backup/publish-$(date +%Y%m%d-%H%M%S) || true
           
           # Clean the publish directory
-          sudo rm -rf /var/www/packsi/publish/*
+          sudo rm -rf /var/www/packsi/*
           
           # Update systemd service file if needed
           sudo cp /tmp/api.service /etc/systemd/system/
