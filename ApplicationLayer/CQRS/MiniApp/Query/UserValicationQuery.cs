@@ -1,5 +1,5 @@
-﻿using ApplicationLayer.DTOs.MiniApp;
+using ApplicationLayer.DTOs.MiniApp;
 using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Query;
-public record UserValicationQuery : IRequest<HandlerResult>;
+public record UserValicationQuery(UserValidationDto Model) : IRequest<HandlerResult>;
