@@ -71,7 +71,7 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT || 22 }}
         source: "./publish/*"
-        target: "/var/www/packsi/"
+        target: "/var/www/packsi/publish"
         strip_components: 1
         
     - name: Start application
