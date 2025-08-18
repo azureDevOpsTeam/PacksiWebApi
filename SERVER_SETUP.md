@@ -9,9 +9,9 @@ wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.
 sudo dpkg -i packages-microsoft-prod.deb
 rm packages-microsoft-prod.deb
 
-# نصب .NET 8 Runtime
+# نصب .NET 9 Runtime
 sudo apt-get update
-sudo apt-get install -y aspnetcore-runtime-8.0
+sudo apt-get install -y aspnetcore-runtime-9.0
 ```
 
 ### 2. ایجاد دایرکتوری‌های مورد نیاز
