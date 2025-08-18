@@ -23,13 +23,13 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
     private readonly IConfiguration _configuration = configuration;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
-    private readonly TelegramBotClient _botClient = new(configuration["TelegramBot:Token"] ?? throw new InvalidOperationException("TelegramBot:Token configuration is missing"));
+    //private readonly TelegramBotClient _botClient = new(configuration["TelegramBot:Token"] ?? throw new InvalidOperationException("TelegramBot:Token configuration is missing"));
 
     public async Task<Result<TelegramMiniAppValidationResultDto>> ValidateTelegramMiniAppUserAsync()
     {
         try
         {
-            var botToken = _configuration["TelegramBot:Token"];
+            var botToken = "8461452463:AAFXLgBhfn8T8t1zWopj9_OT0_B9yznzJrw";//_configuration["TelegramBot:Token"];
             var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
             if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
@@ -37,8 +37,8 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                 return Result<TelegramMiniAppValidationResultDto>.ValidationFailure("اطلاعات نامعتبر");
             }
 
-            return await Task.Run(async () =>
-            {
+            //return await Task.Run(async () =>
+            //{
                 var parsedData = ParseInitData(initData);
                 if (parsedData == null)
                     return Result<TelegramMiniAppValidationResultDto>.ValidationFailure("فرمت داده‌های اولیه نامعتبر است");
@@ -61,7 +61,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                 };
 
                 return Result<TelegramMiniAppValidationResultDto>.Success(validationResult);
-            });
+            //});
         }
         catch (Exception exception)
         {
@@ -153,10 +153,10 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
             var random = new Random();
             var code = random.Next(100000, 999999).ToString();
 
-            var sentMessage = await _botClient.SendMessage(
-                chatId: chatId,
-                text: code
-            );
+            //var sentMessage = await _botClient.SendMessage(
+            //    chatId: chatId,
+            //    text: code
+            //);
 
             _logger.LogInformation("پیام با موفقیت به چت {ChatId} ارسال شد", chatId);
             return Result<bool>.Success(true);

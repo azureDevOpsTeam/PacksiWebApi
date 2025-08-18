@@ -35,6 +35,7 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/Administrator/swagger.json", "Administrator");
         options.SwaggerEndpoint("/swagger/Managers/swagger.json", "Managers");
         options.SwaggerEndpoint("/swagger/Users/swagger.json", "Users");
+        options.SwaggerEndpoint("/swagger/MiniApp/swagger.json", "MiniApp");
     });
 }
 else

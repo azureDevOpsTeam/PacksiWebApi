@@ -57,6 +57,7 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
         Task<ServiceResult> MiniApp_AddRequestAsync(CreateRequestTMADto model, UserAccount userAccount, CancellationToken cancellationToken);
 
         Task<ServiceResult> MiniApp_AddRequestSelectionAsync(int requestId, UserAccount userAccount, CancellationToken cancellationToken);
+        Task<ServiceResult> AddRequestItemTypeAsync(CreateRequestDto model, int requestId);
 
         #endregion Telegram MiniApp
     }

@@ -15,6 +15,7 @@ namespace ApplicationLayer.MapperProfile.UserAccounts
 
             CreateMap<SignUpDto, UserProfile>();
             CreateMap<TelegramMiniAppUserDto, UserProfile>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
                 .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
 

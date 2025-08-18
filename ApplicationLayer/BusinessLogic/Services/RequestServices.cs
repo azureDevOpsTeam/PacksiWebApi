@@ -9,6 +9,7 @@ using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
 
 namespace ApplicationLayer.BusinessLogic.Services
 {
@@ -66,15 +67,6 @@ namespace ApplicationLayer.BusinessLogic.Services
                     }
                 }
 
-                foreach (var itemType in model.ItemTypeIds)
-                {
-                    await _itemTypeRepo.AddAsync(new RequestItemType
-                    {
-                        RequestId = request.Id,
-                        ItemType = itemType
-                    });
-                }
-
                 //foreach (var file in dto.Attachments)
                 //{
                 //    await _attachmentRepo.AddAsync(new RequestAttachment
@@ -90,6 +82,26 @@ namespace ApplicationLayer.BusinessLogic.Services
                 //request.AvailableDestinations = _mapper.Map<List<RequestAvailableDestination>>(model.AvailableDestinations);
                 await _requestRepository.AddAsync(request);
 
+                return new ServiceResult { RequestStatus = RequestStatus.Successful, Data = request, Message = CommonMessages.Successful };
+            }
+            catch (Exception exception)
+            {
+                return new ServiceResult().Failed(_logger, exception, CommonExceptionMessage.AddFailed("ثبت درخواست"));
+            }
+        }
+
+        public async Task<ServiceResult> AddRequestItemTypeAsync(CreateRequestDto model, int requestId)
+        {
+            try
+            {
+                foreach (var itemType in model.ItemTypeIds)
+                {
+                    await _itemTypeRepo.AddAsync(new RequestItemType
+                    {
+                        RequestId = requestId,
+                        ItemType = itemType
+                    });
+                }
                 return new ServiceResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
             }
             catch (Exception exception)

@@ -45,6 +45,12 @@ public class UserValicationHandler(IUnitOfWork unitOfWork, IMiniAppServices mini
                 await _unitOfWork.SaveChangesAsync();
 
                 var userProfile = _mapper.Map<UserProfile>(validationResult.Value.User);
+                //UserProfile userProfile = new()
+                //{
+                //    FirstName = validationResult.Value.User.FirstName,
+                //    LastName = validationResult.Value.User.LastName
+                //};
+
                 var userAccount = (UserAccount)userAccont.Data;
                 userProfile.UserAccountId = userAccount.Id;
                 var resultUserProfile = await _userAccountServices.MiniApp_AddProfileAsync(userProfile);

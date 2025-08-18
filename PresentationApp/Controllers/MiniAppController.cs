@@ -10,7 +10,7 @@ namespace PresentationApp.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[ApiExplorerSettings(GroupName = "Users")]
+[ApiExplorerSettings(GroupName = "MiniApp")]
 [AllowAnonymous]
 public class MiniAppController(IMediator mediator) : ControllerBase
 {
@@ -18,8 +18,8 @@ public class MiniAppController(IMediator mediator) : ControllerBase
 
     [HttpGet]
     [Route("validate")]
-    public async Task<IActionResult> ValidateUserAsync([FromQuery] UserValidationDto model)
-        => await ResultHelper.GetResultAsync(_mediator, new UserValicationQuery(model));
+    public async Task<IActionResult> ValidateUserAsync()
+        => await ResultHelper.GetResultAsync(_mediator, new UserValicationQuery());
 
     [HttpPost]
     [Route("Create")]

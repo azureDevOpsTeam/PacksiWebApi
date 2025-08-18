@@ -14,21 +14,41 @@ public class CreateRequestHandler(IRequestServices requestServices, IUnitOfWork 
 
     public async Task<HandlerResult> Handle(CreateRequestCommand request, CancellationToken cancellationToken)
     {
-        var resultAddRequest = await _requestServices.AddRequestAsync(request.Model, cancellationToken);
+        try
+        {
+            var resultAddRequest = await _requestServices.AddRequestAsync(request.Model, cancellationToken);
 
-        if (resultAddRequest.RequestStatus != RequestStatus.Successful)
-            return new HandlerResult { RequestStatus = resultAddRequest.RequestStatus, Message = resultAddRequest.Message };
+            if (resultAddRequest.RequestStatus != RequestStatus.Successful)
+            {
+                await _unitOfWork.RollbackAsync();
+                return new HandlerResult { RequestStatus = resultAddRequest.RequestStatus, Message = resultAddRequest.Message };
+            }
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            var requestObj = (Request)resultAddRequest.Data;
 
-        var requestObj = (Request)resultAddRequest.Data;
-        var resultAddStatus = await _requestServices.AddRequestSelectionAsync(requestObj.Id, cancellationToken);
+            var resultAddItemType = await _requestServices.AddRequestItemTypeAsync(request.Model, requestObj.Id);
+            if (resultAddItemType.RequestStatus != RequestStatus.Successful)
+            {
+                await _unitOfWork.RollbackAsync();
+                return new HandlerResult { RequestStatus = resultAddItemType.RequestStatus, Message = resultAddItemType.Message };
+            }
 
-        if (resultAddStatus.RequestStatus != RequestStatus.Successful)
-            return new HandlerResult { RequestStatus = resultAddStatus.RequestStatus, Message = resultAddStatus.Message };
+            var resultAddStatus = await _requestServices.AddRequestSelectionAsync(requestObj.Id, cancellationToken);
+            if (resultAddStatus.RequestStatus != RequestStatus.Successful)
+            {
+                await _unitOfWork.RollbackAsync();
+                return new HandlerResult { RequestStatus = resultAddStatus.RequestStatus, Message = resultAddStatus.Message };
+            }
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return new HandlerResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CommitAsync();
+            return new HandlerResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
+        }
+        catch
+        {
+            await _unitOfWork.RollbackAsync();
+            return new HandlerResult { RequestStatus = RequestStatus.Failed, Message = CommonMessages.Failed };
+        }
     }
 }

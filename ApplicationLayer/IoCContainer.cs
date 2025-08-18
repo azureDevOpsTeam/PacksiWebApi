@@ -124,6 +124,7 @@ namespace ApplicationLayer
                 options.SwaggerDoc("Administrator", new OpenApiInfo { Title = "API Administrator", Version = "v1" });
                 options.SwaggerDoc("Managers", new OpenApiInfo { Title = "API Managers", Version = "v1" });
                 options.SwaggerDoc("Users", new OpenApiInfo { Title = "API Users", Version = "v1" });
+                options.SwaggerDoc("MiniApp", new OpenApiInfo { Title = "API MiniApp", Version = "v1" });
             });
         }
 
