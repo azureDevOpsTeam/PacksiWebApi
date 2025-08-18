@@ -38,7 +38,7 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         port: ${{ secrets.SERVER_PORT || 2267 }}
-        source: "packsi-api.service"
+        source: "api.service"
         target: "/tmp/"
         
     - name: Deploy to Server
@@ -50,7 +50,7 @@ jobs:
         port: ${{ secrets.SERVER_PORT || 2267 }}
         script: |
           # Stop the application service if running
-          sudo systemctl stop packsi-api || true
+          sudo systemctl stop api || true
           
           # Create backup of current deployment
           sudo mkdir -p /var/www/packsi/backup
@@ -60,7 +60,7 @@ jobs:
           sudo rm -rf /var/www/packsi/publish/*
           
           # Update systemd service file if needed
-          sudo cp /tmp/packsi-api.service /etc/systemd/system/
+          sudo cp /tmp/api.service /etc/systemd/system/
           sudo systemctl daemon-reload
           
     - name: Copy files to server
@@ -87,12 +87,12 @@ jobs:
           sudo chmod +x /var/www/packsi/PresentationApp
           
           # Start the application service
-          sudo systemctl start packsi-api
-          sudo systemctl enable packsi-api
+          sudo systemctl start api
+          sudo systemctl enable api
           
           # Restart nginx to ensure proper routing
           sudo systemctl reload nginx
           
           # Check if application is running
           sleep 5
-          sudo systemctl status packsi-api --no-pager
+          sudo systemctl status api --no-pager
