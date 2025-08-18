@@ -7,7 +7,7 @@ Type=notify
 User=www-data
 Group=www-data
 WorkingDirectory=/var/www/packsi
-ExecStart=/usr/bin/dotnet /var/www/packsi/PresentationApp.dll
+ExecStart=/usr/bin/dotnet /var/www/packsi/PresentationApp.dll --urls=http://127.0.0.1:5005
 Restart=always
 RestartSec=10
 KillSignal=SIGINT
