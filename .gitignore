@@ -567,14 +567,7 @@ docker-compose.local.yml
 # Service mesh
 .linkerd/
 
-# Monitoring
-.prometheus/
-.grafana/
 
-# Logging
-.elasticsearch/
-.logstash/
-.kibana/
 
 # Message queues
 .rabbitmq/
@@ -591,13 +584,7 @@ docker-compose.local.yml
 .azure/
 .gcp/
 
-# CI/CD
-.github/
-.gitlab-ci/
-.jenkins/
-.travis/
-.circleci/
-.appveyor/
+
 
 # Package managers
 packages/
