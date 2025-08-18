@@ -1,5 +1,6 @@
-﻿using ApplicationLayer.CQRS.MiniApp.Command;
+using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.CQRS.MiniApp.Query;
+using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -17,8 +18,8 @@ public class MiniAppController(IMediator mediator) : ControllerBase
 
     [HttpGet]
     [Route("validate")]
-    public async Task<IActionResult> ValidateUserAsync()
-        => await ResultHelper.GetResultAsync(_mediator, new UserValicationQuery());
+    public async Task<IActionResult> ValidateUserAsync([FromQuery] UserValidationDto model)
+        => await ResultHelper.GetResultAsync(_mediator, new UserValicationQuery(model));
 
     [HttpPost]
     [Route("Create")]

@@ -36,7 +36,7 @@ public class CreateRequestTMAHandler(IUnitOfWork unitOfWork, IHttpContextAccesso
             _logger.LogError("Telegram bot token is not configured");
             return new HandlerResult { RequestStatus = RequestStatus.Failed, Message = "اطلاعات نامعتبر است" };
         }
-        var resultValidation = await _miniAppServices.ValidateTelegramMiniAppUserAsync(initData, botToken);
+        var resultValidation = await _miniAppServices.ValidateTelegramMiniAppUserAsync();
         if (resultValidation.IsFailure)
             return resultValidation.ToHandlerResult();
 
