@@ -17,8 +17,8 @@ public class MiniAppController(IMediator mediator) : ControllerBase
 
     [HttpGet]
     [Route("validate")]
-    public async Task<IActionResult> ValidateUserAsync(UserValicationQuery model)
-        => await ResultHelper.GetResultAsync(_mediator, model);
+    public async Task<IActionResult> ValidateUserAsync()
+        => await ResultHelper.GetResultAsync(_mediator, new UserValicationQuery());
 
     [HttpPost]
     [Route("Create")]
