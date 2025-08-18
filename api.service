@@ -1,29 +1,13 @@
 [Unit]
-Description=Packsi Web API
+Description=Packsi API
 After=network.target
 
 [Service]
-Type=notify
-User=www-data
-Group=www-data
 WorkingDirectory=/var/www/packsi
-ExecStart=/usr/bin/dotnet /var/www/packsi/PresentationApp.dll
+ExecStart=/usr/bin/dotnet /var/www/packsi/PresentationApp.dll --urls=http://localhost:5005
 Restart=always
-RestartSec=10
-KillSignal=SIGINT
-SyslogIdentifier=packsi-api
-Environment=ASPNETCORE_ENVIRONMENT=Production
-Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
-
-# Security settings
-NoNewPrivileges=yes
-PrivateTmp=yes
-ProtectSystem=strict
-ReadWritePaths=/var/www/packsi
-ProtectHome=yes
-ProtectKernelTunables=yes
-ProtectKernelModules=yes
-ProtectControlGroups=yes
+Environment=ASPNETCORE_ENVIRONMENT=Development
+User=www-data
 
 [Install]
 WantedBy=multi-user.target
