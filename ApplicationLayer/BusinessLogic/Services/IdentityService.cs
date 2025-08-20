@@ -59,7 +59,7 @@ namespace ApplicationLayer.BusinessLogic.Services
         {
             var passwordIsValid = HashGenerator.VerifyPassword(signInViewModel.Password, userAccount.Password, userAccount.SecurityStamp);
             if (!passwordIsValid)
-                return new ServiceResult { RequestStatus = RequestStatus.Failed, Message = IdentityMessages.IncorrectPassword };
+                return new ServiceResult { RequestStatus = RequestStatus.IncorrectUser, Message = IdentityMessages.IncorrectPassword };
 
             var roles = await _userRoleRepository.Query()
                 .Where(ur => ur.UserAccountId == userAccount.Id)

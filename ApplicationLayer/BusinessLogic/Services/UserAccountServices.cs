@@ -59,9 +59,9 @@ namespace ApplicationLayer.BusinessLogic.Services
                 {
                     return new ServiceResult
                     {
-                        RequestStatus = RequestStatus.NotFound,
+                        RequestStatus = RequestStatus.IncorrectUser,
                         Data = null,
-                        Message = CommonMessages.NotFound
+                        Message = CommonMessages.IncorrectUser
                     };
                 }
 
