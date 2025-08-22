@@ -25,6 +25,7 @@ var app = builder.Build();
 await ApplicationDbSeeder.SeedAsync(app.Services);
 
 // Configure the HTTP request pipeline.
+//In Produxtion UnXommewnt This
 //if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -38,10 +39,10 @@ await ApplicationDbSeeder.SeedAsync(app.Services);
         options.SwaggerEndpoint("/swagger/MiniApp/swagger.json", "MiniApp");
     });
 }
-else
-{
-    app.UseHsts();
-}
+// else
+// {
+//     app.UseHsts();
+// }
 
 app.UseHttpsRedirection();
 app.UseIpRateLimiting();
