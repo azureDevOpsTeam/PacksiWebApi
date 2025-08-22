@@ -1305,6 +1305,9 @@ namespace InfrastructureLayer.Migrations
                     b.Property<long?>("TelegramId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("TelegramUserName")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 

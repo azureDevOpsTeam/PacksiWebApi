@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InfrastructureLayer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250817194644_InitialFirstDb")]
+    [Migration("20250822185152_InitialFirstDb")]
     partial class InitialFirstDb
     {
         /// <inheritdoc />
@@ -1307,6 +1307,9 @@ namespace InfrastructureLayer.Migrations
 
                     b.Property<long?>("TelegramId")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("TelegramUserName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
