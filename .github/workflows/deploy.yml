@@ -1,98 +1,72 @@
-name: CI/CD Pipeline
+name: Deploy to Server
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '9.0.x'
-        
+        dotnet-version: '8.0.x'
+    
     - name: Restore dependencies
       run: dotnet restore
-      
-    - name: Build
-      run: dotnet build --no-restore --configuration Release
-      
-    - name: Test
-      run: dotnet test --no-build --verbosity normal --configuration Release
-      
-    - name: Publish
-      run: dotnet publish PresentationApp/PresentationApp.csproj --configuration Release --output ./publish --no-restore
-      
-    - name: Copy service file to server
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        port: ${{ secrets.SERVER_PORT || 2267 }}
-        source: "api.service"
-        target: "/tmp/"
-        
-    - name: Deploy to Server
+    
+    - name: Build project
+      run: dotnet build --configuration Release --no-restore
+    
+    - name: Publish project
+      run: dotnet publish PresentationApp/PresentationApp.csproj --configuration Release --output ./publish --no-build
+    
+    - name: Deploy to server
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SERVER_HOST }}
+        port: ${{ secrets.SERVER_PORT }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
-        port: ${{ secrets.SERVER_PORT || 2267 }}
         script: |
-          # Stop the application service if running
+          # Stop the service if running
           sudo systemctl stop api || true
           
-          # Create backup of current deployment
-          sudo mkdir -p /var/www/packsi/backup
-          sudo cp -r /var/www/packsi /var/www/packsi/backup/publish-$(date +%Y%m%d-%H%M%S) || true
-          
-          # Clean the publish directory
-          sudo rm -rf /var/www/packsi/*
-          
-          # Update systemd service file if needed
-          sudo cp /tmp/api.service /etc/systemd/system/
-          sudo systemctl daemon-reload
-          
+          # Remove old files
+          sudo rm -rf /var/www/api-app/*
+    
     - name: Copy files to server
       uses: appleboy/scp-action@v0.1.7
       with:
         host: ${{ secrets.SERVER_HOST }}
+        port: ${{ secrets.SERVER_PORT }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
-        port: ${{ secrets.SERVER_PORT || 22 }}
         source: "./publish/*"
-        target: "/var/www/packsi"
+        target: "/var/www/api-app/"
         strip_components: 1
-        
-    - name: Start application
+    
+    - name: Start service
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SERVER_HOST }}
+        port: ${{ secrets.SERVER_PORT }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
-        port: ${{ secrets.SERVER_PORT || 22 }}
         script: |
           # Set proper permissions
-          sudo chown -R www-data:www-data /var/www/packsi
-          sudo chmod +x /var/www/packsi/PresentationApp
+          sudo chown -R www-data:www-data /var/www/api-app
+          sudo chmod +x /var/www/api-app/PresentationApp
           
-          # Start the application service
-          sudo systemctl start api
+          # Reload systemd and start service
+          sudo systemctl daemon-reload
           sudo systemctl enable api
-          
-          # Restart nginx to ensure proper routing
-          sudo systemctl reload nginx
-          
-          # Check if application is running
-          sleep 5
-          sudo systemctl status api --no-pager
+          sudo systemctl start api
+          sudo systemctl status api

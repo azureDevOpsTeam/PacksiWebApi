@@ -39,7 +39,7 @@ public class RequestController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> MyPostedSelectedAsync()
      => await ResultHelper.GetResultAsync(_mediator, new MyPostedSelectedQuery());
 
-    [HttpGet("GetRequestById")]
+    [HttpPost("GetRequestById")]
     public async Task<IActionResult> GetRequestByIdAsync(GetRequestQuery model)
      => await ResultHelper.GetResultAsync(_mediator, model);
 
