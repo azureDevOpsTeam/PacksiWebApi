@@ -86,7 +86,5 @@
 
             return phoneNumber;
         }
-
-        مثال‌ها:
     }
 }
