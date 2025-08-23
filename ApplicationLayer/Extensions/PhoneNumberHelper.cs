@@ -86,5 +86,49 @@
 
             return phoneNumber;
         }
+        /// <summary>
+        /// دریافت شماره کامل و برگرداندن کد کشور
+        /// مثلا +19136547890 → +1
+        /// </summary>
+        public static string ExtractCountryCode(string phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+                throw new ArgumentException("Phone number is required.");
+
+            phoneNumber = phoneNumber.Trim().Replace(" ", "").Replace("-", "");
+
+            if (!phoneNumber.StartsWith("+"))
+                throw new ArgumentException("Phone number must start with '+' for extracting country code.");
+
+            // کد کشور بین + و اولین رقم شماره داخلی (که معمولا 10 رقم است)
+            // یعنی طول شماره داخلی معمولا 10 رقم → پس بقیه‌اش کد کشور است
+            if (phoneNumber.Length <= 11) // حداقل باید 1 رقم کد + 10 رقم شماره داشته باشه
+                throw new ArgumentException("Invalid phone number format.");
+
+            int countryCodeLength = phoneNumber.Length - 10;
+            return phoneNumber.Substring(0, countryCodeLength);
+        }
+
+        /// <summary>
+        /// دریافت شماره کامل و برگرداندن فقط شماره موبایل بدون کد کشور
+        /// مثلا +19136547890 → 9136547890
+        /// </summary>
+        public static string ExtractPhoneNumber(string phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+                throw new ArgumentException("Phone number is required.");
+
+            phoneNumber = phoneNumber.Trim().Replace(" ", "").Replace("-", "");
+
+            if (!phoneNumber.StartsWith("+"))
+                throw new ArgumentException("Phone number must start with '+' for extracting phone number.");
+
+            if (phoneNumber.Length <= 11)
+                throw new ArgumentException("Invalid phone number format.");
+
+            // شماره داخلی → آخرین 10 رقم
+            return phoneNumber.Substring(phoneNumber.Length - 10);
+        }
+
     }
 }

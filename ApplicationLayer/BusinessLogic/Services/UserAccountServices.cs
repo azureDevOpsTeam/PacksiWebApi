@@ -343,7 +343,8 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (user == null)
                     return new ServiceResult().NotFound();
 
-                user.PhoneNumber = PhoneNumberHelper.RemoveLeadingZero(mdoel.PhoneNumber);
+                user.PhoneNumber = PhoneNumberHelper.ExtractPhoneNumber(mdoel.PhoneNumber);
+                user.PhonePrefix = PhoneNumberHelper.ExtractCountryCode(mdoel.PhoneNumber);
                 user.UserName = mdoel.PhoneNumber;
                 user.ConfirmPhoneNumber = true;
 
