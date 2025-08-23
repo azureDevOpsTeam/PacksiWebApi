@@ -21,6 +21,11 @@ public class MiniAppController(IMediator mediator) : ControllerBase
         => await ResultHelper.GetResultAsync(_mediator, new UserValicationQuery());
 
     [HttpPost]
+    [Route("VerifyPhoneNumber")]
+    public async Task<IActionResult> VerifyPhoneNumberAsync(VerifyPhoneNumberTMACommand model)
+    => await ResultHelper.GetResultAsync(_mediator, model);
+
+    [HttpPost]
     [Route("Create")]
     public async Task<IActionResult> CreateAsync(CreateRequestTMACommand model)
     => await ResultHelper.GetResultAsync(_mediator, model);
@@ -29,6 +34,11 @@ public class MiniAppController(IMediator mediator) : ControllerBase
     [Route("SendConnectionCode")]
     public async Task<IActionResult> SendConnectionCodeAsync(CreateRequestTMACommand model)
     => await ResultHelper.GetResultAsync(_mediator, model);
+
+    [HttpGet]
+    [Route("ItemType")]
+    public async Task<IActionResult> ItemTypeAsync()
+    => await ResultHelper.GetResultAsync(_mediator, new ItemTypeQuery());
 
     [HttpGet]
     [Route("UserInfo")]

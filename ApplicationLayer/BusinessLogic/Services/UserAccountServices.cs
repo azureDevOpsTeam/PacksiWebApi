@@ -1,5 +1,6 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.DTOs.Identity;
+using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.TelegramApis;
 using ApplicationLayer.DTOs.User;
 using ApplicationLayer.Extensions;
@@ -11,6 +12,7 @@ using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Security.Cryptography;
 
 namespace ApplicationLayer.BusinessLogic.Services
@@ -297,6 +299,41 @@ namespace ApplicationLayer.BusinessLogic.Services
             catch (Exception excepotion)
             {
                 return new ServiceResult().Failed(_logger, excepotion, CommonExceptionMessage.GetFailed("اطلاعات کاربر"));
+            }
+        }
+
+        public async Task<ServiceResult> MiniApp_VerifyPhoneNumberAsync(VerifyPhoneNumberDto mdoel)
+        {
+            try
+            {
+                var validationResult = await _miniAppServices.ValidateTelegramMiniAppUserAsync();
+
+                var user = await GetUserAccountByTelegramIdAsync(validationResult.Value.User.Id);
+                if (user == null)
+                    return new ServiceResult().NotFound();
+
+                if (string.IsNullOrEmpty(user.PhoneNumber))
+                {
+                    user.PhoneNumber = mdoel.PhoneNumber;
+                    user.UserName = mdoel.PhoneNumber;
+                    user.ConfirmPhoneNumber = true;
+                }
+                else
+                {
+                    if (user.PhoneNumber != mdoel.PhoneNumber)
+                        return new ServiceResult().IncorectUser();
+
+                    user.UserName = mdoel.PhoneNumber;
+                    user.ConfirmPhoneNumber = true;
+                }
+
+                _userAccountRepository.Update(user);
+
+                return new ServiceResult().Successful();
+            }
+            catch (Exception excepotion)
+            {
+                return new ServiceResult().Failed(_logger, excepotion, CommonExceptionMessage.GetFailed("تایید شماره موبایل"));
             }
         }
         #endregion Mini App

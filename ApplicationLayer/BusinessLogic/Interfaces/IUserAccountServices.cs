@@ -1,4 +1,5 @@
 ﻿using ApplicationLayer.DTOs.Identity;
+using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.TelegramApis;
 using ApplicationLayer.DTOs.User;
 using DomainLayer.Entities;
@@ -32,6 +33,8 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
         Task<ServiceResult> MiniApp_AddProfileAsync(UserProfile model);
 
         Task<ServiceResult> MiniApp_UserInfoAsync();
+
+        Task<ServiceResult> MiniApp_VerifyPhoneNumberAsync(VerifyPhoneNumberDto mdoel);
 
         #endregion Mini App
     }

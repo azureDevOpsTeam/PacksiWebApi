@@ -80,6 +80,15 @@ namespace ApplicationLayer
                 Message = CommonMessages.NotFound
             };
         }
+        public ServiceResult IncorectUser(object data = null)
+        {
+            return new ServiceResult()
+            {
+                Data = data,
+                RequestStatus = RequestStatus.IncorrectUser,
+                Message = CommonMessages.IncorrectUser
+            };
+        }
 
         public ServiceResult Duplicated(object data = null)
         {
