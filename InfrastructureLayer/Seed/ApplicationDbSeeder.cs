@@ -88,55 +88,55 @@ namespace InfrastructureLayer.Seed
             }
 
             // Seed User
-            if (!await context.Set<UserAccount>().AnyAsync())
-            {
-                var securityStamp = Guid.NewGuid().ToString();
-                UserAccount userAccount = new()
-                {
-                    UserName = "+989190693530",
-                    PhonePrefix = "+98",
-                    PhoneNumber = "9190693530",
-                    ConfirmEmail = true,
-                    ConfirmPhoneNumber = true,
-                    SecurityStamp = securityStamp,
-                    Password = HashGenerator.GenerateHashChangePassword("Aa123456@", securityStamp),
-                };
-
-                await context.Set<UserAccount>().AddAsync(userAccount);
-                await context.SaveChangesAsync();
-
-                List<UserRole> userRoles = new();
-                foreach (var role in AllRole)
-                {
-                    userRoles.Add(new UserRole
-                    {
-                        RoleId = role.Id,
-                        UserAccount = userAccount
-                    });
-                }
-                await context.Set<UserRole>().AddRangeAsync(userRoles);
-
-                UserProfile userProfile = new()
-                {
-                    UserAccount = userAccount,
-                    DisplayName = "شهرام",
-                    FirstName = "شهرام",
-                    LastName = "اویسی",
-                    Gender = GenderEnum.Male,
-                    CountryOfResidenceId = PreferredIranId
-                };
-
-                await context.Set<UserProfile>().AddAsync(userProfile);
-
-                UserPreferredLocation userPreferredLocation = new()
-                {
-                    UserAccount = userAccount,
-                    CountryId = PreferredCanadaId
-                };
-
-                await context.Set<UserPreferredLocation>().AddAsync(userPreferredLocation);
-                await context.SaveChangesAsync();
-            }
+            //if (!await context.Set<UserAccount>().AnyAsync())
+            //{
+            //    var securityStamp = Guid.NewGuid().ToString();
+            //    UserAccount userAccount = new()
+            //    {
+            //        UserName = "+989190693530",
+            //        PhonePrefix = "+98",
+            //        PhoneNumber = "9190693530",
+            //        ConfirmEmail = true,
+            //        ConfirmPhoneNumber = true,
+            //        SecurityStamp = securityStamp,
+            //        Password = HashGenerator.GenerateHashChangePassword("Aa123456@", securityStamp),
+            //    };
+            //
+            //    await context.Set<UserAccount>().AddAsync(userAccount);
+            //    await context.SaveChangesAsync();
+            //
+            //    List<UserRole> userRoles = new();
+            //    foreach (var role in AllRole)
+            //    {
+            //        userRoles.Add(new UserRole
+            //        {
+            //            RoleId = role.Id,
+            //            UserAccount = userAccount
+            //        });
+            //    }
+            //    await context.Set<UserRole>().AddRangeAsync(userRoles);
+            //
+            //    UserProfile userProfile = new()
+            //    {
+            //        UserAccount = userAccount,
+            //        DisplayName = "شهرام",
+            //        FirstName = "شهرام",
+            //        LastName = "اویسی",
+            //        Gender = GenderEnum.Male,
+            //        CountryOfResidenceId = PreferredIranId
+            //    };
+            //
+            //    await context.Set<UserProfile>().AddAsync(userProfile);
+            //
+            //    UserPreferredLocation userPreferredLocation = new()
+            //    {
+            //        UserAccount = userAccount,
+            //        CountryId = PreferredCanadaId
+            //    };
+            //
+            //    await context.Set<UserPreferredLocation>().AddAsync(userPreferredLocation);
+            //    await context.SaveChangesAsync();
+            //}
         }
     }
 }
