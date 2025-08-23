@@ -31,7 +31,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
     {
         try
         {
-            var botToken = "8461452463:AAFXLgBhfn8T8t1zWopj9_OT0_B9yznzJrw";//_configuration["TelegramBot:Token"];
+            var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";//_configuration["TelegramBot:Token"];
             var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
             if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
