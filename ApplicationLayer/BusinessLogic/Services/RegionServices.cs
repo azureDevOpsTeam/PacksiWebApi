@@ -123,11 +123,14 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 var dropdownItems = countries.Select(country => new DropDownItemTreeDto
                 {
+
                     Text = country.PersianName,
+                    Label = country.Name,
                     Value = country.Id.ToString(),
                     Children = country.Cities.Select(city => new DropDownItemTreeDto
                     {
-                        Text = city.Name,
+                        Text = city.PersianName,
+                        Label = city.Name,
                         Value = city.Id.ToString()
                     }).ToList()
                 }).ToList();

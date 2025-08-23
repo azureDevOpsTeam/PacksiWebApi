@@ -17,7 +17,7 @@ namespace ApplicationLayer.DTOs.BaseDTOs
 
         public string Text { get; set; }
 
-        public string Label { get => Text; }
+        public string Label { get; set; }
 
         public string Value { get; set; }
 
