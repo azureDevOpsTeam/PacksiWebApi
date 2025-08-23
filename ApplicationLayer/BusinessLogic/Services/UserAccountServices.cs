@@ -248,6 +248,8 @@ namespace ApplicationLayer.BusinessLogic.Services
                 {
                     TelegramId = model.Id,
                     TelegramUserName = model.Username,
+                    ConfirmEmail = false,
+                    ConfirmPhoneNumber = false
                 };
 
                 await _userAccountRepository.AddAsync(userAccount);
@@ -312,20 +314,9 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (user == null)
                     return new ServiceResult().NotFound();
 
-                if (string.IsNullOrEmpty(user.PhoneNumber))
-                {
-                    user.PhoneNumber = mdoel.PhoneNumber;
-                    user.UserName = mdoel.PhoneNumber;
-                    user.ConfirmPhoneNumber = true;
-                }
-                else
-                {
-                    if (user.PhoneNumber != mdoel.PhoneNumber)
-                        return new ServiceResult().IncorectUser();
-
-                    user.UserName = mdoel.PhoneNumber;
-                    user.ConfirmPhoneNumber = true;
-                }
+                user.PhoneNumber = PhoneNumberHelper.RemoveLeadingZero(mdoel.PhoneNumber);
+                user.UserName = mdoel.PhoneNumber;
+                user.ConfirmPhoneNumber = true;
 
                 _userAccountRepository.Update(user);
 
