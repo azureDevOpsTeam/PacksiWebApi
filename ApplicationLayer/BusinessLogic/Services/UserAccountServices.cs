@@ -217,7 +217,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     DisplayName = user.UserProfiles.FirstOrDefault()?.DisplayName,
                     FirstName = user.UserProfiles.FirstOrDefault()?.FirstName,
                     LastName = user.UserProfiles.FirstOrDefault()?.LastName,
-                    CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId.Value,
+                    CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId,
                     SetPreferredLocation = user.UserPreferredLocations.Any()
                 };
 
@@ -384,7 +384,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     FirstName = user.UserProfiles.FirstOrDefault()?.FirstName,
                     LastName = user.UserProfiles.FirstOrDefault()?.LastName,
                     ConfirmPhoneNumber = user.ConfirmPhoneNumber,
-                    CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId.Value,
+                    CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId,
                     SetPreferredLocation = user.UserPreferredLocations.Count != 0
                 };
 
