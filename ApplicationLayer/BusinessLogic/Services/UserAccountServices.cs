@@ -292,8 +292,9 @@ namespace ApplicationLayer.BusinessLogic.Services
                     DisplayName = user.UserProfiles.FirstOrDefault()?.DisplayName,
                     FirstName = user.UserProfiles.FirstOrDefault()?.FirstName,
                     LastName = user.UserProfiles.FirstOrDefault()?.LastName,
+                    ConfirmPhoneNumber = user.ConfirmPhoneNumber,
                     CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId.Value,
-                    SetPreferredLocation = user.UserPreferredLocations.Any()
+                    SetPreferredLocation = user.UserPreferredLocations.Count != 0
                 };
 
                 return new ServiceResult().Successful(userInfo);

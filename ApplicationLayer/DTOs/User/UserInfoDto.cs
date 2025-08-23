@@ -14,6 +14,8 @@ public class UserInfoDto
 
     public string LastName { get; set; }
 
+    public bool ConfirmPhoneNumber { get; set; }
+
     public bool HasCompletedProfile
     {
         get
