@@ -1,5 +1,6 @@
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.CQRS.MiniApp.Query;
+using ApplicationLayer.CQRS.UserProfiles.Command;
 using ApplicationLayer.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -23,31 +24,33 @@ public class MiniAppController(IMediator mediator) : ControllerBase
     [HttpPost]
     [Route("VerifyPhoneNumber")]
     public async Task<IActionResult> VerifyPhoneNumberAsync(VerifyPhoneNumberTMACommand model)
-    => await ResultHelper.GetResultAsync(_mediator, model);
+        => await ResultHelper.GetResultAsync(_mediator, model);
 
     [HttpPost]
     [Route("Create")]
     public async Task<IActionResult> CreateAsync(CreateRequestTMACommand model)
-    => await ResultHelper.GetResultAsync(_mediator, model);
+        => await ResultHelper.GetResultAsync(_mediator, model);
 
     [HttpPost]
     [Route("SendConnectionCode")]
     public async Task<IActionResult> SendConnectionCodeAsync(CreateRequestTMACommand model)
-    => await ResultHelper.GetResultAsync(_mediator, model);
+        => await ResultHelper.GetResultAsync(_mediator, model);
 
     [HttpGet]
     [Route("ItemType")]
     public async Task<IActionResult> ItemTypeAsync()
-    => await ResultHelper.GetResultAsync(_mediator, new ItemTypeQuery());
+        => await ResultHelper.GetResultAsync(_mediator, new ItemTypeQuery());
 
     [HttpGet]
     [Route("UserInfo")]
     public async Task<IActionResult> UserInfoAsync()
-    => await ResultHelper.GetResultAsync(_mediator, new UserInfoTMAQuery());
+        => await ResultHelper.GetResultAsync(_mediator, new UserInfoTMAQuery());
 
-    //For Delete
-    [HttpGet]
-    [Route("RequiredOperation")]
-    public async Task<IActionResult> RequiredOperationAsync()
-    => await ResultHelper.GetResultAsync(_mediator, new RequiredOperationQuery());
+    [HttpPost("AddUserPreferredLocation")]
+    public async Task<IActionResult> AddUserPreferredLocationAsync(AddUserPreferredLocationTMACommand model)
+        => await ResultHelper.GetResultAsync(_mediator, model);
+
+    [HttpPost("UpdateUserProfile")]
+    public async Task<IActionResult> UpdateUserProfileAsync(UpdateUserProfileTMACommand model)
+        => await ResultHelper.GetResultAsync(_mediator, model);
 }

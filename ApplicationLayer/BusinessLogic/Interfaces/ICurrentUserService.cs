@@ -4,5 +4,7 @@ namespace ApplicationLayer.BusinessLogic.Interfaces;
 
 public interface ICurrentUserService
 {
-    Task<ServiceResult> AddUserPreferredLocation(AddUserPreferredLocationDto model);
+    Task<ServiceResult> AddUserPreferredLocationAsync(PreferredLocationDto model);
+
+    Task<ServiceResult> MiniApp_AddUserPreferredLocationAsync(PreferredLocationDto model);
 }

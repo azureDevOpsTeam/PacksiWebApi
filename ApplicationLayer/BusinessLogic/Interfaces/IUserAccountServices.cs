@@ -36,6 +36,7 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
 
         Task<ServiceResult> MiniApp_VerifyPhoneNumberAsync(VerifyPhoneNumberDto mdoel);
         Task<ServiceResult> MiniApp_RequiredOperationAsync();
+        Task<ServiceResult> MiniApp_UpdateUserProfileAsync(UpdateUserProfileDto model);
 
         #endregion Mini App
     }

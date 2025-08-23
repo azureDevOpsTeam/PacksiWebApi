@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace ApplicationLayer.Validators.User
 {
-    public class AddUserPreferredLocationValidator : AbstractValidator<AddUserPreferredLocationDto>
+    public class AddUserPreferredLocationValidator : AbstractValidator<PreferredLocationDto>
     {
         public AddUserPreferredLocationValidator()
         {

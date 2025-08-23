@@ -12,21 +12,22 @@ using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Security.Cryptography;
 
 namespace ApplicationLayer.BusinessLogic.Services
 {
     [InjectAsScoped]
     public class UserAccountServices(IRepository<UserAccount> userAccountRepository, IRepository<UserProfile> userProfileRepository, IMiniAppServices miniAppServices,
-        IRepository<Role> roleRepository, IRepository<UserRole> userRoleRepository, IUserContextService userContextService,
-        IRepository<Invitation> invitationRepository, ILogger<UserAccountServices> logger, IMapper mapper) : IUserAccountServices
+        IRepository<Role> roleRepository, IRepository<UserRole> userRoleRepository, IUserContextService userContextService, IRepository<City> cityRepository,
+        IRepository<Invitation> invitationRepository, IRepository<UserPreferredLocation> locationRepo, ILogger<UserAccountServices> logger, IMapper mapper) : IUserAccountServices
     {
         private readonly IRepository<UserAccount> _userAccountRepository = userAccountRepository;
         private readonly IRepository<UserProfile> _userProfileRepository = userProfileRepository;
+        private readonly IRepository<UserPreferredLocation> _locationRepo = locationRepo;
         private readonly IRepository<Role> _roleRepository = roleRepository;
         private readonly IRepository<UserRole> _userRoleRepository = userRoleRepository;
         private readonly IRepository<Invitation> _invitationRepository = invitationRepository;
+        private readonly IRepository<City> _cityRepository = cityRepository;
         private readonly IUserContextService _userContextService = userContextService;
         private readonly IMiniAppServices _miniAppServices = miniAppServices;
         private readonly ILogger<UserAccountServices> _logger = logger;
@@ -277,6 +278,65 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
+        public async Task<ServiceResult> MiniApp_UpdateUserProfileAsync(UpdateUserProfileDto model)
+        {
+            try
+            {
+                var validationResult = await _miniAppServices.ValidateTelegramMiniAppUserAsync();
+                var user = await GetUserAccountByTelegramIdAsync(validationResult.Value.User.Id);
+                if (user == null)
+                    return new ServiceResult().NotFound();
+
+                var profileExists = await _userProfileRepository.Query().FirstOrDefaultAsync(x => x.UserAccountId == user.Id);
+                profileExists = _mapper.Map<UserProfile>(model);
+                _userProfileRepository.Update(profileExists);
+
+                var currentUserId = userContextService.UserId.Value;
+
+                var requestedCityIds = model.CityIds.Distinct().ToList();
+
+                var existingLocations = await _locationRepo.Query()
+                    .Where(x => x.UserAccountId == currentUserId && x.CityId != null)
+                    .ToListAsync();
+
+                var existingCityIds = existingLocations.Select(x => x.CityId.Value).ToList();
+
+                var toAddCityIds = requestedCityIds.Except(existingCityIds).ToList();
+
+                var toRemoveCityIds = existingCityIds.Except(requestedCityIds).ToList();
+
+                if (toAddCityIds.Count != 0)
+                {
+                    var cities = await _cityRepository.Query()
+                        .Where(c => toAddCityIds.Contains(c.Id))
+                        .ToListAsync();
+
+                    var newLocations = cities.Select(city => new UserPreferredLocation
+                    {
+                        UserAccountId = currentUserId,
+                        CityId = city.Id,
+                        CountryId = city.CountryId
+                    }).ToList();
+
+                    _locationRepo.AddRange(newLocations);
+                }
+
+                if (toRemoveCityIds.Count != 0)
+                {
+                    var toRemoveLocations = existingLocations
+                        .Where(x => toRemoveCityIds.Contains(x.CityId.Value))
+                        .ToList();
+
+                    _locationRepo.RemoveRange(toRemoveLocations);
+                }
+
+                return new ServiceResult().Successful();
+            }
+            catch (Exception excepotion)
+            {
+                return new ServiceResult().Failed(_logger, excepotion, CommonExceptionMessage.AddFailed("آپدیت پروفایل"));
+            }
+        }
         public async Task<ServiceResult> MiniApp_UserInfoAsync()
         {
             try

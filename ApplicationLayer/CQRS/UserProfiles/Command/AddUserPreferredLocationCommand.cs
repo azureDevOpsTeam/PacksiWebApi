@@ -3,4 +3,4 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.UserProfiles.Command;
 
-public record AddUserPreferredLocationCommand(AddUserPreferredLocationDto Model) : IRequest<HandlerResult>;
+public record AddUserPreferredLocationCommand(PreferredLocationDto Model) : IRequest<HandlerResult>;

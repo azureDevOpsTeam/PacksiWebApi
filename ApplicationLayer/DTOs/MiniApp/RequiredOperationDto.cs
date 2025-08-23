@@ -11,7 +11,6 @@ namespace ApplicationLayer.DTOs.MiniApp
         [JsonIgnore]
         public int? CountryOfResidenceId { get; set; }
 
-        [JsonIgnore]
         public bool SetPreferredLocation { get; set; }
 
         [JsonIgnore]
