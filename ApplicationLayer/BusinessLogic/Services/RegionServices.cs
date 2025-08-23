@@ -127,7 +127,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     Value = country.Id.ToString(),
                     Children = country.Cities.Select(city => new DropDownItemTreeDto
                     {
-                        Text = city.PersianName,
+                        Text = city.Name,
                         Value = city.Id.ToString()
                     }).ToList()
                 }).ToList();

@@ -15,7 +15,6 @@ namespace ApplicationLayer.DTOs.BaseDTOs
     {
         #region Properties
 
-        [JsonIgnore]
         public string Text { get; set; }
 
         public string Label { get => Text; }
