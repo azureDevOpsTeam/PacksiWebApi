@@ -356,7 +356,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     FirstName = user.UserProfiles.FirstOrDefault()?.FirstName,
                     LastName = user.UserProfiles.FirstOrDefault()?.LastName,
                     ConfirmPhoneNumber = user.ConfirmPhoneNumber,
-                    CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId.Value,
+                    CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId,
                     SetPreferredLocation = user.UserPreferredLocations.Count != 0
                 };
 

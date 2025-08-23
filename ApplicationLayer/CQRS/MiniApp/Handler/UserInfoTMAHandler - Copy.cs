@@ -5,9 +5,8 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class UserInfoTMAHandler(IUnitOfWork unitOfWork, IUserAccountServices userAccountServices) : IRequestHandler<UserInfoTMAQuery, HandlerResult>
+public class UserInfoTMAHandler(IUserAccountServices userAccountServices) : IRequestHandler<UserInfoTMAQuery, HandlerResult>
 {
-    private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IUserAccountServices _userAccountServices = userAccountServices;
 
     public async Task<HandlerResult> Handle(UserInfoTMAQuery request, CancellationToken cancellationToken)
