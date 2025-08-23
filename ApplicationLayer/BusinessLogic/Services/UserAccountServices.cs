@@ -37,7 +37,10 @@ namespace ApplicationLayer.BusinessLogic.Services
             => await Task.Run(() => _userAccountRepository.GetDbSet().FirstOrDefaultAsync(row => row.Id == accountId));
 
         public async Task<UserAccount> GetUserAccountByTelegramIdAsync(long telegramId)
-            => await Task.Run(() => _userAccountRepository.GetDbSet().FirstOrDefaultAsync(row => row.TelegramId == telegramId));
+            => await Task.Run(() => _userAccountRepository.GetDbSet()
+            .Include(current => current.UserProfiles)
+            .Include(current => current.UserPreferredLocations)
+            .FirstOrDefaultAsync(row => row.TelegramId == telegramId));
 
         public async Task<UserAccount> GetUserByIdAsync(int accountId)
             => await Task.Run(() => _userAccountRepository.GetDbSet()
