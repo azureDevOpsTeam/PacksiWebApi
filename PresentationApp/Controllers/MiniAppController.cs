@@ -1,6 +1,5 @@
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.CQRS.MiniApp.Query;
-using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -30,4 +29,9 @@ public class MiniAppController(IMediator mediator) : ControllerBase
     [Route("SendConnectionCode")]
     public async Task<IActionResult> SendConnectionCodeAsync(CreateRequestTMACommand model)
     => await ResultHelper.GetResultAsync(_mediator, model);
+
+    [HttpGet]
+    [Route("ItemType")]
+    public async Task<IActionResult> ItemTypeAsync()
+    => await ResultHelper.GetResultAsync(_mediator, new ItemTypeQuery());
 }

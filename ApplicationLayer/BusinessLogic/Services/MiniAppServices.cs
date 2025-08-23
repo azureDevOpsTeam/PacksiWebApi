@@ -1,6 +1,8 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.DTOs;
+using ApplicationLayer.DTOs.Requests;
 using ApplicationLayer.DTOs.TelegramApis;
+using ApplicationLayer.Extensions.SmartEnums;
 using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
 using Microsoft.AspNetCore.Http;
@@ -39,28 +41,28 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
 
             //return await Task.Run(async () =>
             //{
-                var parsedData = ParseInitData(initData);
-                if (parsedData == null)
-                    return Result<TelegramMiniAppValidationResultDto>.ValidationFailure("فرمت داده‌های اولیه نامعتبر است");
+            var parsedData = ParseInitData(initData);
+            if (parsedData == null)
+                return Result<TelegramMiniAppValidationResultDto>.ValidationFailure("فرمت داده‌های اولیه نامعتبر است");
 
-                var isValidSignature = ValidateSignature(initData, botToken);
-                if (!isValidSignature)
-                    return Result<TelegramMiniAppValidationResultDto>.AuthenticationFailure("امضای دیجیتال نامعتبر است");
+            var isValidSignature = ValidateSignature(initData, botToken);
+            if (!isValidSignature)
+                return Result<TelegramMiniAppValidationResultDto>.AuthenticationFailure("امضای دیجیتال نامعتبر است");
 
-                var authDate = DateTimeOffset.FromUnixTimeSeconds(parsedData.AuthDate).DateTime;
-                if (DateTime.UtcNow.Subtract(authDate).TotalHours > 24)
-                    return Result<TelegramMiniAppValidationResultDto>.AuthenticationFailure("داده‌های اعتبارسنجی منقضی شده‌اند");
+            var authDate = DateTimeOffset.FromUnixTimeSeconds(parsedData.AuthDate).DateTime;
+            if (DateTime.UtcNow.Subtract(authDate).TotalHours > 24)
+                return Result<TelegramMiniAppValidationResultDto>.AuthenticationFailure("داده‌های اعتبارسنجی منقضی شده‌اند");
 
-                var validationResult = new TelegramMiniAppValidationResultDto
-                {
-                    IsValid = true,
-                    User = parsedData.User,
-                    AuthDate = authDate,
-                    Hash = parsedData.Hash,
-                    ExistUser = await _userAccountRepository.GetDbSet().AnyAsync(current => current.TelegramId == parsedData.User.Id)
-                };
+            var validationResult = new TelegramMiniAppValidationResultDto
+            {
+                IsValid = true,
+                User = parsedData.User,
+                AuthDate = authDate,
+                Hash = parsedData.Hash,
+                ExistUser = await _userAccountRepository.GetDbSet().AnyAsync(current => current.TelegramId == parsedData.User.Id)
+            };
 
-                return Result<TelegramMiniAppValidationResultDto>.Success(validationResult);
+            return Result<TelegramMiniAppValidationResultDto>.Success(validationResult);
             //});
         }
         catch (Exception exception)
@@ -165,6 +167,28 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         {
             _logger.LogError(exception, "خطا در ارسال پیام به چت {ChatId}", chatId);
             return Result<bool>.GeneralFailure("خطا در ارسال پیام");
+        }
+    }
+
+    public Task<Result<List<RequestItemTypeDto>>> ItemTypeAsync()
+    {
+        try
+        {
+            var result = TransportableItemTypeEnum.List
+                .Select(current => new RequestItemTypeDto
+                {
+                    ItemTypeId = current.Value,
+                    ItemType = current.Name,
+                    PersianName = current.PersianName,
+                })
+                .ToList();
+
+            return Task.FromResult(Result<List<RequestItemTypeDto>>.Success(result));
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در دریافت لیست آیتم‌ها");
+            return Task.FromResult(Result<List<RequestItemTypeDto>>.GeneralFailure("خطا در دریافت لیست آیتم‌ها"));
         }
     }
 
