@@ -12,11 +12,8 @@ namespace ApplicationLayer.CQRS.MiniApp.Handler;
 public class VerifyPhoneNumberTMAHandler(IUnitOfWork unitOfWork, IMiniAppServices miniAppServices, IConfiguration configuration, IUserAccountServices userAccountServices, ILogger<VerifyPhoneNumberTMAHandler> logger, IMapper mapper) : IRequestHandler<VerifyPhoneNumberTMACommand, HandlerResult>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
-    private readonly IMiniAppServices _miniAppServices = miniAppServices;
     private readonly IUserAccountServices _userAccountServices = userAccountServices;
-    private readonly IConfiguration _configuration = configuration;
     private readonly ILogger<VerifyPhoneNumberTMAHandler> _logger = logger;
-    private readonly IMapper _mapper = mapper;
     public async Task<HandlerResult> Handle(VerifyPhoneNumberTMACommand request, CancellationToken cancellationToken)
     {
         try

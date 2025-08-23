@@ -44,4 +44,9 @@ public class MiniAppController(IMediator mediator) : ControllerBase
     [Route("UserInfo")]
     public async Task<IActionResult> UserInfoAsync()
     => await ResultHelper.GetResultAsync(_mediator, new UserInfoTMAQuery());
+
+    [HttpGet]
+    [Route("RequiredOperation")]
+    public async Task<IActionResult> RequiredOperationAsync()
+    => await ResultHelper.GetResultAsync(_mediator, new RequiredOperationQuery());
 }

@@ -35,6 +35,7 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
         Task<ServiceResult> MiniApp_UserInfoAsync();
 
         Task<ServiceResult> MiniApp_VerifyPhoneNumberAsync(VerifyPhoneNumberDto mdoel);
+        Task<ServiceResult> MiniApp_RequiredOperationAsync();
 
         #endregion Mini App
     }

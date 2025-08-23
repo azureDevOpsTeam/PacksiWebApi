@@ -305,6 +305,34 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
+        public async Task<ServiceResult> MiniApp_RequiredOperationAsync()
+        {
+            try
+            {
+                var validationResult = await _miniAppServices.ValidateTelegramMiniAppUserAsync();
+                var user = await GetUserAccountByTelegramIdAsync(validationResult.Value.User.Id);
+                if (user == null)
+                    return new ServiceResult().NotFound();
+
+                var userInfo = new RequiredOperationDto
+                {
+                    UserAccountId = user.Id,
+                    DisplayName = user.UserProfiles.FirstOrDefault()?.DisplayName,
+                    FirstName = user.UserProfiles.FirstOrDefault()?.FirstName,
+                    LastName = user.UserProfiles.FirstOrDefault()?.LastName,
+                    ConfirmPhoneNumber = user.ConfirmPhoneNumber,
+                    CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId.Value,
+                    SetPreferredLocation = user.UserPreferredLocations.Count != 0
+                };
+
+                return new ServiceResult().Successful(userInfo);
+            }
+            catch (Exception excepotion)
+            {
+                return new ServiceResult().Failed(_logger, excepotion, CommonExceptionMessage.GetFailed("اطلاعات کاربر"));
+            }
+        }
+
         public async Task<ServiceResult> MiniApp_VerifyPhoneNumberAsync(VerifyPhoneNumberDto mdoel)
         {
             try
