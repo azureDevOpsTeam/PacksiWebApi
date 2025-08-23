@@ -45,6 +45,7 @@ public class MiniAppController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> UserInfoAsync()
     => await ResultHelper.GetResultAsync(_mediator, new UserInfoTMAQuery());
 
+    //For Delete
     [HttpGet]
     [Route("RequiredOperation")]
     public async Task<IActionResult> RequiredOperationAsync()

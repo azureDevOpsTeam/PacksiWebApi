@@ -55,9 +55,12 @@ public class UserValicationHandler(IUnitOfWork unitOfWork, IMiniAppServices mini
                 }
                 await _unitOfWork.SaveChangesAsync();
             }
+
+            var result = await _userAccountServices.MiniApp_RequiredOperationAsync();
+
             await _unitOfWork.CommitAsync();
 
-            return new HandlerResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
+            return new HandlerResult { RequestStatus = RequestStatus.Successful, ObjectResult = result.Data, Message = CommonMessages.Successful };
         }
         catch (Exception exception)
         {
