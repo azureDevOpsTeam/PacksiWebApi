@@ -16,7 +16,7 @@ using System.Security.Cryptography;
 namespace ApplicationLayer.BusinessLogic.Services
 {
     [InjectAsScoped]
-    public class UserAccountServices(IRepository<UserAccount> userAccountRepository, IRepository<UserProfile> userProfileRepository,
+    public class UserAccountServices(IRepository<UserAccount> userAccountRepository, IRepository<UserProfile> userProfileRepository, IMiniAppServices miniAppServices,
         IRepository<Role> roleRepository, IRepository<UserRole> userRoleRepository, IUserContextService userContextService,
         IRepository<Invitation> invitationRepository, ILogger<UserAccountServices> logger, IMapper mapper) : IUserAccountServices
     {
@@ -26,6 +26,7 @@ namespace ApplicationLayer.BusinessLogic.Services
         private readonly IRepository<UserRole> _userRoleRepository = userRoleRepository;
         private readonly IRepository<Invitation> _invitationRepository = invitationRepository;
         private readonly IUserContextService _userContextService = userContextService;
+        private readonly IMiniAppServices _miniAppServices = miniAppServices;
         private readonly ILogger<UserAccountServices> _logger = logger;
         private readonly IMapper _mapper = mapper;
 
@@ -207,8 +208,9 @@ namespace ApplicationLayer.BusinessLogic.Services
                 var userInfo = new UserInfoDto
                 {
                     UserAccountId = user.Id,
-                    FirstName = user.UserProfiles.FirstOrDefault().FirstName,
-                    LastName = user.UserProfiles.FirstOrDefault().LastName,
+                    DisplayName = user.UserProfiles.FirstOrDefault()?.DisplayName,
+                    FirstName = user.UserProfiles.FirstOrDefault()?.FirstName,
+                    LastName = user.UserProfiles.FirstOrDefault()?.LastName,
                     CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId.Value,
                     SetPreferredLocation = user.UserPreferredLocations.Any()
                 };
@@ -271,6 +273,32 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
+        public async Task<ServiceResult> MiniApp_UserInfoAsync()
+        {
+            try
+            {
+                var validationResult = await _miniAppServices.ValidateTelegramMiniAppUserAsync();
+                var user = await GetUserAccountByTelegramIdAsync(validationResult.Value.User.Id);
+                if (user == null)
+                    return new ServiceResult().NotFound();
+
+                var userInfo = new UserInfoDto
+                {
+                    UserAccountId = user.Id,
+                    DisplayName = user.UserProfiles.FirstOrDefault()?.DisplayName,
+                    FirstName = user.UserProfiles.FirstOrDefault()?.FirstName,
+                    LastName = user.UserProfiles.FirstOrDefault()?.LastName,
+                    CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId.Value,
+                    SetPreferredLocation = user.UserPreferredLocations.Any()
+                };
+
+                return new ServiceResult().Successful(userInfo);
+            }
+            catch (Exception excepotion)
+            {
+                return new ServiceResult().Failed(_logger, excepotion, CommonExceptionMessage.GetFailed("اطلاعات کاربر"));
+            }
+        }
         #endregion Mini App
     }
 }

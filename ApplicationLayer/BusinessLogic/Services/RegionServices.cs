@@ -60,7 +60,8 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 var dropdownItems = getAll.Select(current => new DropDownItemDto
                 {
-                    Text = current.Name,
+                    Label = current.Name,
+                    Text = current.PersianName,
                     Value = current.Id.ToString(),
                     Icon = current.Flag
                 }).ToList();

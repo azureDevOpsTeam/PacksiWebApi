@@ -31,6 +31,8 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
 
         Task<ServiceResult> MiniApp_AddProfileAsync(UserProfile model);
 
+        Task<ServiceResult> MiniApp_UserInfoAsync();
+
         #endregion Mini App
     }
 }
