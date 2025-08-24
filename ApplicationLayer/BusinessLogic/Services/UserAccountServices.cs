@@ -294,12 +294,11 @@ namespace ApplicationLayer.BusinessLogic.Services
                 _mapper.Map(model, profileExists);
                 _userProfileRepository.Update(profileExists);
 
-                var currentUserId = userContextService.UserId.Value;
 
                 var requestedCityIds = model.CityIds.Distinct().ToList();
 
                 var existingLocations = await _locationRepo.Query()
-                    .Where(x => x.UserAccountId == currentUserId && x.CityId != null)
+                    .Where(x => x.UserAccountId == user.Id && x.CityId != null)
                     .ToListAsync();
 
                 var existingCityIds = existingLocations.Select(x => x.CityId.Value).ToList();
@@ -316,7 +315,7 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                     var newLocations = cities.Select(city => new UserPreferredLocation
                     {
-                        UserAccountId = currentUserId,
+                        UserAccountId = user.Id,
                         CityId = city.Id,
                         CountryId = city.CountryId
                     }).ToList();
