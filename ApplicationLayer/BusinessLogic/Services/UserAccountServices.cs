@@ -137,7 +137,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (profileExists == null)
                     return new ServiceResult { RequestStatus = RequestStatus.IncorrectUser, Message = CommonMessages.IncorrectUser };
 
-                profileExists = _mapper.Map<UserProfile>(dto);
+                _mapper.Map(dto, profileExists);
                 _userProfileRepository.Update(profileExists);
 
                 return new ServiceResult().Successful();
@@ -291,7 +291,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     return new ServiceResult().NotFound();
 
                 var profileExists = await _userProfileRepository.Query().FirstOrDefaultAsync(x => x.UserAccountId == user.Id);
-                profileExists = _mapper.Map<UserProfile>(model);
+                _mapper.Map(model, profileExists);
                 _userProfileRepository.Update(profileExists);
 
                 var currentUserId = userContextService.UserId.Value;
