@@ -1,6 +1,6 @@
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.CQRS.MiniApp.Query;
-using ApplicationLayer.CQRS.UserProfiles.Command;
+using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -28,7 +28,7 @@ public class MiniAppController(IMediator mediator) : ControllerBase
 
     [HttpPost]
     [Route("Create")]
-    public async Task<IActionResult> CreateAsync(CreateRequestTMACommand model)
+    public async Task<IActionResult> CreateAsync([FromForm] CreateRequestTMADto model)
         => await ResultHelper.GetResultAsync(_mediator, model);
 
     [HttpPost]
