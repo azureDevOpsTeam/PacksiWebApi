@@ -23,7 +23,8 @@ public class CreateRequestTMAHandler(IUnitOfWork unitOfWork, IHttpContextAccesso
 
     public async Task<HandlerResult> Handle(CreateRequestTMACommand request, CancellationToken cancellationToken)
     {
-        var botToken = _configuration["TelegramBot:Token"];
+        //var botToken = _configuration["TelegramBot:Token"];
+        var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
 
         var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
         if (string.IsNullOrWhiteSpace(initData))
