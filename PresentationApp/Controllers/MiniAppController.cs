@@ -28,7 +28,7 @@ public class MiniAppController(IMediator mediator) : ControllerBase
 
     [HttpPost]
     [Route("Create")]
-    public async Task<IActionResult> CreateAsync([FromForm] CreateRequestTMADto model)
+    public async Task<IActionResult> CreateAsync(CreateRequestTMACommand model)
         => await ResultHelper.GetResultAsync(_mediator, model);
 
     [HttpPost]
