@@ -1,4 +1,5 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
+using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.Requests;
 using ApplicationLayer.Extensions.ServiceMessages;
@@ -724,7 +725,7 @@ namespace ApplicationLayer.BusinessLogic.Services
 
         #region Telegram MiniApp
 
-        public async Task<ServiceResult> MiniApp_AddRequestAsync(CreateRequestTMADto model, UserAccount userAccount, CancellationToken cancellationToken)
+        public async Task<ServiceResult> MiniApp_AddRequestAsync(CreateRequestTMACommand model, UserAccount userAccount, CancellationToken cancellationToken)
         {
             try
             {

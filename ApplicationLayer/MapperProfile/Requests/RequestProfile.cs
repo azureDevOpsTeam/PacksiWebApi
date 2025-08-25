@@ -1,4 +1,5 @@
-﻿using ApplicationLayer.DTOs.MiniApp;
+﻿using ApplicationLayer.CQRS.MiniApp.Command;
+using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.Requests;
 using AutoMapper;
 using DomainLayer.Entities;
@@ -24,7 +25,7 @@ public class RequestProfile : Profile
         CreateMap<DeliverableOriginLocationDto, RequestAvailableOrigin>();
         CreateMap<DeliverableDestinationLocationDto, RequestAvailableDestination>();
 
-        CreateMap<CreateRequestTMADto, Request>()
+        CreateMap<CreateRequestTMACommand, Request>()
             // این‌ها optional هستند اگر بخوای مقادیر nullable یا لیست‌ها را تنظیم کنی
             .ForMember(dest => dest.OriginCityId, opt => opt.MapFrom(src => src.OriginCityId))
             .ForMember(dest => dest.DestinationCityId, opt => opt.MapFrom(src => src.DestinationCityId))

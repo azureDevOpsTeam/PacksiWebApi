@@ -44,7 +44,7 @@ public class CreateRequestTMAHandler(IUnitOfWork unitOfWork, IHttpContextAccesso
         var userTelegramInfo = resultValidation.Value.User;
         var userAccount = await _userAccountServices.GetUserAccountByTelegramIdAsync(userTelegramInfo.Id);
 
-        var resultAddRequest = await _requestServices.MiniApp_AddRequestAsync(request.Model, userAccount, cancellationToken);
+        var resultAddRequest = await _requestServices.MiniApp_AddRequestAsync(request, userAccount, cancellationToken);
 
         if (resultAddRequest.RequestStatus != RequestStatus.Successful)
             return new HandlerResult { RequestStatus = resultAddRequest.RequestStatus, Message = resultAddRequest.Message };
