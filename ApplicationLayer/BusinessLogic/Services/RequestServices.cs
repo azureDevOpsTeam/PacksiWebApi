@@ -1,5 +1,6 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.CQRS.MiniApp.Command;
+using ApplicationLayer.CQRS.Requests.Command;
 using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.Requests;
 using ApplicationLayer.Extensions.ServiceMessages;
@@ -34,7 +35,7 @@ namespace ApplicationLayer.BusinessLogic.Services
         private readonly IRepository<RequestAvailableOrigin> _requestAvailableOriginRepository = requestAvailableOriginRepository;
         private readonly IRepository<RequestAvailableDestination> _requestAvailableDestinationRepository = requestAvailableDestinationRepository;
 
-        public async Task<ServiceResult> AddRequestAsync(CreateRequestDto model, CancellationToken cancellationToken)
+        public async Task<ServiceResult> AddRequestAsync(CreateRequestCommand model, CancellationToken cancellationToken)
         {
             try
             {
@@ -91,7 +92,7 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
-        public async Task<ServiceResult> AddRequestItemTypeAsync(CreateRequestDto model, int requestId)
+        public async Task<ServiceResult> AddRequestItemTypeAsync(CreateRequestCommand model, int requestId)
         {
             try
             {

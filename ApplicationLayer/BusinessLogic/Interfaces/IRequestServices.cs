@@ -1,4 +1,5 @@
 ﻿using ApplicationLayer.CQRS.MiniApp.Command;
+using ApplicationLayer.CQRS.Requests.Command;
 using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.Requests;
 using DomainLayer.Entities;
@@ -7,7 +8,7 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
 {
     public interface IRequestServices
     {
-        Task<ServiceResult> AddRequestAsync(CreateRequestDto dto, CancellationToken cancellationToken);
+        Task<ServiceResult> AddRequestAsync(CreateRequestCommand dto, CancellationToken cancellationToken);
 
         Task<ServiceResult> UpdateRequestAsync(UpdateRequestDto dto, CancellationToken cancellationToken);
 
@@ -58,7 +59,8 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
         Task<ServiceResult> MiniApp_AddRequestAsync(CreateRequestTMACommand model, UserAccount userAccount, CancellationToken cancellationToken);
 
         Task<ServiceResult> MiniApp_AddRequestSelectionAsync(int requestId, UserAccount userAccount, CancellationToken cancellationToken);
-        Task<ServiceResult> AddRequestItemTypeAsync(CreateRequestDto model, int requestId);
+
+        Task<ServiceResult> AddRequestItemTypeAsync(CreateRequestCommand model, int requestId);
 
         #endregion Telegram MiniApp
     }

@@ -16,7 +16,7 @@ public class CreateRequestHandler(IRequestServices requestServices, IUnitOfWork 
     {
         try
         {
-            var resultAddRequest = await _requestServices.AddRequestAsync(request.Model, cancellationToken);
+            var resultAddRequest = await _requestServices.AddRequestAsync(request, cancellationToken);
 
             if (resultAddRequest.RequestStatus != RequestStatus.Successful)
             {
@@ -27,7 +27,7 @@ public class CreateRequestHandler(IRequestServices requestServices, IUnitOfWork 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             var requestObj = (Request)resultAddRequest.Data;
 
-            var resultAddItemType = await _requestServices.AddRequestItemTypeAsync(request.Model, requestObj.Id);
+            var resultAddItemType = await _requestServices.AddRequestItemTypeAsync(request, requestObj.Id);
             if (resultAddItemType.RequestStatus != RequestStatus.Successful)
             {
                 await _unitOfWork.RollbackAsync();
