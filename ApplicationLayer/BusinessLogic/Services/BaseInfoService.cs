@@ -24,6 +24,7 @@ public class BaseInfoService(ILogger<BaseInfoService> logger) : IBaseInfoService
             var dropdownItems = getAll.Select(current => new DropDownItemDto
             {
                 Text = current.PersianName,
+                Label = current.Name,
                 Value = current.Value.ToString(),
             }).ToList();
 
