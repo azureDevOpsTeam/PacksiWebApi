@@ -13,7 +13,7 @@ public interface IRefreshTokenService
 
     Task<Result> RevokeRefreshTokenByUserIdAsync(int userId);
 
-    Result UpdateRefreshToken(RefreshToken refreshToken);
+    Task<Result> UpdateRefreshToken(RefreshToken refreshToken);
 
     Task<Result<RefreshToken>> VerifyTokenAsync(TokenRequestDto tokenRequest);
 

@@ -48,5 +48,6 @@ namespace ApplicationLayer
         Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate);
 
         bool Any(Expression<Func<TEntity, bool>> predicate);
+        Task UpdateAsync(TEntity entity);
     }
 }

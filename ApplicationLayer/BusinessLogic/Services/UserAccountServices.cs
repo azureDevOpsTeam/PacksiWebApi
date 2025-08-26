@@ -8,6 +8,7 @@ using ApplicationLayer.Extensions.ServiceMessages;
 using ApplicationLayer.Extensions.SmartEnums;
 using ApplicationLayer.Interfaces;
 using AutoMapper;
+using Azure.Core;
 using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -33,8 +34,34 @@ namespace ApplicationLayer.BusinessLogic.Services
         private readonly ILogger<UserAccountServices> _logger = logger;
         private readonly IMapper _mapper = mapper;
 
+        public async Task<bool> RegisterWithTelegramAsync(SignUpDto model)
+            => await _userAccountRepository.GetDbSet()
+            .AnyAsync(row => (row.PhoneNumber == PhoneNumberHelper.ExtractPhoneParts(model.PhoneNumber)
+            || row.UserName == PhoneNumberHelper.NormalizePhoneNumber(model.PhonePrefix, model.PhoneNumber))
+            && row.Password == null);
+
         public async Task<UserAccount> GetUserAccountByIdAsync(int accountId)
             => await Task.Run(() => _userAccountRepository.GetDbSet().FirstOrDefaultAsync(row => row.Id == accountId));
+
+        public async Task<UserAccount> GetUserAccountByPhoneNumberAsync(string phoneNumber)
+            => await Task.Run(() => _userAccountRepository.GetDbSet()
+            .Include(current => current.UserProfiles)
+            .FirstOrDefaultAsync(row => row.PhoneNumber == PhoneNumberHelper.ExtractPhoneParts(phoneNumber)));
+
+        public async Task<bool> ExistUserAsync(SignUpDto model)
+        {
+            var normalizedUserName = PhoneNumberHelper.NormalizePhoneNumber(model.PhonePrefix, model.PhoneNumber);
+
+            var user = await _userAccountRepository.Query()
+                .Where(u => u.IsDeleted == false && u.IsActive == true && u.UserName == normalizedUserName)
+                .FirstOrDefaultAsync();
+
+            if (user == null)
+                return false;
+
+            var hashedPassword = HashGenerator.GenerateHashChangePassword(model.Password, user.SecurityStamp);
+            return user.Password == hashedPassword;
+        }
 
         public async Task<UserAccount> GetUserAccountByTelegramIdAsync(long telegramId)
             => await Task.Run(() => _userAccountRepository.GetDbSet()
@@ -92,6 +119,26 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
+        public async Task<ServiceResult> MergeToTelegramAccountAsync(UserAccount model, string newPassword)
+        {
+            try
+            {
+                var password = HashGenerator.GenerateSHA256HashWithSalt(newPassword, out string securityStamp);
+                model.SecurityStamp = securityStamp;
+                model.Password = password;
+                model.SecurityCode = GenerateSecurityCode();
+                model.ExpireSecurityCode = DateTime.Now.AddMinutes(10);
+
+                await _userAccountRepository.UpdateAsync(model);
+                return new ServiceResult { RequestStatus = RequestStatus.Successful, Data = model, Message = CommonMessages.Successful };
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(message: exception.Message, CommonMessages.Failed);
+                return new ServiceResult { RequestStatus = RequestStatus.Failed, Data = model, Message = CommonMessages.Failed };
+            }
+        }
+
         public async Task<ServiceResult> AddUserAccountAsync(UserAccount model)
         {
             try
@@ -127,6 +174,9 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
+        public async Task UpdateUserProfileAsync(UserProfile model)
+            => await _userProfileRepository.UpdateAsync(model);
+
         public async Task<ServiceResult> UpdateUserProfileAsync(UpdateUserProfileDto dto)
         {
             try
@@ -138,7 +188,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     return new ServiceResult { RequestStatus = RequestStatus.IncorrectUser, Message = CommonMessages.IncorrectUser };
 
                 _mapper.Map(dto, profileExists);
-                _userProfileRepository.Update(profileExists);
+                await _userProfileRepository.UpdateAsync(profileExists);
 
                 return new ServiceResult().Successful();
             }
@@ -292,8 +342,7 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 var profileExists = await _userProfileRepository.Query().FirstOrDefaultAsync(x => x.UserAccountId == user.Id);
                 _mapper.Map(model, profileExists);
-                _userProfileRepository.Update(profileExists);
-
+                await _userProfileRepository.UpdateAsync(profileExists);
 
                 var requestedCityIds = model.CityIds.Distinct().ToList();
 
@@ -339,6 +388,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 return new ServiceResult().Failed(_logger, excepotion, CommonExceptionMessage.AddFailed("آپدیت پروفایل"));
             }
         }
+
         public async Task<ServiceResult> MiniApp_UserInfoAsync()
         {
             try
@@ -405,12 +455,12 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (user == null)
                     return new ServiceResult().NotFound();
 
-                user.PhoneNumber = PhoneNumberHelper.ExtractPhoneNumber(mdoel.PhoneNumber);
+                user.PhoneNumber = PhoneNumberHelper.ExtractPhoneParts(mdoel.PhoneNumber);
                 user.PhonePrefix = PhoneNumberHelper.ExtractCountryCode(mdoel.PhoneNumber);
                 user.UserName = mdoel.PhoneNumber;
                 user.ConfirmPhoneNumber = true;
 
-                _userAccountRepository.Update(user);
+                await _userAccountRepository.UpdateAsync(user);
 
                 return new ServiceResult().Successful();
             }
@@ -419,6 +469,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 return new ServiceResult().Failed(_logger, excepotion, CommonExceptionMessage.GetFailed("تایید شماره موبایل"));
             }
         }
+
         #endregion Mini App
     }
 }

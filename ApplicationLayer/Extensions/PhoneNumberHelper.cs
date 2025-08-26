@@ -43,6 +43,7 @@
 
             return phoneNumber;
         }
+
         /// <summary>
         /// دریافت شماره موبایل و حذف کد کشور (+XX یا 00XX)
         /// فقط شماره داخلی بدون کد کشور خروجی داده می‌شود
@@ -86,6 +87,7 @@
 
             return phoneNumber;
         }
+
         /// <summary>
         /// دریافت شماره کامل و برگرداندن کد کشور
         /// مثلا +19136547890 → +1
@@ -113,22 +115,47 @@
         /// دریافت شماره کامل و برگرداندن فقط شماره موبایل بدون کد کشور
         /// مثلا +19136547890 → 9136547890
         /// </summary>
-        public static string ExtractPhoneNumber(string phoneNumber)
+        public static string ExtractPhoneParts(string phoneNumber)
         {
             if (string.IsNullOrWhiteSpace(phoneNumber))
                 throw new ArgumentException("Phone number is required.");
 
-            phoneNumber = phoneNumber.Trim().Replace(" ", "").Replace("-", "");
+            // پاک‌سازی
+            phoneNumber = phoneNumber.Trim()
+                                     .Replace(" ", "")
+                                     .Replace("-", "")
+                                     .Replace("(", "")
+                                     .Replace(")", "");
 
-            if (!phoneNumber.StartsWith("+"))
-                throw new ArgumentException("Phone number must start with '+' for extracting phone number.");
+            // اگر با 00 شروع شد → تبدیل به +
+            if (phoneNumber.StartsWith("00"))
+                phoneNumber = "+" + phoneNumber.Substring(2);
 
-            if (phoneNumber.Length <= 11)
-                throw new ArgumentException("Invalid phone number format.");
+            if (phoneNumber.Length < 10)
+                throw new ArgumentException("Invalid phone number length.");
 
-            // شماره داخلی → آخرین 10 رقم
-            return phoneNumber.Substring(phoneNumber.Length - 10);
+            string countryCode = "";
+            string localNumber = "";
+
+            if (phoneNumber.StartsWith("+"))
+            {
+                if (phoneNumber.Length <= 11)
+                    throw new ArgumentException("Invalid international phone number format.");
+
+                // آخرین ۱۰ رقم شماره داخلی
+                localNumber = phoneNumber.Substring(phoneNumber.Length - 10);
+
+                // کد کشور = از ابتدای + تا قبل از ۱۰ رقم آخر
+                countryCode = phoneNumber.Substring(0, phoneNumber.Length - 10);
+            }
+            else
+            {
+                // شماره داخلی بدون کد کشور
+                localNumber = phoneNumber.Substring(phoneNumber.Length - 10);
+                countryCode = ""; // نامشخص
+            }
+
+            return localNumber;
         }
-
     }
 }

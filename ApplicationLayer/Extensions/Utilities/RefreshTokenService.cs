@@ -35,11 +35,11 @@ namespace ApplicationLayer.Extensions.Utilities
             }
         }
 
-        public Result<RefreshToken> UpdateRefreshToken(RefreshToken refreshToken)
+        public async Task<Result<RefreshToken>> UpdateRefreshToken(RefreshToken refreshToken)
         {
             try
             {
-                _refreshTokenRepository.Update(refreshToken);
+                await _refreshTokenRepository.UpdateAsync(refreshToken);
                 return Result<RefreshToken>.Success(refreshToken);
             }
             catch (Exception ex)
@@ -141,7 +141,7 @@ namespace ApplicationLayer.Extensions.Utilities
                 }
 
                 storedToken.IsUsed = true;
-                var updateResult = UpdateRefreshToken(storedToken);
+                var updateResult = await UpdateRefreshToken(storedToken);
 
                 if (updateResult.IsFailure)
                 {
@@ -192,7 +192,7 @@ namespace ApplicationLayer.Extensions.Utilities
                 foreach (var token in refreshTokens)
                 {
                     token.IsRevoked = true;
-                    var updateResult = UpdateRefreshToken(token);
+                    var updateResult = await UpdateRefreshToken(token);
                     if (updateResult.IsFailure)
                     {
                         return Result.GeneralFailure("خطا در لغو توکن‌ها");

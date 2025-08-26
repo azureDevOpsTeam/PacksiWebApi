@@ -13,7 +13,7 @@ namespace ApplicationLayer.Extensions.Utilities
 
         Task<Result> RevokeRefreshTokenByUserId(int userId);
 
-        Result<RefreshToken> UpdateRefreshToken(RefreshToken refreshToken);
+        Task<Result<RefreshToken>> UpdateRefreshToken(RefreshToken refreshToken);
 
         Task<Result<RefreshToken>> VerifyToken(TokenRequestDto tokenRequest);
     }

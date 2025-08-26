@@ -36,11 +36,11 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
-        public Result UpdateRefreshToken(RefreshToken refreshToken)
+        public async Task<Result> UpdateRefreshToken(RefreshToken refreshToken)
         {
             try
             {
-                _refreshTokenRepository.Update(refreshToken);
+                await _refreshTokenRepository.UpdateAsync(refreshToken);
                 return Result.Success();
             }
             catch (Exception ex)
@@ -156,7 +156,7 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 // علامت‌گذاری Token به عنوان استفاده شده
                 storedToken.IsUsed = true;
-                var updateResult = UpdateRefreshToken(storedToken);
+                var updateResult = await UpdateRefreshToken(storedToken);
 
                 if (updateResult.IsFailure)
                 {
@@ -207,7 +207,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 foreach (var token in refreshTokens)
                 {
                     token.IsRevoked = true;
-                    var updateResult = UpdateRefreshToken(token);
+                    var updateResult = await UpdateRefreshToken(token);
 
                     if (updateResult.IsFailure)
                     {

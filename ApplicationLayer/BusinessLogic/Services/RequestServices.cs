@@ -204,7 +204,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 var destinations = _mapper.Map<List<RequestAvailableDestination>>(dto.AvailableDestinations);
                 request.AvailableDestinations = destinations;
 
-                _requestRepository.Update(request);
+                await _requestRepository.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -485,7 +485,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     return new ServiceResult().NotFound();
 
                 request.Status = RequestStatusEnum.ConfirmedBySender;
-                _requestSelection.Update(request);
+                await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -506,7 +506,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     return new ServiceResult().NotFound();
 
                 request.Status = RequestStatusEnum.ConfirmedBySender;
-                _requestSelection.Update(request);
+                await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -530,7 +530,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     .FirstOrDefaultAsync(current => current.RequestId == request.Id);
 
                 requestRecord.Status = RequestStatusEnum.RejectedByManager;
-                _requestSelection.Update(requestRecord);
+                await _requestSelection.UpdateAsync(requestRecord);
 
                 return new ServiceResult().Successful();
             }
@@ -554,7 +554,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     .FirstOrDefaultAsync(current => current.RequestId == request.Id);
 
                 requestRecord.Status = RequestStatusEnum.Published;
-                _requestSelection.Update(requestRecord);
+                await _requestSelection.UpdateAsync(requestRecord);
 
                 return new ServiceResult().Successful();
             }
@@ -575,7 +575,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     return new ServiceResult().NotFound();
 
                 request.Status = RequestStatusEnum.ReadyToPickup;
-                _requestSelection.Update(request);
+                await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -596,7 +596,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     return new ServiceResult().NotFound();
 
                 request.Status = RequestStatusEnum.PickedUp;
-                _requestSelection.Update(request);
+                await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -617,7 +617,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     return new ServiceResult().NotFound();
 
                 request.Status = RequestStatusEnum.InTransit;
-                _requestSelection.Update(request);
+                await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -638,7 +638,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     return new ServiceResult().NotFound();
 
                 request.Status = RequestStatusEnum.ReadyToDeliver;
-                _requestSelection.Update(request);
+                await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -663,7 +663,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     .FirstOrDefaultAsync(current => current.UserAccountId == currentUserId && current.RequestId == request.Id);
 
                 requestRecord.Status = RequestStatusEnum.Delivered;
-                _requestSelection.Update(requestRecord);
+                await _requestSelection.UpdateAsync(requestRecord);
 
                 return new ServiceResult().Successful();
             }
@@ -684,7 +684,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     return new ServiceResult().NotFound();
 
                 request.Status = RequestStatusEnum.NotDelivered;
-                _requestSelection.Update(request);
+                await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }

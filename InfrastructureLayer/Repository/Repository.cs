@@ -74,6 +74,7 @@ namespace InfrastructureLayer.Repository
 
             return await query.ToListAsync();
         }
+
         public IEnumerable<TEntity> Where(Expression<Func<TEntity, bool>> predicate)
             => _entities.Where(predicate);
 
@@ -89,13 +90,15 @@ namespace InfrastructureLayer.Repository
         public void Update(TEntity entity)
             => _entities.Update(entity);
 
+        public Task UpdateAsync(TEntity entity)
+        {
+            _entities.Update(entity);
+            return Task.CompletedTask;
+        }
+
         public void UpdateRange(IEnumerable<TEntity> entities)
            => _entities.UpdateRange(entities);
 
-        /// <summary>
-        /// Soft Remove
-        /// </summary>
-        /// <param name="entity"></param>
         public void Remove(TEntity entity)
         {
             _entities.Entry(entity).State = EntityState.Modified;
@@ -107,30 +110,17 @@ namespace InfrastructureLayer.Repository
             }
         }
 
-        /// <summary>
-        /// Soft Remove
-        /// </summary>
-        /// <param name="entities"></param>
         public void RemoveRange(IEnumerable<TEntity> entities)
         {
             foreach (var entity in entities)
                 Remove(entity);
         }
 
-
-        /// <summary>
-        /// Delete From DataBase Completely
-        /// </summary>
-        /// <param name="entities"></param>
         public void DeleteFromDatabase(TEntity entity)
         {
             _entities.Remove(entity);
         }
 
-        /// <summary>
-        /// Delete From DataBase Completely
-        /// </summary>
-        /// <param name="entities"></param>
         public void DeleteRangeFromDatabase(IEnumerable<TEntity> entities)
         {
             foreach (var entity in entities)
