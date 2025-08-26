@@ -756,28 +756,6 @@ namespace ApplicationLayer.BusinessLogic.Services
                     }
                 }
 
-                //foreach (var itemType in model.ItemTypeIds)
-                //{
-                //    await _itemTypeRepo.AddAsync(new RequestItemType
-                //    {
-                //        RequestId = request.Id,
-                //        ItemType = itemType
-                //    });
-                //}
-
-                //foreach (var file in dto.Attachments)
-                //{
-                //    await _attachmentRepo.AddAsync(new RequestAttachment
-                //    {
-                //        RequestId = request.Id,
-                //        FilePath = file.FilePath,
-                //        FileType = file.FileType,
-                //        AttachmentType = file.AttachmentType
-                //    });
-                //}
-
-                //request.AvailableOrigins = _mapper.Map<List<RequestAvailableOrigin>>(model.AvailableOrigins);
-                //request.AvailableDestinations = _mapper.Map<List<RequestAvailableDestination>>(model.AvailableDestinations);
                 await _requestRepository.AddAsync(request);
 
                 return new ServiceResult { RequestStatus = RequestStatus.Successful, Data = request, Message = CommonMessages.Successful };
