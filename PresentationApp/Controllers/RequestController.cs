@@ -16,7 +16,7 @@ public class RequestController(IMediator mediator) : ControllerBase
     private readonly IMediator _mediator = mediator;
 
     [HttpPost("Create")]
-    public async Task<IActionResult> CreateAsync(CreateRequestCommand model)
+    public async Task<IActionResult> CreateAsync([FromForm] CreateRequestCommand model)
      => await ResultHelper.GetResultAsync(_mediator, model);
 
     [HttpPut("Update")]
