@@ -1,7 +1,6 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.CQRS.Requests.Command;
-using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.Requests;
 using ApplicationLayer.Extensions.ServiceMessages;
 using ApplicationLayer.Extensions.SmartEnums;
@@ -11,7 +10,6 @@ using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
 
 namespace ApplicationLayer.BusinessLogic.Services
 {

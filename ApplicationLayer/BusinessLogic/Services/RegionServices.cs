@@ -93,7 +93,8 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 var dropdownItems = getAll.Select(current => new DropDownItemDto
                 {
-                    Text = current.Name,
+                    Text = current.PersianName,
+                    Label = current.Name,
                     Value = current.Id.ToString(),
                 }).ToList();
 
@@ -124,7 +125,6 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 var dropdownItems = countries.Select(country => new DropDownItemTreeDto
                 {
-
                     Text = country.PersianName,
                     Label = country.Name,
                     Value = country.Id.ToString(),
