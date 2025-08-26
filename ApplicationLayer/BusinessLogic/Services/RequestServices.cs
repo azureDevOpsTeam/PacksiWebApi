@@ -756,14 +756,14 @@ namespace ApplicationLayer.BusinessLogic.Services
                     }
                 }
 
-                foreach (var itemType in model.ItemTypeIds)
-                {
-                    await _itemTypeRepo.AddAsync(new RequestItemType
-                    {
-                        RequestId = request.Id,
-                        ItemType = itemType
-                    });
-                }
+                //foreach (var itemType in model.ItemTypeIds)
+                //{
+                //    await _itemTypeRepo.AddAsync(new RequestItemType
+                //    {
+                //        RequestId = request.Id,
+                //        ItemType = itemType
+                //    });
+                //}
 
                 //foreach (var file in dto.Attachments)
                 //{
@@ -780,6 +780,26 @@ namespace ApplicationLayer.BusinessLogic.Services
                 //request.AvailableDestinations = _mapper.Map<List<RequestAvailableDestination>>(model.AvailableDestinations);
                 await _requestRepository.AddAsync(request);
 
+                return new ServiceResult { RequestStatus = RequestStatus.Successful, Data = request, Message = CommonMessages.Successful };
+            }
+            catch (Exception exception)
+            {
+                return new ServiceResult().Failed(_logger, exception, CommonExceptionMessage.AddFailed("ثبت درخواست"));
+            }
+        }
+
+        public async Task<ServiceResult> MiniApp_AddRequestItemTypeAsync(CreateRequestTMACommand model, int requestId)
+        {
+            try
+            {
+                foreach (var itemType in model.ItemTypeIds)
+                {
+                    await _itemTypeRepo.AddAsync(new RequestItemType
+                    {
+                        RequestId = requestId,
+                        ItemType = itemType
+                    });
+                }
                 return new ServiceResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
             }
             catch (Exception exception)
@@ -792,12 +812,10 @@ namespace ApplicationLayer.BusinessLogic.Services
         {
             try
             {
-                var currentUserId = _userContextService.UserId;
-
                 RequestSelection requestSelection = new()
                 {
                     RequestId = requestId,
-                    UserAccountId = currentUserId.Value
+                    UserAccountId = userAccount.Id
                 };
 
                 await _requestSelection.AddAsync(requestSelection);
