@@ -1,6 +1,4 @@
-﻿using ApplicationLayer.Extensions;
-using ApplicationLayer.Extensions.SmartEnums;
-using DomainLayer.Entities;
+﻿using DomainLayer.Entities;
 using InfrastructureLayer.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
