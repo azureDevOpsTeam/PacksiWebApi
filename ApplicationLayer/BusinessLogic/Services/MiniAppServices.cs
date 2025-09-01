@@ -1,5 +1,6 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.DTOs;
+using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.Requests;
 using ApplicationLayer.DTOs.TelegramApis;
 using ApplicationLayer.Extensions.SmartEnums;
@@ -13,15 +14,17 @@ using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
-using Telegram.Bot;
 
 namespace ApplicationLayer.BusinessLogic.Services;
 
 [InjectAsScoped]
-public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger) : IMiniAppServices
+public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository, IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation, IRepository<Request> requestRepository, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger) : IMiniAppServices
 {
     private readonly IRepository<TelegramUserInformation> _telegramUserRepository = telegramUserRepository;
     private readonly IRepository<UserAccount> _userAccountRepository = userAccountRepository;
+    private readonly IRepository<UserProfile> _userProfileRepository = userProfileRepository;
+    private readonly IRepository<UserPreferredLocation> _userPreferredLocation = userPreferredLocation;
+    private readonly IRepository<Request> _requestRepository = requestRepository;
     private readonly IConfiguration _configuration = configuration;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
@@ -31,16 +34,15 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
     {
         try
         {
-            var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";//_configuration["TelegramBot:Token"];
-            var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
+            var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
+            //var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
+            var initData = "user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22ShahramOweisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&chat_instance=8801843048456500717&chat_type=channel&auth_date=1756671209&signature=Fz9EjiT_xMZqpk8WfnjDoOsUYzo__PVwsChDNVQdV80oW6gSFOx8oPcjb1PXLOTg1Mw5osM2awcB7shUWLCzAw&hash=cbbc1bd4ec896785e8c7a688540e7d9f6f5e617f6dbf3400e7bbc258019437d1";
             if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
                 _logger.LogWarning("InitData is missing or empty");
                 return Result<TelegramMiniAppValidationResultDto>.ValidationFailure("اطلاعات نامعتبر");
             }
 
-            //return await Task.Run(async () =>
-            //{
             var parsedData = ParseInitData(initData);
             if (parsedData == null)
                 return Result<TelegramMiniAppValidationResultDto>.ValidationFailure("فرمت داده‌های اولیه نامعتبر است");
@@ -63,18 +65,14 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
             };
 
             return Result<TelegramMiniAppValidationResultDto>.Success(validationResult);
-            //});
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در اعتبارسنجی کاربر Telegram MiniApp");
+            _logger.LogError(exception, "خطا در اعتبارسنجی کاربر");
             return Result<TelegramMiniAppValidationResultDto>.GeneralFailure("خطای داخلی سرور");
         }
     }
 
-    /// <summary>
-    /// استخراج اطلاعات کاربر از داده‌های Telegram MiniApp
-    /// </summary>
     public async Task<Result<TelegramMiniAppUserDto>> ExtractUserInfoFromInitDataAsync(string initData)
     {
         try
@@ -110,9 +108,6 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         }
     }
 
-    /// <summary>
-    /// بررسی وجود کاربر در سیستم بر اساس Telegram User ID
-    /// </summary>
     public async Task<Result<TelegramInfoDto>> CheckUserExistenceAsync(long telegramUserId)
     {
         try
@@ -145,6 +140,100 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         {
             _logger.LogError(exception, "خطا در بررسی وجود کاربر با شناسه تلگرام {TelegramUserId}", telegramUserId);
             return Result<TelegramInfoDto>.GeneralFailure("خطای داخلی سرور");
+        }
+    }
+
+    public async Task<Result<List<OutboundDto>>> OutboundTripsAsync(UserAccount user)
+    {
+        try
+        {
+            var userCountryId = await _userProfileRepository.Query()
+                .Where(p => p.UserAccountId == user.Id)
+                .Select(p => p.CountryOfResidenceId)
+                .FirstOrDefaultAsync();
+
+            var preferredCountryIds = await _userPreferredLocation.Query()
+                .Where(p => p.UserAccountId == user.Id && p.CountryId != null)
+                .Select(p => p.CountryId.Value)
+                .ToListAsync();
+
+            var outboundRequests = await _requestRepository.Query()
+                .Where(r =>
+                    r.OriginCity != null &&
+                    r.OriginCity.CountryId == userCountryId &&
+                    r.DestinationCity != null &&
+                    preferredCountryIds.Contains(r.DestinationCity.CountryId))
+                .Include(r => r.OriginCity).ThenInclude(c => c.Country)
+                .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
+                .Select(current => new OutboundDto
+                {
+                    RequestId = current.Id,
+                    UserAccountId = current.UserAccountId,
+                    ArrivalDate = current.ArrivalDate,
+                    DepartureDate = current.DepartureDate,
+                    Description = current.Description,
+                    DestinationCity = current.DestinationCity.Name,
+                    OriginCity = current.OriginCity.Name,
+                    MaxHeightCm = current.MaxHeightCm,
+                    MaxLengthCm = current.MaxLengthCm,
+                    MaxWeightKg = current.MaxWeightKg,
+                    MaxWidthCm = current.MaxWidthCm
+                })
+                .ToListAsync();
+
+            return Result<List<OutboundDto>>.Success(outboundRequests);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در دریافت پروازهای خروجی {UserId}", user.Id);
+            return Result<List<OutboundDto>>.GeneralFailure("خطا در دریافت پروازهای خروجی");
+        }
+    }
+
+    public async Task<Result<List<OutboundDto>>> InboundTripsQueryAsync(UserAccount user)
+    {
+        try
+        {
+            var userCountryId = await _userProfileRepository.Query()
+               .Where(p => p.UserAccountId == user.Id)
+               .Select(p => p.CountryOfResidenceId)
+               .FirstOrDefaultAsync();
+
+            var preferredCountryIds = await _userPreferredLocation.Query()
+                .Where(p => p.UserAccountId == user.Id && p.CountryId != null)
+                .Select(p => p.CountryId.Value)
+                .ToListAsync();
+
+            var inboundRequests = await _requestRepository.Query()
+                .Where(r =>
+                    r.OriginCity != null &&
+                    preferredCountryIds.Contains(r.OriginCity.CountryId) &&
+                    r.DestinationCity != null &&
+                    r.DestinationCity.CountryId == userCountryId)
+                .Include(r => r.OriginCity).ThenInclude(c => c.Country)
+                .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
+                .Select(current => new OutboundDto
+                {
+                    RequestId = current.Id,
+                    UserAccountId = current.UserAccountId,
+                    ArrivalDate = current.ArrivalDate,
+                    DepartureDate = current.DepartureDate,
+                    Description = current.Description,
+                    DestinationCity = current.DestinationCity.Name,
+                    OriginCity = current.OriginCity.Name,
+                    MaxHeightCm = current.MaxHeightCm,
+                    MaxLengthCm = current.MaxLengthCm,
+                    MaxWeightKg = current.MaxWeightKg,
+                    MaxWidthCm = current.MaxWidthCm
+                })
+                .ToListAsync();
+
+            return Result<List<OutboundDto>>.Success(inboundRequests);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در دریافت پروازهای ورودی {UserId}", user.Id);
+            return Result<List<OutboundDto>>.GeneralFailure("خطا در دریافت پروازهای ورودی");
         }
     }
 
@@ -194,9 +283,6 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
 
     #region Private Methods
 
-    /// <summary>
-    /// پارس کردن داده‌های اولیه Telegram MiniApp
-    /// </summary>
     private TelegramInitDataDto ParseInitData(string initData)
     {
         try
@@ -240,9 +326,6 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         }
     }
 
-    /// <summary>
-    /// اعتبارسنجی امضای دیجیتال داده‌های Telegram MiniApp
-    /// </summary>
     private bool ValidateSignature(string initData, string botToken)
     {
         try
@@ -281,9 +364,6 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         }
     }
 
-    /// <summary>
-    /// محاسبه HMAC-SHA256
-    /// </summary>
     private byte[] ComputeHmacSha256(byte[] key, byte[] data)
     {
         using var hmac = new HMACSHA256(key);

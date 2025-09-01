@@ -1,11 +1,10 @@
-﻿using ApplicationLayer.DTOs.MiniApp;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Http;
 
 namespace ApplicationLayer.CQRS.MiniApp.Command;
 
 //public record CreateRequestTMACommand(CreateRequestTMADto Model) : IRequest<HandlerResult>;
-public record CreateRequestTMACommand(
+public record MiniApp_CreateRequestCommand(
     int OriginCityId,
     int DestinationCityId,
     DateTime DepartureDate,

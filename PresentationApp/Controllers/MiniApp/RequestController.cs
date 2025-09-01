@@ -1,6 +1,5 @@
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.CQRS.MiniApp.Query;
-using ApplicationLayer.CQRS.Requests.Query;
 using ApplicationLayer.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +17,7 @@ namespace PresentationApp.Controllers.MiniApp
 
         [HttpPost]
         [Route("Create")]
-        public async Task<IActionResult> CreateAsync([FromForm] CreateRequestTMACommand model)
+        public async Task<IActionResult> CreateAsync([FromForm] MiniApp_CreateRequestCommand model)
             => await ResultHelper.GetResultAsync(_mediator, model);
 
         [HttpGet]
@@ -28,10 +27,10 @@ namespace PresentationApp.Controllers.MiniApp
 
         [HttpGet("OutboundTrips")]
         public async Task<IActionResult> OutboundTripsAsync()
-            => await ResultHelper.GetResultAsync(_mediator, new OutboundTripsQuery());
+            => await ResultHelper.GetResultAsync(_mediator, new MiniApp_OutboundTripsQuery());
 
         [HttpGet("InboundTrips")]
         public async Task<IActionResult> InboundTripsAsync()
-            => await ResultHelper.GetResultAsync(_mediator, new InboundTripsQuery());
+            => await ResultHelper.GetResultAsync(_mediator, new MiniApp_InboundTripsQuery());
     }
 }

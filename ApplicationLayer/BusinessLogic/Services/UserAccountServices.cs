@@ -1,4 +1,5 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
+using ApplicationLayer.DTOs;
 using ApplicationLayer.DTOs.Identity;
 using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.TelegramApis;
@@ -8,7 +9,6 @@ using ApplicationLayer.Extensions.ServiceMessages;
 using ApplicationLayer.Extensions.SmartEnums;
 using ApplicationLayer.Interfaces;
 using AutoMapper;
-using Azure.Core;
 using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -63,7 +63,7 @@ namespace ApplicationLayer.BusinessLogic.Services
             return user.Password == hashedPassword;
         }
 
-        public async Task<UserAccount> GetUserAccountByTelegramIdAsync(long telegramId)
+        public async Task<Result<UserAccount>> GetUserAccountByTelegramIdAsync(long telegramId)
             => await Task.Run(() => _userAccountRepository.GetDbSet()
             .Include(current => current.UserProfiles)
             .Include(current => current.UserPreferredLocations)
@@ -340,14 +340,14 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (user == null)
                     return new ServiceResult().NotFound();
 
-                var profileExists = await _userProfileRepository.Query().FirstOrDefaultAsync(x => x.UserAccountId == user.Id);
+                var profileExists = await _userProfileRepository.Query().FirstOrDefaultAsync(x => x.UserAccountId == user.Value.Id);
                 _mapper.Map(model, profileExists);
                 await _userProfileRepository.UpdateAsync(profileExists);
 
                 var requestedCityIds = model.CityIds.Distinct().ToList();
 
                 var existingLocations = await _locationRepo.Query()
-                    .Where(x => x.UserAccountId == user.Id && x.CityId != null)
+                    .Where(x => x.UserAccountId == user.Value.Id && x.CityId != null)
                     .ToListAsync();
 
                 var existingCityIds = existingLocations.Select(x => x.CityId.Value).ToList();
@@ -364,7 +364,7 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                     var newLocations = cities.Select(city => new UserPreferredLocation
                     {
-                        UserAccountId = user.Id,
+                        UserAccountId = user.Value.Id,
                         CityId = city.Id,
                         CountryId = city.CountryId
                     }).ToList();
@@ -400,13 +400,13 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 var userInfo = new UserInfoDto
                 {
-                    UserAccountId = user.Id,
-                    DisplayName = user.UserProfiles.FirstOrDefault()?.DisplayName,
-                    FirstName = user.UserProfiles.FirstOrDefault()?.FirstName,
-                    LastName = user.UserProfiles.FirstOrDefault()?.LastName,
-                    ConfirmPhoneNumber = user.ConfirmPhoneNumber,
-                    CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId,
-                    SetPreferredLocation = user.UserPreferredLocations.Count != 0
+                    UserAccountId = user.Value.Id,
+                    DisplayName = user.Value.UserProfiles.FirstOrDefault()?.DisplayName,
+                    FirstName = user.Value.UserProfiles.FirstOrDefault()?.FirstName,
+                    LastName = user.Value.UserProfiles.FirstOrDefault()?.LastName,
+                    ConfirmPhoneNumber = user.Value.ConfirmPhoneNumber,
+                    CountryOfResidenceId = user.Value.UserProfiles.FirstOrDefault()?.CountryOfResidenceId,
+                    SetPreferredLocation = user.Value.UserPreferredLocations.Count != 0
                 };
 
                 return new ServiceResult().Successful(userInfo);
@@ -428,13 +428,13 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 var userInfo = new RequiredOperationDto
                 {
-                    UserAccountId = user.Id,
-                    DisplayName = user.UserProfiles.FirstOrDefault()?.DisplayName,
-                    FirstName = user.UserProfiles.FirstOrDefault()?.FirstName,
-                    LastName = user.UserProfiles.FirstOrDefault()?.LastName,
-                    ConfirmPhoneNumber = user.ConfirmPhoneNumber,
-                    CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId,
-                    SetPreferredLocation = user.UserPreferredLocations.Count != 0
+                    UserAccountId = user.Value.Id,
+                    DisplayName = user.Value.UserProfiles.FirstOrDefault()?.DisplayName,
+                    FirstName = user.Value.UserProfiles.FirstOrDefault()?.FirstName,
+                    LastName = user.Value.UserProfiles.FirstOrDefault()?.LastName,
+                    ConfirmPhoneNumber = user.Value.ConfirmPhoneNumber,
+                    CountryOfResidenceId = user.Value.UserProfiles.FirstOrDefault()?.CountryOfResidenceId,
+                    SetPreferredLocation = user.Value.UserPreferredLocations.Count != 0
                 };
 
                 return new ServiceResult().Successful(userInfo);
@@ -455,12 +455,12 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (user == null)
                     return new ServiceResult().NotFound();
 
-                user.PhoneNumber = PhoneNumberHelper.ExtractPhoneParts(mdoel.PhoneNumber);
-                user.PhonePrefix = PhoneNumberHelper.ExtractCountryCode(mdoel.PhoneNumber);
-                user.UserName = mdoel.PhoneNumber;
-                user.ConfirmPhoneNumber = true;
+                user.Value.PhoneNumber = PhoneNumberHelper.ExtractPhoneParts(mdoel.PhoneNumber);
+                user.Value.PhonePrefix = PhoneNumberHelper.ExtractCountryCode(mdoel.PhoneNumber);
+                user.Value.UserName = mdoel.PhoneNumber;
+                user.Value.ConfirmPhoneNumber = true;
 
-                await _userAccountRepository.UpdateAsync(user);
+                await _userAccountRepository.UpdateAsync(user.Value);
 
                 return new ServiceResult().Successful();
             }

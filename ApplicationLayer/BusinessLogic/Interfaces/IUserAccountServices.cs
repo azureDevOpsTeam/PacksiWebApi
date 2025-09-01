@@ -1,4 +1,5 @@
-﻿using ApplicationLayer.DTOs.Identity;
+﻿using ApplicationLayer.DTOs;
+using ApplicationLayer.DTOs.Identity;
 using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.TelegramApis;
 using ApplicationLayer.DTOs.User;
@@ -26,7 +27,7 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
 
         Task<ServiceResult> UserInfoAsync();
 
-        Task<UserAccount> GetUserAccountByTelegramIdAsync(long telegramId);
+        Task<Result<UserAccount>> GetUserAccountByTelegramIdAsync(long telegramId);
 
         Task<ServiceResult> MergeToTelegramAccountAsync(UserAccount model, string newPassword);
 

@@ -56,12 +56,12 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
 
         #region Telegram MiniApp
 
-        Task<ServiceResult> MiniApp_AddRequestAsync(CreateRequestTMACommand model, UserAccount userAccount, CancellationToken cancellationToken);
+        Task<ServiceResult> MiniApp_AddRequestAsync(MiniApp_CreateRequestCommand model, UserAccount userAccount, CancellationToken cancellationToken);
 
         Task<ServiceResult> MiniApp_AddRequestSelectionAsync(int requestId, UserAccount userAccount, CancellationToken cancellationToken);
 
         Task<ServiceResult> AddRequestItemTypeAsync(CreateRequestCommand model, int requestId);
-        Task<ServiceResult> MiniApp_AddRequestItemTypeAsync(CreateRequestTMACommand model, int requestId);
+        Task<ServiceResult> MiniApp_AddRequestItemTypeAsync(MiniApp_CreateRequestCommand model, int requestId);
 
         #endregion Telegram MiniApp
     }

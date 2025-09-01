@@ -75,7 +75,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (user == null)
                     return new ServiceResult().NotFound();
 
-                var userProfile = await _userProfileRepository.Query().FirstOrDefaultAsync(current => current.UserAccountId == user.Id);
+                var userProfile = await _userProfileRepository.Query().FirstOrDefaultAsync(current => current.UserAccountId == user.Value.Id);
                 if (model.CountryOfResidenceId.HasValue)
                     userProfile.CountryOfResidenceId = model.CountryOfResidenceId.Value;
 
@@ -93,7 +93,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 {
                     preferredLocations.Add(new UserPreferredLocation
                     {
-                        UserAccountId = user.Id,
+                        UserAccountId = user.Value.Id,
                         CityId = city.Id,
                         CountryId = city.CountryId
                     });

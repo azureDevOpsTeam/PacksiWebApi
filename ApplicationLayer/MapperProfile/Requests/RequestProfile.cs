@@ -25,7 +25,7 @@ public class RequestProfile : Profile
         CreateMap<DeliverableOriginLocationDto, RequestAvailableOrigin>();
         CreateMap<DeliverableDestinationLocationDto, RequestAvailableDestination>();
 
-        CreateMap<CreateRequestTMACommand, Request>()
+        CreateMap<MiniApp_CreateRequestCommand, Request>()
             // این‌ها optional هستند اگر بخوای مقادیر nullable یا لیست‌ها را تنظیم کنی
             .ForMember(dest => dest.OriginCityId, opt => opt.MapFrom(src => src.OriginCityId))
             .ForMember(dest => dest.DestinationCityId, opt => opt.MapFrom(src => src.DestinationCityId))

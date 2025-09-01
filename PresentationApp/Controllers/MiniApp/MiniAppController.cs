@@ -16,7 +16,7 @@ namespace PresentationApp.Controllers.MiniApp
 
         [HttpPost]
         [Route("SendConnectionCode")]
-        public async Task<IActionResult> SendConnectionCodeAsync(CreateRequestTMACommand model)
+        public async Task<IActionResult> SendConnectionCodeAsync(MiniApp_CreateRequestCommand model)
             => await ResultHelper.GetResultAsync(_mediator, model);
     }
 }
