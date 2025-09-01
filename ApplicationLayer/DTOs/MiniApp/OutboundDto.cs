@@ -8,7 +8,11 @@ public class OutboundDto
 
     public string OriginCity { get; set; }
 
+    public string OriginCityFa { get; set; }
+
     public string DestinationCity { get; set; }
+
+    public string DestinationCityFa { get; set; }
 
     public DateTime DepartureDate { get; set; }
 
@@ -19,6 +23,8 @@ public class OutboundDto
     public string ArrivalDatePersian { get; set; }
 
     public decimal? SuggestedPrice { get; set; }
+
+    public string[] ItemTypes { get; set; }
 
     public string Description { get; set; }
 

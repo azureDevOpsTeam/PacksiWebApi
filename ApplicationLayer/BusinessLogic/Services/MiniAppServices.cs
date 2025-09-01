@@ -3,6 +3,7 @@ using ApplicationLayer.DTOs;
 using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.Requests;
 using ApplicationLayer.DTOs.TelegramApis;
+using ApplicationLayer.Extensions;
 using ApplicationLayer.Extensions.SmartEnums;
 using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
@@ -158,6 +159,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                 .ToListAsync();
 
             var outboundRequests = await _requestRepository.Query()
+                .Include(current => current.RequestItemTypes)
                 .Where(r =>
                     r.OriginCity != null &&
                     r.OriginCity.CountryId == userCountryId &&
@@ -171,15 +173,19 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     UserAccountId = current.UserAccountId,
                     ArrivalDate = current.ArrivalDate,
                     DepartureDate = current.DepartureDate,
+                    ArrivalDatePersian = DateTimeHelper.GetPersianDate(current.ArrivalDate),
+                    DepartureDatePersian = DateTimeHelper.GetPersianDate(current.DepartureDate),
                     Description = current.Description,
                     DestinationCity = current.DestinationCity.Name,
+                    DestinationCityFa = current.DestinationCity.PersianName,
                     OriginCity = current.OriginCity.Name,
+                    OriginCityFa = current.OriginCity.PersianName,
+                    ItemTypes = current.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.Id).PersianName).ToArray(),
                     MaxHeightCm = current.MaxHeightCm,
                     MaxLengthCm = current.MaxLengthCm,
                     MaxWeightKg = current.MaxWeightKg,
                     MaxWidthCm = current.MaxWidthCm
-                })
-                .ToListAsync();
+                }).ToListAsync();
 
             return Result<List<OutboundDto>>.Success(outboundRequests);
         }
