@@ -26,6 +26,8 @@ public class OutboundDto
 
     public string[] ItemTypes { get; set; }
 
+    public string[] ItemTypesFa { get; set; }
+
     public string Description { get; set; }
 
     public double? MaxWeightKg { get; set; }
