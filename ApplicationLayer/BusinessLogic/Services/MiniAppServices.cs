@@ -36,8 +36,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         try
         {
             var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
-            //var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
-            var initData = "user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22ShahramOweisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&chat_instance=8801843048456500717&chat_type=channel&auth_date=1756671209&signature=Fz9EjiT_xMZqpk8WfnjDoOsUYzo__PVwsChDNVQdV80oW6gSFOx8oPcjb1PXLOTg1Mw5osM2awcB7shUWLCzAw&hash=cbbc1bd4ec896785e8c7a688540e7d9f6f5e617f6dbf3400e7bbc258019437d1";
+            var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
             if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
                 _logger.LogWarning("InitData is missing or empty");
