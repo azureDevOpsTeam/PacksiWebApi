@@ -15,10 +15,11 @@ namespace InfrastructureLayer.Configuration
                    .HasForeignKey(x => x.RequestId)
                    .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasOne(x => x.ChangedByUser)
-                   .WithMany()
+            builder.HasOne(x => x.UserAccount)
+                   .WithMany(x => x.StatusHistories)
                    .HasForeignKey(x => x.UserAccountId)
-                   .OnDelete(DeleteBehavior.Restrict);
+                   .OnDelete(DeleteBehavior.Restrict)
+                   .IsRequired(false);
 
             builder.Property(x => x.Comment)
                    .HasMaxLength(1000);

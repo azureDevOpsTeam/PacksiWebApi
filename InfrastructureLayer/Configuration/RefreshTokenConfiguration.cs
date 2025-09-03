@@ -1,4 +1,5 @@
 ﻿using DomainLayer.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace InfrastructureLayer.Configuration
@@ -11,6 +12,11 @@ namespace InfrastructureLayer.Configuration
 
             builder.Property(row => row.Token).IsRequired();
             builder.Property(row => row.JwtId).IsRequired();
+
+            builder.HasOne(x => x.UserAccount)
+                   .WithMany(x => x.RefreshTokens)
+                   .HasForeignKey(x => x.UserAccountId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

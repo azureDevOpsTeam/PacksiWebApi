@@ -1,4 +1,4 @@
-﻿using DomainLayer.Entities;
+using DomainLayer.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -36,7 +36,7 @@ namespace InfrastructureLayer.Configuration
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(a => a.UserAccount)
-                .WithMany()
+                .WithMany(u => u.Advertisements)
                 .HasForeignKey(a => a.UserAccountId)
                 .OnDelete(DeleteBehavior.Restrict);
 

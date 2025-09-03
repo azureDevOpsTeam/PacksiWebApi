@@ -14,7 +14,7 @@ namespace DomainLayer.Entities
 
         public string Comment { get; set; }
 
-        public UserAccount ChangedByUser { get; set; }
+        public UserAccount UserAccount { get; set; }
 
         public Request Request { get; set; }
     }

@@ -194,7 +194,6 @@ namespace InfrastructureLayer.Migrations
                     ModifiedByUserId = table.Column<int>(type: "int", nullable: true),
                     ModifiedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    UserAccountId1 = table.Column<int>(type: "int", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -208,12 +207,6 @@ namespace InfrastructureLayer.Migrations
                         principalTable: "UserAccount",
                         principalColumn: "UserAccountId",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Advertisement_UserAccount_UserAccountId1",
-                        column: x => x.UserAccountId1,
-                        principalSchema: "dbo",
-                        principalTable: "UserAccount",
-                        principalColumn: "UserAccountId");
                 });
 
             migrationBuilder.CreateTable(
@@ -850,7 +843,6 @@ namespace InfrastructureLayer.Migrations
                     ModifiedByUserId = table.Column<int>(type: "int", nullable: true),
                     ModifiedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
                     RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
-                    UserAccountId1 = table.Column<int>(type: "int", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -871,12 +863,6 @@ namespace InfrastructureLayer.Migrations
                         principalTable: "UserAccount",
                         principalColumn: "UserAccountId",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_RequestStatusHistory_UserAccount_UserAccountId1",
-                        column: x => x.UserAccountId1,
-                        principalSchema: "dbo",
-                        principalTable: "UserAccount",
-                        principalColumn: "UserAccountId");
                 });
 
             migrationBuilder.CreateIndex(
@@ -890,12 +876,6 @@ namespace InfrastructureLayer.Migrations
                 schema: "dbo",
                 table: "Advertisement",
                 column: "UserAccountId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Advertisement_UserAccountId1",
-                schema: "dbo",
-                table: "Advertisement",
-                column: "UserAccountId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_City_CountryId",
@@ -1023,12 +1003,6 @@ namespace InfrastructureLayer.Migrations
                 schema: "dbo",
                 table: "RequestStatusHistory",
                 column: "UserAccountId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RequestStatusHistory_UserAccountId1",
-                schema: "dbo",
-                table: "RequestStatusHistory",
-                column: "UserAccountId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TelegramPostLog_AdvertisementId",

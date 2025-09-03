@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InfrastructureLayer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250830175450_InitialFirstDb")]
+    [Migration("20250903204414_InitialFirstDb")]
     partial class InitialFirstDb
     {
         /// <inheritdoc />
@@ -163,14 +163,9 @@ namespace InfrastructureLayer.Migrations
                     b.Property<int>("UserAccountId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UserAccountId1")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("UserAccountId");
-
-                    b.HasIndex("UserAccountId1");
 
                     b.ToTable("Advertisement", "dbo");
                 });
@@ -1037,16 +1032,11 @@ namespace InfrastructureLayer.Migrations
                     b.Property<int?>("UserAccountId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UserAccountId1")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("RequestId");
 
                     b.HasIndex("UserAccountId");
-
-                    b.HasIndex("UserAccountId1");
 
                     b.ToTable("RequestStatusHistory", "dbo");
                 });
@@ -1533,14 +1523,10 @@ namespace InfrastructureLayer.Migrations
             modelBuilder.Entity("DomainLayer.Entities.Advertisement", b =>
                 {
                     b.HasOne("DomainLayer.Entities.UserAccount", "UserAccount")
-                        .WithMany()
+                        .WithMany("Advertisements")
                         .HasForeignKey("UserAccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("DomainLayer.Entities.UserAccount", null)
-                        .WithMany("Advertisements")
-                        .HasForeignKey("UserAccountId1");
 
                     b.Navigation("UserAccount");
                 });
@@ -1726,18 +1712,14 @@ namespace InfrastructureLayer.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DomainLayer.Entities.UserAccount", "ChangedByUser")
-                        .WithMany()
+                    b.HasOne("DomainLayer.Entities.UserAccount", "UserAccount")
+                        .WithMany("StatusHistories")
                         .HasForeignKey("UserAccountId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("DomainLayer.Entities.UserAccount", null)
-                        .WithMany("StatusHistories")
-                        .HasForeignKey("UserAccountId1");
-
-                    b.Navigation("ChangedByUser");
-
                     b.Navigation("Request");
+
+                    b.Navigation("UserAccount");
                 });
 
             modelBuilder.Entity("DomainLayer.Entities.TelegramPostLog", b =>
