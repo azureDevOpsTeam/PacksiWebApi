@@ -41,7 +41,8 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         try
         {
             var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
-            var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
+            //var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
+            var initData = "user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22ShahramOweisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&chat_instance=-2675852455221065738&chat_type=sender&auth_date=1756919843&signature=oVTvDp3bgZDaX_Yds0PCzANzn1HuH6xTGfLaR3WXKzzwU8e2kceGTS79nkv9Jugd0JYxT5CxBkTyWtD0kd55Bw&hash=f5ca10f64ee5cc692049905c26cadb73fdd05c22bee2fcb1b71da41a149f3f14";
             if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
                 _logger.LogWarning("InitData is missing or empty");
@@ -319,7 +320,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
             {
                 Id = request.Id,
                 UserAccountId = request.UserAccountId,
-                CurrentStatus = RequestStatusEnum.FromValue(request.RequestSelections.OrderByDescending(order => order.Id).FirstOrDefault().Status).PersianName,
+                //CurrentStatus = RequestStatusEnum.FromValue(request.RequestSelections.OrderByDescending(order => order.Id).FirstOrDefault().Status).PersianName,
                 OriginCityName = request.OriginCity?.Name,
                 OriginCountryName = request.OriginCity?.Country?.Name,
                 DestinationCityName = request.DestinationCity?.Name,
@@ -442,7 +443,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
 
     #region Change Status
 
-    public async Task<Result<RequestSelection>> SelectedRequestAsync(RequestKeyDto model, UserAccount user)
+    public async Task<Result> SelectedRequestAsync(RequestKeyDto model, UserAccount user)
     {
         try
         {
@@ -450,21 +451,22 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                 .Where(r => r.Id == model.RequestId).FirstOrDefaultAsync();
 
             if (request == null)
-                return Result<RequestSelection>.NotFound();
+                return Result.NotFound();
 
             RequestSelection requestSelection = new()
             {
-                UserAccountId = user.Id,
-                RequestId = model.RequestId
+                UserAccount = user,
+                Request = request,
+                Status = RequestStatusEnum.Selected,                
             };
 
             await _requestSelection.AddAsync(requestSelection);
-            return Result<RequestSelection>.Success(requestSelection);
+            return Result.Success();
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "خطا در دریافت درخواست های کاربر {UserId}", user.Id);
-            return Result<RequestSelection>.GeneralFailure("خطا در دریافت درخواست های کاربر");
+            return Result.GeneralFailure("خطا در دریافت درخواست های کاربر");
         }
     }
 

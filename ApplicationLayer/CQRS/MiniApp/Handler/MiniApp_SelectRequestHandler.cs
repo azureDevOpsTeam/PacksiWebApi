@@ -5,10 +5,11 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class MiniApp_SelectRequestHandler(IMiniAppServices miniAppServices, IUserAccountServices userAccountServices) : IRequestHandler<MiniApp_SelectRequestCommand, HandlerResult>
+public class MiniApp_SelectRequestHandler(IUnitOfWork unitOfWork, IMiniAppServices miniAppServices, IUserAccountServices userAccountServices) : IRequestHandler<MiniApp_SelectRequestCommand, HandlerResult>
 {
     private readonly IMiniAppServices _miniAppServices = miniAppServices;
     private readonly IUserAccountServices _userAccountServices = userAccountServices;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
     public async Task<HandlerResult> Handle(MiniApp_SelectRequestCommand requestDto, CancellationToken cancellationToken)
     {
@@ -21,6 +22,9 @@ public class MiniApp_SelectRequestHandler(IMiniAppServices miniAppServices, IUse
             return userAccount.ToHandlerResult();
 
         var result = await _miniAppServices.SelectedRequestAsync(requestDto.Model, userAccount.Value);
+        if (resultValidation.IsSuccess)
+            await _unitOfWork.SaveChangesAsync();
+
         return result.ToHandlerResult();
     }
 }

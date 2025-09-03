@@ -30,7 +30,7 @@ public interface IMiniAppServices
 
     Task<Result<RequestDetailDto>> GetRequestByIdAsync(RequestKeyDto model);
 
-    Task<Result<RequestSelection>> SelectedRequestAsync(RequestKeyDto model, UserAccount user);
+    Task<Result> SelectedRequestAsync(RequestKeyDto model, UserAccount user);
 
     Task<Result> ConfirmedBySenderAsync(RequestSelectionKeyDto model);
 
