@@ -6,6 +6,8 @@ public class OutboundDto
 
     public int UserAccountId { get; set; }
 
+    public string FullName { get; set; }
+
     public string OriginCity { get; set; }
 
     public string OriginCityFa { get; set; }

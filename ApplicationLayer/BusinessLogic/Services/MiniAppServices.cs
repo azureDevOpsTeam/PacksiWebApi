@@ -19,13 +19,18 @@ using System.Web;
 namespace ApplicationLayer.BusinessLogic.Services;
 
 [InjectAsScoped]
-public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository, IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation, IRepository<Request> requestRepository, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger) : IMiniAppServices
+public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository,
+    IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation,
+    IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo, IRepository<RequestSelection> requestSelection,
+    IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger) : IMiniAppServices
 {
     private readonly IRepository<TelegramUserInformation> _telegramUserRepository = telegramUserRepository;
     private readonly IRepository<UserAccount> _userAccountRepository = userAccountRepository;
     private readonly IRepository<UserProfile> _userProfileRepository = userProfileRepository;
     private readonly IRepository<UserPreferredLocation> _userPreferredLocation = userPreferredLocation;
     private readonly IRepository<Request> _requestRepository = requestRepository;
+    private readonly IRepository<RequestItemType> _itemTypeRepo = itemTypeRepo;
+    private readonly IRepository<RequestSelection> _requestSelection = requestSelection;
     private readonly IConfiguration _configuration = configuration;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
@@ -158,18 +163,21 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                 .ToListAsync();
 
             var outboundRequests = await _requestRepository.Query()
-                .Include(current => current.RequestItemTypes)
                 .Where(r =>
                     r.OriginCity != null &&
                     r.OriginCity.CountryId == userCountryId &&
                     r.DestinationCity != null &&
                     preferredCountryIds.Contains(r.DestinationCity.CountryId))
-                .Include(r => r.OriginCity).ThenInclude(c => c.Country)
-                .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
+                .Include(current => current.UserAccount)
+                    .ThenInclude(current => current.UserProfiles)
+                .Include(current => current.RequestItemTypes)
+                .Include(current => current.OriginCity).ThenInclude(current => current.Country)
+                .Include(current => current.DestinationCity).ThenInclude(current => current.Country)
                 .Select(current => new OutboundDto
                 {
                     RequestId = current.Id,
                     UserAccountId = current.UserAccountId,
+                    FullName = current.UserAccount.UserProfiles.FirstOrDefault().DisplayName ?? current.UserAccount.UserProfiles.FirstOrDefault().FirstName,
                     ArrivalDate = current.ArrivalDate,
                     DepartureDate = current.DepartureDate,
                     ArrivalDatePersian = DateTimeHelper.GetPersianDate(current.ArrivalDate),
@@ -216,12 +224,16 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     preferredCountryIds.Contains(r.OriginCity.CountryId) &&
                     r.DestinationCity != null &&
                     r.DestinationCity.CountryId == userCountryId)
+                .Include(current => current.UserAccount)
+                    .ThenInclude(current => current.UserProfiles)
+                .Include(current => current.RequestItemTypes)
                 .Include(r => r.OriginCity).ThenInclude(c => c.Country)
                 .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
                 .Select(current => new OutboundDto
                 {
                     RequestId = current.Id,
                     UserAccountId = current.UserAccountId,
+                    FullName = current.UserAccount.UserProfiles.FirstOrDefault().DisplayName ?? current.UserAccount.UserProfiles.FirstOrDefault().FirstName,
                     ArrivalDate = current.ArrivalDate,
                     DepartureDate = current.DepartureDate,
                     ArrivalDatePersian = DateTimeHelper.GetPersianDate(current.ArrivalDate),
@@ -249,6 +261,428 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         }
     }
 
+    #region User Request Data
+
+    public async Task<Result<RequestDetailDto>> GetRequestByIdAsync(RequestKeyDto model)
+    {
+        try
+        {
+            var request = await _requestRepository.Query()
+                .Where(r => r.Id == model.RequestId)
+                .Include(r => r.RequestSelections)
+                .Include(r => r.OriginCity).ThenInclude(c => c.Country)
+                .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
+                .Include(r => r.Attachments)
+                .Include(r => r.AvailableOrigins).ThenInclude(o => o.City).ThenInclude(c => c.Country)
+                .Include(r => r.AvailableDestinations).ThenInclude(d => d.City).ThenInclude(c => c.Country)
+                .FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result<RequestDetailDto>.NotFound();
+
+            var itemTypes = (await _itemTypeRepo.Query()
+                .Where(it => it.RequestId == request.Id)
+                .Select(it => it.ItemType)
+                .ToListAsync())
+                .ToHashSet();
+
+            var itemList = TransportableItemTypeEnum.List
+                .Where(row => itemTypes.Contains(row.Value))
+                .Select(it => new RequestItemTypeDto
+                {
+                    ItemTypeId = it.Value,
+                    ItemType = it.PersianName,
+                })
+                .ToList();
+
+            var userProfile = await _userProfileRepository.Query()
+                .Where(p => p.UserAccountId == request.UserAccountId)
+                .FirstOrDefaultAsync();
+
+            var result = new RequestDetailDto
+            {
+                Id = request.Id,
+                UserAccountId = request.UserAccountId,
+                CurrentStatus = RequestStatusEnum.FromValue(request.RequestSelections.OrderByDescending(order => order.Id).FirstOrDefault().Status).PersianName,
+                OriginCityName = request.OriginCity?.Name,
+                OriginCountryName = request.OriginCity?.Country?.Name,
+                DestinationCityName = request.DestinationCity?.Name,
+                DestinationCountryName = request.DestinationCity?.Country?.Name,
+                ArrivalDate = request.ArrivalDate,
+                DepartureDate = request.DepartureDate,
+                ItemTypes = itemList,
+                Attachments = request.Attachments.Select(a => new RequestAttachmentDto
+                {
+                    FilePath = a.FilePath,
+                    FileType = a.FileType,
+                    AttachmentType = a.AttachmentType.ToString()
+                }).ToList(),
+                AvailableOrigins = request.AvailableOrigins.Select(o => new LocationDto
+                {
+                    CityName = o.City?.Name,
+                    CountryName = o.City?.Country?.Name
+                }).ToList(),
+                AvailableDestinations = request.AvailableDestinations.Select(d => new LocationDto
+                {
+                    CityName = d.City?.Name,
+                    CountryName = d.City?.Country?.Name
+                }).ToList(),
+                UserDisplayName = userProfile?.DisplayName
+            };
+
+            return Result<RequestDetailDto>.Success(result);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در دریافت جزئیات درخواست {RequestId}", model.RequestId);
+            return Result<RequestDetailDto>.GeneralFailure("جزئیات درخواست");
+        }
+    }
+
+    public async Task<Result<List<UserRequestsDto>>> UserRequestsAsync(UserAccount user)
+    {
+        try
+        {
+            var result = await _requestRepository.Query()
+                .Include(r => r.OriginCity)
+                .Where(r => r.UserAccountId == user.Id)
+                .Select(current => new UserRequestsDto
+                {
+                    RequestId = current.Id,
+                    ArrivalDate = current.ArrivalDate,
+                    DepartureDate = current.DepartureDate,
+                    OriginCityName = current.OriginCity.Name,
+                    DestinationCityName = current.DestinationCity.Name,
+                })
+                .ToListAsync();
+
+            return Result<List<UserRequestsDto>>.Success(result);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در دریافت درخواست های کاربر {UserId}", user.Id);
+            return Result<List<UserRequestsDto>>.GeneralFailure("خطا در دریافت درخواست های کاربر");
+        }
+    }
+
+    public async Task<Result<List<MyPostedSelectedDto>>> MyPostedSelectedAsync(UserAccount user)
+    {
+        try
+        {
+            var result = await _requestRepository.Query()
+                .Where(r => r.UserAccountId == user.Id)
+                .SelectMany(r => r.RequestSelections
+                    .Where(rs => rs.UserAccountId != user.Id)
+                    .GroupBy(rs => rs.UserAccountId)
+                    .Select(g => g.OrderByDescending(x => x.Id).FirstOrDefault())
+                    .Select(rs => new MyPostedSelectedDto
+                    {
+                        RequestId = r.Id,
+                        RequestSelectionId = rs.Id,
+                        SelectorUserAccountId = rs.UserAccountId,
+                        SelectorFirstName = rs.UserAccount.UserProfiles.FirstOrDefault().FirstName,
+                        SelectorLastName = rs.UserAccount.UserProfiles.FirstOrDefault().LastName,
+                        LastStatus = rs.Status,
+                        LastStatusStr = RequestStatusEnum.FromValue(rs.Status).PersianName
+                    }))
+                .ToListAsync();
+
+            return Result<List<MyPostedSelectedDto>>.Success(result);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در دریافت درخواست های انتخاب شده {UserId}", user.Id);
+            return Result<List<MyPostedSelectedDto>>.GeneralFailure("خطا در دریافت درخواست های انتخاب شده");
+        }
+    }
+
+    public async Task<Result<List<UserRequestsDto>>> MySelectionsAsync(UserAccount user)
+    {
+        try
+        {
+            var result = await _requestRepository.Query()
+                .Include(r => r.OriginCity)
+                .Where(r => r.RequestSelections.Any(current => current.UserAccountId == user.Id))
+                .Select(current => new UserRequestsDto
+                {
+                    RequestId = current.Id,
+                    ArrivalDate = current.ArrivalDate,
+                    DepartureDate = current.DepartureDate,
+                    OriginCityName = current.OriginCity.Name,
+                    DestinationCityName = current.DestinationCity.Name,
+                })
+                .ToListAsync();
+
+            return Result<List<UserRequestsDto>>.Success(result);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در دریافت درخواست های کاربر {UserId}", user.Id);
+            return Result<List<UserRequestsDto>>.GeneralFailure("خطا در دریافت درخواست های کاربر");
+        }
+    }
+
+    #endregion User Request Data
+
+    #region Change Status
+
+    public async Task<Result<RequestSelection>> SelectedRequestAsync(RequestKeyDto model, UserAccount user)
+    {
+        try
+        {
+            var request = await _requestRepository.Query()
+                .Where(r => r.Id == model.RequestId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result<RequestSelection>.NotFound();
+
+            RequestSelection requestSelection = new()
+            {
+                UserAccountId = user.Id,
+                RequestId = model.RequestId
+            };
+
+            await _requestSelection.AddAsync(requestSelection);
+            return Result<RequestSelection>.Success(requestSelection);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در دریافت درخواست های کاربر {UserId}", user.Id);
+            return Result<RequestSelection>.GeneralFailure("خطا در دریافت درخواست های کاربر");
+        }
+    }
+
+    public async Task<Result> ConfirmedBySenderAsync(RequestSelectionKeyDto model)
+    {
+        try
+        {
+            var request = await _requestSelection.Query()
+                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result.NotFound();
+
+            request.Status = RequestStatusEnum.ConfirmedBySender;
+            await _requestSelection.UpdateAsync(request);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در تایید درخواست انتخاب شده {RequestSelectionId}", model.RequestSelectionId);
+            return Result.GeneralFailure("خطا در تایید درخواست انتخاب شده");
+        }
+    }
+
+    public async Task<Result> RejectSelectionAsync(RequestSelectionKeyDto model)
+    {
+        try
+        {
+            var request = await _requestSelection.Query()
+                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result.NotFound();
+
+            request.Status = RequestStatusEnum.ConfirmedBySender;
+            await _requestSelection.UpdateAsync(request);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در رد کردن درخواست انتخاب شده  {RequestSelectionId}", model.RequestSelectionId);
+            return Result.GeneralFailure("خطا در رد درخوااست انتخاب شده");
+        }
+    }
+
+    public async Task<Result> RejectByManagerAsync(RequestKeyDto model)
+    {
+        try
+        {
+            var request = await _requestRepository.Query()
+                .Where(r => r.Id == model.RequestId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result.NotFound();
+
+            var requestRecord = await _requestSelection.Query()
+                .FirstOrDefaultAsync(current => current.RequestId == request.Id);
+
+            requestRecord.Status = RequestStatusEnum.RejectedByManager;
+            await _requestSelection.UpdateAsync(requestRecord);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در رد درخواست توسط مدیر  {RequestId}", model.RequestId);
+            return Result.GeneralFailure("خطا در رد درخواست توسط مدیر");
+        }
+    }
+
+    public async Task<Result> PublishedRequestAsync(RequestKeyDto model)
+    {
+        try
+        {
+            var request = await _requestRepository.Query()
+                .Where(r => r.Id == model.RequestId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result.NotFound();
+
+            var requestRecord = await _requestSelection.Query()
+                .FirstOrDefaultAsync(current => current.RequestId == request.Id);
+
+            requestRecord.Status = RequestStatusEnum.Published;
+            await _requestSelection.UpdateAsync(requestRecord);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در انتشار درخواست {UserId}", model.RequestId);
+            return Result.GeneralFailure("خطا در انتشار درخواست");
+        }
+    }
+
+    public async Task<Result> ReadyToPickupAsync(RequestSelectionKeyDto model)
+    {
+        try
+        {
+            var request = await _requestSelection.Query()
+                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result.NotFound();
+
+            request.Status = RequestStatusEnum.ReadyToPickup;
+            await _requestSelection.UpdateAsync(request);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در ثبت وضعیت آماده برای دریافت بار  {RequestSelectionId}", model.RequestSelectionId);
+            return Result.GeneralFailure("خطا در ثبت وضعیت آماده برای دریافت بار");
+        }
+    }
+
+    public async Task<Result> PickedUpAsync(RequestSelectionKeyDto model)
+    {
+        try
+        {
+            var request = await _requestSelection.Query()
+                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result.NotFound();
+
+            request.Status = RequestStatusEnum.PickedUp;
+            await _requestSelection.UpdateAsync(request);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در ثبت وضعیت دریافت بار  {RequestSelectionId}", model.RequestSelectionId);
+            return Result.GeneralFailure("خطا در ثبت وضعیت دریافت بار");
+        }
+    }
+
+    public async Task<Result> InTransitAsync(RequestSelectionKeyDto model)
+    {
+        try
+        {
+            var request = await _requestSelection.Query()
+                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result.NotFound();
+
+            request.Status = RequestStatusEnum.InTransit;
+            await _requestSelection.UpdateAsync(request);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در ثبت وضعیت در حال پرواز  {RequestSelectionId}", model.RequestSelectionId);
+            return Result.GeneralFailure("خطا در ثبت وضعیت در حال پرواز");
+        }
+    }
+
+    public async Task<Result> ReadyToDeliverAsync(RequestSelectionKeyDto model)
+    {
+        try
+        {
+            var request = await _requestSelection.Query()
+                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result.NotFound();
+
+            request.Status = RequestStatusEnum.ReadyToDeliver;
+            await _requestSelection.UpdateAsync(request);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در ثبت وضعیت آماده تحویل  {RequestSelectionId}", model.RequestSelectionId);
+            return Result.GeneralFailure("خطا در ثبت وضعیت آماده تحویل");
+        }
+    }
+
+    public async Task<Result> DeliveredAsync(RequestKeyDto model, UserAccount user)
+    {
+        try
+        {
+            var request = await _requestRepository.Query()
+                .Where(r => r.Id == model.RequestId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result.NotFound();
+
+            var requestRecord = await _requestSelection.Query()
+                .FirstOrDefaultAsync(current => current.UserAccountId == user.Id && current.RequestId == request.Id);
+
+            requestRecord.Status = RequestStatusEnum.Delivered;
+            await _requestSelection.UpdateAsync(requestRecord);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در ثبت وضعیت تحویل شده  {RequestId}", model.RequestId);
+            return Result.GeneralFailure("خطا در ثبت وضعیت تحویل شده");
+        }
+    }
+
+    public async Task<Result> NotDeliveredAsync(RequestSelectionKeyDto model)
+    {
+        try
+        {
+            var request = await _requestSelection.Query()
+                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result.NotFound();
+
+            request.Status = RequestStatusEnum.NotDelivered;
+            await _requestSelection.UpdateAsync(request);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در ثبت وضعیت عدم تحویل  {UserId}", model.RequestSelectionId);
+            return Result.GeneralFailure("خطا در ثبت وضعیت عدم تحویل");
+        }
+    }
+
+    #endregion Change Status
+
     public async Task<Result<bool>> SendMessageAsync(long chatId)
     {
         try
@@ -267,7 +701,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         catch (Exception exception)
         {
             _logger.LogError(exception, "خطا در ارسال پیام به چت {ChatId}", chatId);
-            return Result<bool>.GeneralFailure("خطا در ارسال پیام");
+            return Result<bool>.Success(false);
         }
     }
 

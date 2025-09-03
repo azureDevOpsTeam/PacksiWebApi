@@ -21,4 +21,34 @@ public interface IMiniAppServices
     Task<Result<List<OutboundDto>>> InboundTripsQueryAsync(UserAccount user);
 
     Task<Result<List<OutboundDto>>> OutboundTripsAsync(UserAccount user);
+
+    Task<Result<List<UserRequestsDto>>> UserRequestsAsync(UserAccount user);
+
+    Task<Result<List<MyPostedSelectedDto>>> MyPostedSelectedAsync(UserAccount user);
+
+    Task<Result<List<UserRequestsDto>>> MySelectionsAsync(UserAccount user);
+
+    Task<Result<RequestDetailDto>> GetRequestByIdAsync(RequestKeyDto model);
+
+    Task<Result<RequestSelection>> SelectedRequestAsync(RequestKeyDto model, UserAccount user);
+
+    Task<Result> ConfirmedBySenderAsync(RequestSelectionKeyDto model);
+
+    Task<Result> RejectByManagerAsync(RequestKeyDto model);
+
+    Task<Result> PublishedRequestAsync(RequestKeyDto model);
+
+    Task<Result> ReadyToPickupAsync(RequestSelectionKeyDto model);
+
+    Task<Result> PickedUpAsync(RequestSelectionKeyDto model);
+
+    Task<Result> InTransitAsync(RequestSelectionKeyDto model);
+
+    Task<Result> ReadyToDeliverAsync(RequestSelectionKeyDto model);
+
+    Task<Result> DeliveredAsync(RequestKeyDto model, UserAccount user);
+
+    Task<Result> NotDeliveredAsync(RequestSelectionKeyDto model);
+
+    Task<Result> RejectSelectionAsync(RequestSelectionKeyDto model);
 }

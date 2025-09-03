@@ -1,0 +1,6 @@
+﻿using ApplicationLayer.DTOs.Requests;
+using MediatR;
+
+namespace ApplicationLayer.CQRS.MiniApp.Command;
+
+public record MiniApp_PublishedCommand(RequestKeyDto Model) : IRequest<HandlerResult>;
