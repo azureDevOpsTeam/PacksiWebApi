@@ -22,8 +22,8 @@ public class MiniApp_SelectRequestHandler(IUnitOfWork unitOfWork, IMiniAppServic
             return userAccount.ToHandlerResult();
 
         var result = await _miniAppServices.SelectedRequestAsync(requestDto.Model, userAccount.Value);
-        if (resultValidation.IsSuccess)
-            await _unitOfWork.SaveChangesAsync();
+        if (result.IsSuccess)
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return result.ToHandlerResult();
     }
