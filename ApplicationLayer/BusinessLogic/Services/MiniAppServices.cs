@@ -170,6 +170,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     preferredCountryIds.Contains(r.DestinationCity.CountryId))
                 .Include(current => current.UserAccount)
                     .ThenInclude(current => current.UserProfiles)
+                .Include(current => current.StatusHistories)
                 .Include(current => current.RequestItemTypes)
                 .Include(current => current.OriginCity).ThenInclude(current => current.Country)
                 .Include(current => current.DestinationCity).ThenInclude(current => current.Country)
@@ -192,7 +193,8 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     MaxHeightCm = current.MaxHeightCm,
                     MaxLengthCm = current.MaxLengthCm,
                     MaxWeightKg = current.MaxWeightKg,
-                    MaxWidthCm = current.MaxWidthCm
+                    MaxWidthCm = current.MaxWidthCm,
+                    Status = RequestStatusEnum.FromValue(current.StatusHistories.OrderByDescending(row => row.Id).Where(row => row.UserAccountId == user.Id).FirstOrDefault().Status),
                 }).ToListAsync();
 
             return Result<List<OutboundDto>>.Success(outboundRequests);
@@ -248,7 +250,8 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     MaxHeightCm = current.MaxHeightCm,
                     MaxLengthCm = current.MaxLengthCm,
                     MaxWeightKg = current.MaxWeightKg,
-                    MaxWidthCm = current.MaxWidthCm
+                    MaxWidthCm = current.MaxWidthCm,
+                    Status = RequestStatusEnum.FromValue(current.StatusHistories.OrderByDescending(row => row.Id).Where(row => row.UserAccountId == user.Id).FirstOrDefault().Status),
                 })
                 .ToListAsync();
 

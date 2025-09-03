@@ -1,4 +1,6 @@
-﻿namespace ApplicationLayer.DTOs.MiniApp;
+﻿using ApplicationLayer.Extensions.SmartEnums;
+
+namespace ApplicationLayer.DTOs.MiniApp;
 
 public class OutboundDto
 {
@@ -39,4 +41,6 @@ public class OutboundDto
     public double? MaxWidthCm { get; set; }
 
     public double? MaxHeightCm { get; set; }
+
+    public RequestStatusEnum Status { get; set; }
 }
