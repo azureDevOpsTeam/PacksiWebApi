@@ -172,8 +172,10 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     .ThenInclude(current => current.UserProfiles)
                 .Include(current => current.StatusHistories)
                 .Include(current => current.RequestItemTypes)
-                .Include(current => current.OriginCity).ThenInclude(current => current.Country)
-                .Include(current => current.DestinationCity).ThenInclude(current => current.Country)
+                .Include(current => current.OriginCity)
+                    .ThenInclude(current => current.Country)
+                .Include(current => current.DestinationCity)
+                    .ThenInclude(current => current.Country)
                 .Select(current => new OutboundDto
                 {
                     RequestId = current.Id,
@@ -194,7 +196,12 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     MaxLengthCm = current.MaxLengthCm,
                     MaxWeightKg = current.MaxWeightKg,
                     MaxWidthCm = current.MaxWidthCm,
-                    Status = RequestStatusEnum.FromValue(current.StatusHistories.OrderByDescending(row => row.Id).Where(row => row.UserAccountId == user.Id).FirstOrDefault().Status),
+                    Status = RequestStatusEnum.FromValue(
+                        current.StatusHistories
+                        .Where(row => row.UserAccountId == user.Id)
+                        .OrderByDescending(row => row.Id)
+                        .Select(row => (int?)row.Status)
+                        .FirstOrDefault() ?? (int)RequestStatusEnum.Published)
                 }).ToListAsync();
 
             return Result<List<OutboundDto>>.Success(outboundRequests);
