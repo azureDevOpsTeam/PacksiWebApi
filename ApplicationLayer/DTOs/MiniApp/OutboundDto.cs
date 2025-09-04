@@ -1,4 +1,6 @@
-﻿namespace ApplicationLayer.DTOs.MiniApp;
+﻿using ApplicationLayer.Extensions.SmartEnums;
+
+namespace ApplicationLayer.DTOs.MiniApp;
 
 public class OutboundDto
 {
@@ -41,4 +43,26 @@ public class OutboundDto
     public double? MaxHeightCm { get; set; }
 
     public int? CurrentUserStatus { get; set; }
+
+    public string CurrentUserStatusEn
+    {
+        get
+        {
+            if (CurrentUserStatus < 100)
+                return RequestLifecycleStatus.FromValue(CurrentUserStatus.Value).EnglishName;
+            else
+                return RequestProcessStatus.FromValue(CurrentUserStatus.Value).EnglishName;
+        }
+    }
+
+    public string CurrentUserStatusFa
+    {
+        get
+        {
+            if (CurrentUserStatus < 100)
+                return RequestLifecycleStatus.FromValue(CurrentUserStatus.Value).PersianName;
+            else
+                return RequestProcessStatus.FromValue(CurrentUserStatus.Value).PersianName;
+        }
+    }
 }
