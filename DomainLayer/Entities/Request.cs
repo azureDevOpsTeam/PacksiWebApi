@@ -28,6 +28,8 @@ namespace DomainLayer.Entities
 
         public double? MaxHeightCm { get; set; }
 
+        public int Status { get; set; }
+
         public UserAccount UserAccount { get; set; }
 
         public City OriginCity { get; set; }
@@ -35,8 +37,6 @@ namespace DomainLayer.Entities
         public City DestinationCity { get; set; }
 
         public ICollection<RequestItemType> RequestItemTypes { get; set; } = [];
-
-        public ICollection<RequestStatusHistory> StatusHistories { get; set; } = [];
 
         public ICollection<RequestAttachment> Attachments { get; set; } = [];
 

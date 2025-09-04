@@ -320,7 +320,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 {
                     Id = request.Id,
                     UserAccountId = request.UserAccountId,
-                    CurrentStatus = RequestStatusEnum.FromValue(request.RequestSelections.OrderByDescending(order => order.Id).FirstOrDefault().Status).PersianName,
+                    //CurrentStatus = RequestStatusEnum.FromValue(request.RequestSelections.OrderByDescending(order => order.Id).FirstOrDefault().Status).PersianName,
                     OriginCityName = request.OriginCity?.Name,
                     OriginCountryName = request.OriginCity?.Country?.Name,
                     DestinationCityName = request.DestinationCity?.Name,
@@ -404,7 +404,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                             SelectorFirstName = rs.UserAccount.UserProfiles.FirstOrDefault().FirstName,
                             SelectorLastName = rs.UserAccount.UserProfiles.FirstOrDefault().LastName,
                             LastStatus = rs.Status,
-                            LastStatusStr = RequestStatusEnum.FromValue(rs.Status).PersianName
+                            //LastStatusStr = RequestStatusEnum.FromValue(rs.Status).PersianName
                         }))
                     .ToListAsync();
 
@@ -483,7 +483,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (request == null)
                     return new ServiceResult().NotFound();
 
-                request.Status = RequestStatusEnum.ConfirmedBySender;
+                //request.Status = RequestStatusEnum.ConfirmedBySender;
                 await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
@@ -504,7 +504,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (request == null)
                     return new ServiceResult().NotFound();
 
-                request.Status = RequestStatusEnum.ConfirmedBySender;
+                //request.Status = RequestStatusEnum.ConfirmedBySender;
                 await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
@@ -528,7 +528,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 var requestRecord = await _requestSelection.Query()
                     .FirstOrDefaultAsync(current => current.RequestId == request.Id);
 
-                requestRecord.Status = RequestStatusEnum.RejectedByManager;
+                //requestRecord.Status = RequestStatusEnum.RejectedByManager;
                 await _requestSelection.UpdateAsync(requestRecord);
 
                 return new ServiceResult().Successful();
@@ -552,7 +552,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 var requestRecord = await _requestSelection.Query()
                     .FirstOrDefaultAsync(current => current.RequestId == request.Id);
 
-                requestRecord.Status = RequestStatusEnum.Published;
+                //requestRecord.Status = RequestStatusEnum.Published;
                 await _requestSelection.UpdateAsync(requestRecord);
 
                 return new ServiceResult().Successful();
@@ -573,7 +573,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (request == null)
                     return new ServiceResult().NotFound();
 
-                request.Status = RequestStatusEnum.ReadyToPickup;
+                //request.Status = RequestStatusEnum.ReadyToPickup;
                 await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
@@ -594,7 +594,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (request == null)
                     return new ServiceResult().NotFound();
 
-                request.Status = RequestStatusEnum.PickedUp;
+                //request.Status = RequestStatusEnum.PickedUp;
                 await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
@@ -615,7 +615,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (request == null)
                     return new ServiceResult().NotFound();
 
-                request.Status = RequestStatusEnum.InTransit;
+                //request.Status = RequestStatusEnum.InTransit;
                 await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
@@ -636,7 +636,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (request == null)
                     return new ServiceResult().NotFound();
 
-                request.Status = RequestStatusEnum.ReadyToDeliver;
+                //request.Status = RequestStatusEnum.ReadyToDeliver;
                 await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
@@ -661,7 +661,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 var requestRecord = await _requestSelection.Query()
                     .FirstOrDefaultAsync(current => current.UserAccountId == currentUserId && current.RequestId == request.Id);
 
-                requestRecord.Status = RequestStatusEnum.Delivered;
+                //requestRecord.Status = RequestStatusEnum.Delivered;
                 await _requestSelection.UpdateAsync(requestRecord);
 
                 return new ServiceResult().Successful();
@@ -682,7 +682,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (request == null)
                     return new ServiceResult().NotFound();
 
-                request.Status = RequestStatusEnum.NotDelivered;
+                //request.Status = RequestStatusEnum.NotDelivered;
                 await _requestSelection.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
@@ -721,91 +721,5 @@ namespace ApplicationLayer.BusinessLogic.Services
 
             _requestAvailableDestinationRepository.RemoveRange(entities);
         }
-
-        #region Telegram MiniApp
-
-        public async Task<ServiceResult> MiniApp_AddRequestAsync(MiniApp_CreateRequestCommand model, UserAccount userAccount, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var request = _mapper.Map<Request>(model);
-                request.UserAccountId = userAccount.Id;
-
-                var attachments = new List<CreateRequestAttachmentDto>();
-                var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-                Directory.CreateDirectory(uploadsRoot);
-
-                foreach (var formFile in model.Files)
-                {
-                    if (formFile.Length > 0)
-                    {
-                        var fileName = Guid.NewGuid() + Path.GetExtension(formFile.FileName);
-                        var filePath = Path.Combine(uploadsRoot, fileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await formFile.CopyToAsync(stream);
-                        }
-
-                        attachments.Add(new CreateRequestAttachmentDto
-                        {
-                            FilePath = $"/uploads/{fileName}",
-                            FileType = formFile.ContentType,
-                            AttachmentType = model.RequestType == RequestTypeEnum.Carryer ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
-                        });
-                    }
-                }
-
-                await _requestRepository.AddAsync(request);
-
-                return new ServiceResult { RequestStatus = RequestStatus.Successful, Data = request, Message = CommonMessages.Successful };
-            }
-            catch (Exception exception)
-            {
-                return new ServiceResult().Failed(_logger, exception, CommonExceptionMessage.AddFailed("ثبت درخواست"));
-            }
-        }
-
-        public async Task<ServiceResult> MiniApp_AddRequestItemTypeAsync(MiniApp_CreateRequestCommand model, int requestId)
-        {
-            try
-            {
-                foreach (var itemType in model.ItemTypeIds)
-                {
-                    await _itemTypeRepo.AddAsync(new RequestItemType
-                    {
-                        RequestId = requestId,
-                        ItemType = itemType
-                    });
-                }
-                return new ServiceResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
-            }
-            catch (Exception exception)
-            {
-                return new ServiceResult().Failed(_logger, exception, CommonExceptionMessage.AddFailed("ثبت درخواست"));
-            }
-        }
-
-        public async Task<ServiceResult> MiniApp_AddRequestSelectionAsync(int requestId, UserAccount userAccount, CancellationToken cancellationToken)
-        {
-            try
-            {
-                RequestSelection requestSelection = new()
-                {
-                    RequestId = requestId,
-                    UserAccountId = userAccount.Id
-                };
-
-                await _requestSelection.AddAsync(requestSelection);
-
-                return new ServiceResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
-            }
-            catch (Exception exception)
-            {
-                return new ServiceResult().Failed(_logger, exception, CommonExceptionMessage.AddFailed("ثبت وضعیت درخواست"));
-            }
-        }
-
-        #endregion Telegram MiniApp
     }
 }

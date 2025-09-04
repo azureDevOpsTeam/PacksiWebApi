@@ -1,6 +1,5 @@
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.CQRS.MiniApp.Query;
-using ApplicationLayer.CQRS.Requests.Command;
 using ApplicationLayer.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

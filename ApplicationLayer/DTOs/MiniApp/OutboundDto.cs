@@ -1,6 +1,4 @@
-﻿using ApplicationLayer.Extensions.SmartEnums;
-
-namespace ApplicationLayer.DTOs.MiniApp;
+﻿namespace ApplicationLayer.DTOs.MiniApp;
 
 public class OutboundDto
 {
@@ -42,5 +40,5 @@ public class OutboundDto
 
     public double? MaxHeightCm { get; set; }
 
-    public RequestStatusEnum Status { get; set; }
+    public int? CurrentUserStatus { get; set; }
 }

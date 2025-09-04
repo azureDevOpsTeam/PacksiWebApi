@@ -1,5 +1,4 @@
 ﻿using ApplicationLayer.CQRS.MiniApp.Command;
-using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.Requests;
 using AutoMapper;
 using DomainLayer.Entities;
@@ -13,14 +12,12 @@ public class RequestProfile : Profile
         CreateMap<CreateRequestDto, Request>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.RequestItemTypes, opt => opt.Ignore())
-            .ForMember(dest => dest.Attachments, opt => opt.Ignore())
-            .ForMember(dest => dest.StatusHistories, opt => opt.Ignore());
+            .ForMember(dest => dest.Attachments, opt => opt.Ignore());
 
         CreateMap<UpdateRequestDto, Request>()
            .ForMember(dest => dest.Id, opt => opt.Ignore())
            .ForMember(dest => dest.RequestItemTypes, opt => opt.Ignore())
-           .ForMember(dest => dest.Attachments, opt => opt.Ignore())
-           .ForMember(dest => dest.StatusHistories, opt => opt.Ignore());
+           .ForMember(dest => dest.Attachments, opt => opt.Ignore());
 
         CreateMap<DeliverableOriginLocationDto, RequestAvailableOrigin>();
         CreateMap<DeliverableDestinationLocationDto, RequestAvailableDestination>();
@@ -38,7 +35,6 @@ public class RequestProfile : Profile
             .ForMember(dest => dest.Attachments, opt => opt.Ignore())       // فایل‌ها را باید جداگانه تبدیل کنی
             .ForMember(dest => dest.UserAccountId, opt => opt.Ignore())     // معمولا از context میاد
             .ForMember(dest => dest.SuggestedPrice, opt => opt.Ignore())
-            .ForMember(dest => dest.StatusHistories, opt => opt.Ignore())
             .ForMember(dest => dest.AvailableOrigins, opt => opt.Ignore())
             .ForMember(dest => dest.AvailableDestinations, opt => opt.Ignore())
             .ForMember(dest => dest.RequestSelections, opt => opt.Ignore());

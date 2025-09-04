@@ -1,6 +1,7 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.Extensions;
+using ApplicationLayer.Extensions.SmartEnums;
 using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
@@ -21,7 +22,11 @@ public class MiniApp_SelectRequestHandler(IUnitOfWork unitOfWork, IMiniAppServic
         if (userAccount.IsFailure)
             return userAccount.ToHandlerResult();
 
-        var result = await _miniAppServices.SelectedRequestAsync(requestDto.Model, userAccount.Value);
+        var resultSelected = await _miniAppServices.SelectedRequestAsync(requestDto.Model, userAccount.Value);
+        if (resultSelected.IsSuccess)
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var result = await _miniAppServices.AddHistoryStatusAsync(resultSelected.Value, RequestProcessStatus.Selected, userAccount.Value);
         if (result.IsSuccess)
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

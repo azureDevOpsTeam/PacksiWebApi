@@ -15,6 +15,7 @@ public record MiniApp_CreateRequestCommand(
     double? MaxLengthCm,
     double? MaxWidthCm,
     double? MaxHeightCm,
+    bool IsDraft,
     List<int> ItemTypeIds,
     List<IFormFile> Files
 ) : IRequest<HandlerResult>;

@@ -6,7 +6,7 @@ namespace DomainLayer.Entities
     {
         public int? UserAccountId { get; set; }
 
-        public int RequestId { get; set; }
+        public int RequestSelectionId { get; set; }
 
         public int Status { get; set; }
 
@@ -16,6 +16,6 @@ namespace DomainLayer.Entities
 
         public UserAccount UserAccount { get; set; }
 
-        public Request Request { get; set; }
+        public RequestSelection RequestSelection { get; set; }
     }
 }

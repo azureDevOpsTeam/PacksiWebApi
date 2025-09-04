@@ -10,9 +10,9 @@ namespace InfrastructureLayer.Configuration
         {
             base.Configure(builder);
 
-            builder.HasOne(x => x.Request)
-                   .WithMany(x => x.StatusHistories)
-                   .HasForeignKey(x => x.RequestId)
+            builder.HasOne(x => x.RequestSelection)
+                   .WithMany(x => x.RequestStatusHistories)
+                   .HasForeignKey(x => x.RequestSelectionId)
                    .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasOne(x => x.UserAccount)

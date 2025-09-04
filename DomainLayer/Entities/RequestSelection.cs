@@ -13,4 +13,6 @@ public class RequestSelection : BaseEntityModel, IAuditableEntity
     public UserAccount UserAccount { get; set; }
 
     public Request Request { get; set; }
+
+    public ICollection<RequestStatusHistory> RequestStatusHistories { get; set; } = [];
 }
