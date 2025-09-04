@@ -829,7 +829,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         }
     }
 
-    public async Task<Result<RequestStatusHistory>> AddHistoryStatusAsync(RequestSelection requestSelection, RequestProcessStatus processStatus, UserAccount user)
+    public async Task<Result> AddHistoryStatusAsync(RequestSelection requestSelection, RequestProcessStatus processStatus, UserAccount user)
     {
         try
         {
@@ -841,12 +841,12 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
             };
 
             await _requestStatusHistoryRepository.AddAsync(requestStatusHistory);
-            return Result<RequestStatusHistory>.Success(requestStatusHistory);
+            return Result.Success();
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "خطا در دریافت درخواست های کاربر {UserId}", user.Id);
-            return Result<RequestStatusHistory>.GeneralFailure("خطا در دریافت درخواست های کاربر");
+            return Result.GeneralFailure("خطا در دریافت درخواست های کاربر");
         }
     }
 

@@ -61,5 +61,5 @@ public interface IMiniAppServices
 
     Task<Result> RejectSelectionAsync(RequestSelectionKeyDto model);
 
-    Task<Result<RequestStatusHistory>> AddHistoryStatusAsync(RequestSelection requestSelection, RequestProcessStatus processStatus, UserAccount user);
+    Task<Result> AddHistoryStatusAsync(RequestSelection requestSelection, RequestProcessStatus processStatus, UserAccount user);
 }
