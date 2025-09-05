@@ -27,7 +27,7 @@ public class MarkMessagesAsReadCommandHandler(IUserAccountServices userAccountSe
         if (userAccount.IsFailure)
             return userAccount.ToHandlerResult();
 
-        var result = await _liveChatServices.MarkMessagesAsReadAsync(request.ConversationId, );
+        var result = await _liveChatServices.MarkMessagesAsReadAsync(request.ConversationId, userAccount.Value);
         return new HandlerResult
         {
             RequestStatus = result.IsSuccess ? RequestStatus.Successful : RequestStatus.Failed,
