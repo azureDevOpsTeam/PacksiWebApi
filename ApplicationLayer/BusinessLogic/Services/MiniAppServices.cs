@@ -261,7 +261,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                             .OrderByDescending(h => h.Id)
                             .Select(h => (int?)h.Status))
                         .FirstOrDefault() ?? (int?)r.Status,
-                    RecordType = "Passenger"
+                    RecordType = r.RequestType == RequestTypeEnum.Carryer ? "Passenger" : "Sender"
                 }).ToListAsync();
 
             return Result<List<TripsDto>>.Success(requests);

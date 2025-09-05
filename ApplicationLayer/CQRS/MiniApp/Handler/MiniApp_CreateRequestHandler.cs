@@ -3,7 +3,6 @@ using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.Extensions;
 using ApplicationLayer.Extensions.ServiceMessages;
 using ApplicationLayer.Extensions.SmartEnums;
-using DomainLayer.Entities;
 using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
@@ -27,14 +26,6 @@ public class MiniApp_CreateRequestHandler(IUnitOfWork unitOfWork, IUserAccountSe
 
         if (resultAddRequest.RequestStatus != RequestStatus.Successful)
             return new HandlerResult { RequestStatus = resultAddRequest.RequestStatus, Message = resultAddRequest.Message };
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        var requestObj = (Request)resultAddRequest.Data;
-        var resultAddStatus = await _miniAppServices.AddRequestSelectionAsync(requestObj.Id, userAccount.Value, cancellationToken);
-
-        if (resultAddStatus.RequestStatus != RequestStatus.Successful)
-            return new HandlerResult { RequestStatus = resultAddStatus.RequestStatus, Message = resultAddStatus.Message };
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
