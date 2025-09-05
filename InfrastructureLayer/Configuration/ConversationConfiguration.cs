@@ -34,7 +34,7 @@ namespace InfrastructureLayer.Configuration
                    .OnDelete(DeleteBehavior.Restrict);
 
             // Ensure User1Id != User2Id
-            builder.HasCheckConstraint("CK_Conversation_DifferentUsers", "[User1Id] != [User2Id]");
+            builder.ToTable(t => t.HasCheckConstraint("CK_Conversation_DifferentUsers", "[User1Id] <> [User2Id]"));
 
             // Create unique index for User1Id and User2Id combination
             builder.HasIndex(x => new { x.User1Id, x.User2Id })

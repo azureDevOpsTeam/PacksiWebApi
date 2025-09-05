@@ -2,14 +2,12 @@
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.Extensions.ServiceMessages;
 using ApplicationLayer.Extensions.SmartEnums;
-using AutoMapper;
 using MediatR;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class VerifyPhoneNumberTMAHandler(IUnitOfWork unitOfWork, IMiniAppServices miniAppServices, IConfiguration configuration, IUserAccountServices userAccountServices, ILogger<VerifyPhoneNumberTMAHandler> logger, IMapper mapper) : IRequestHandler<VerifyPhoneNumberTMACommand, HandlerResult>
+public class VerifyPhoneNumberTMAHandler(IUnitOfWork unitOfWork, IUserAccountServices userAccountServices, ILogger<VerifyPhoneNumberTMAHandler> logger) : IRequestHandler<VerifyPhoneNumberTMACommand, HandlerResult>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IUserAccountServices _userAccountServices = userAccountServices;

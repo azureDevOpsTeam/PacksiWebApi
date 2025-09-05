@@ -1,6 +1,7 @@
 using ApplicationLayer.BusinessLogic.Interfaces.LiveChat;
 using ApplicationLayer.DTOs;
 using ApplicationLayer.DTOs.LiveChat;
+using ApplicationLayer.Extensions.SmartEnums;
 using AutoMapper;
 using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
@@ -26,22 +27,32 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
     {
         try
         {
-            var chatList = await _requestSelectionRepository.Query()
-                .Where(rs => rs.UserAccountId == currentUser.Id)
+            var requestSelections = await _requestSelectionRepository.Query()
+                .Where(rs => rs.UserAccountId == currentUser.Id && rs.Status == RequestProcessStatus.ConfirmedBySender)
+                .Include(rs => rs.Request)
+                    .ThenInclude(rs => rs.UserAccount)
+                        .ThenInclude(u => u.UserProfiles)
+                    .ToListAsync();
+
+            var chatList = requestSelections
                 .Select(rs => new ChatListDto
                 {
+                    RequestId = rs.RequestId,
                     RequestCreatorId = rs.Request.UserAccountId,
                     CurrentUserAccountId = currentUser.Id,
-                    RequestCreatorDisplayName = rs.Request.UserAccount.UserProfiles.FirstOrDefault().DisplayName,
-                    //Avatar = rs.Request.UserAccount.AvatarUrl,
-                    IsOnline = false, // TODO: Implement online status tracking
-                    LastSeen = null, // TODO: Implement last seen tracking
+                    RequestCreatorDisplayName = rs.Request.UserAccount.UserProfiles
+                        .FirstOrDefault()?.DisplayName,
+                    Avatar = "",
+                    IsOnline = false,
+                    LastSeen = null,
+                    LastMessage = null,
                     IsBlocked = false,
                 })
-                .DistinctBy(c => c.CurrentUserAccountId)
-                .ToListAsync();
+                .DistinctBy(c => c.RequestCreatorId)
+                .ToList();
 
             return Result<List<ChatListDto>>.Success(chatList);
+
         }
         catch (Exception exception)
         {

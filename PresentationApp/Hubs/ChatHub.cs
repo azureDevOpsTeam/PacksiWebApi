@@ -1,10 +1,9 @@
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.Authorization;
 using ApplicationLayer.BusinessLogic.Interfaces.LiveChat;
 using ApplicationLayer.DTOs.LiveChat;
 using ApplicationLayer.Interfaces;
 using DomainLayer.Entities;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 
 namespace PresentationApp.Hubs;
 
@@ -33,7 +32,7 @@ public class ChatHub : Hub
         await base.OnConnectedAsync();
     }
 
-    public override async Task OnDisconnectedAsync(Exception? exception)
+    public override async Task OnDisconnectedAsync(Exception exception)
     {
         var userId = Context.UserIdentifier;
         if (!string.IsNullOrEmpty(userId))

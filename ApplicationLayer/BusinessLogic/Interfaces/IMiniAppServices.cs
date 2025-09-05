@@ -22,10 +22,6 @@ public interface IMiniAppServices
 
     Task<Result<List<TripsDto>>> GetRequestsAsync(UserAccount user);
 
-    //Task<Result<List<TripsDto>>> InboundTripsQueryAsync(UserAccount user);
-
-    //Task<Result<List<TripsDto>>> OutboundTripsAsync(UserAccount user);
-
     Task<Result<List<UserRequestsDto>>> UserRequestsAsync(UserAccount user);
 
     Task<Result<List<MyPostedSelectedDto>>> MyPostedSelectedAsync(UserAccount user);
@@ -35,8 +31,6 @@ public interface IMiniAppServices
     Task<Result<RequestDetailDto>> GetRequestByIdAsync(RequestKeyDto model);
 
     Task<ServiceResult> AddRequestAsync(MiniApp_CreateRequestCommand model, UserAccount userAccount, CancellationToken cancellationToken);
-
-    Task<ServiceResult> AddRequestSelectionAsync(int requestId, UserAccount userAccount, CancellationToken cancellationToken);
 
     Task<ServiceResult> AddRequestItemTypeAsync(MiniApp_CreateRequestCommand model, int requestId);
 

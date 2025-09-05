@@ -48,7 +48,7 @@
         /// دریافت شماره موبایل و حذف کد کشور (+XX یا 00XX)
         /// فقط شماره داخلی بدون کد کشور خروجی داده می‌شود
         /// </summary>
-        public static string RemoveCountryCode(string phoneNumber, string? defaultCountryCode = null)
+        public static string RemoveCountryCode(string phoneNumber, string defaultCountryCode = null)
         {
             if (string.IsNullOrWhiteSpace(phoneNumber))
                 throw new ArgumentException("Phone number is required.");

@@ -3,14 +3,12 @@ using ApplicationLayer.CQRS.LiveChat.Query;
 using ApplicationLayer.DTOs.LiveChat;
 using ApplicationLayer.Extensions;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace PresentationApp.Controllers.LiveChat;
 
-[Route("api/[controller]")]
+[Route("api/miniapp/[controller]")]
 [ApiController]
-[Authorize]
 [ApiExplorerSettings(GroupName = "MiniApp")]
 public class LiveChatController : ControllerBase
 {

@@ -48,7 +48,11 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         {
             var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
             var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
-            //var initData = "query_id=AAEUWrBhAgAAABRasGGNFkj3&user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22ShahramOweisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&auth_date=1756993110&signature=-ocKtf_4K7y-b2woDpuUw8-B-EpXCQRraWGn7mSN37WEKLV4ZImdQtkU24GD1DS3UfvLsNijVsf74jC3bJOlCw&hash=a50480e2545b2694adf3df5db27eb5c83be154317fa6bec43a08fdd784fc90d9";
+            
+            //TODO For TEST
+            if (string.IsNullOrEmpty(initData))
+                initData = "user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&chat_instance=-2675852455221065738&chat_type=sender&auth_date=1757080096&signature=aQwFSYCv7hl42G0l0JJwhgbEyluQyTbBcI83UwnTYWprJ9tK_ki3inQ92JtpdMm8kYN5b9FAx5Jzdu6OelmRBw&hash=01902d3255aba73e70ff387e58237fd65d420adaee9f03862198bc36133b5fc3";
+
             if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
                 _logger.LogWarning("InitData is missing or empty");
@@ -334,26 +338,6 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         catch (Exception exception)
         {
             return new ServiceResult().Failed(_logger, exception, CommonExceptionMessage.AddFailed("ثبت درخواست"));
-        }
-    }
-
-    public async Task<ServiceResult> AddRequestSelectionAsync(int requestId, UserAccount userAccount, CancellationToken cancellationToken)
-    {
-        try
-        {
-            RequestSelection requestSelection = new()
-            {
-                RequestId = requestId,
-                UserAccountId = userAccount.Id
-            };
-
-            await _requestSelection.AddAsync(requestSelection);
-
-            return new ServiceResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
-        }
-        catch (Exception exception)
-        {
-            return new ServiceResult().Failed(_logger, exception, CommonExceptionMessage.AddFailed("ثبت وضعیت درخواست"));
         }
     }
 
@@ -774,25 +758,20 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
 
     #endregion Change Status
 
-    public async Task<Result<bool>> SendMessageAsync(long chatId)
+    public Task<Result<bool>> SendMessageAsync(long chatId)
     {
         try
         {
             var random = new Random();
             var code = random.Next(100000, 999999).ToString();
 
-            //var sentMessage = await _botClient.SendMessage(
-            //    chatId: chatId,
-            //    text: code
-            //);
-
             _logger.LogInformation("پیام با موفقیت به چت {ChatId} ارسال شد", chatId);
-            return Result<bool>.Success(true);
+            return Task.FromResult(Result<bool>.Success(true));
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "خطا در ارسال پیام به چت {ChatId}", chatId);
-            return Result<bool>.Success(false);
+            return Task.FromResult(Result<bool>.Success(false));
         }
     }
 
@@ -991,6 +970,26 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         {
             _logger.LogError(exception, "خطا در دریافت پروازهای ورودی {UserId}", user.Id);
             return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت پروازهای ورودی");
+        }
+    }
+
+    private async Task<ServiceResult> AddRequestSelectionAsync(int requestId, UserAccount userAccount, CancellationToken cancellationToken)
+    {
+        try
+        {
+            RequestSelection requestSelection = new()
+            {
+                RequestId = requestId,
+                UserAccountId = userAccount.Id
+            };
+
+            await _requestSelection.AddAsync(requestSelection);
+
+            return new ServiceResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
+        }
+        catch (Exception exception)
+        {
+            return new ServiceResult().Failed(_logger, exception, CommonExceptionMessage.AddFailed("ثبت وضعیت درخواست"));
         }
     }
 }
