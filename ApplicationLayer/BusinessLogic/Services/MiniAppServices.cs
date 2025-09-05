@@ -47,8 +47,8 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         try
         {
             var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
-            //var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
-            var initData = "query_id=AAEUWrBhAgAAABRasGGNFkj3&user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22ShahramOweisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&auth_date=1756993110&signature=-ocKtf_4K7y-b2woDpuUw8-B-EpXCQRraWGn7mSN37WEKLV4ZImdQtkU24GD1DS3UfvLsNijVsf74jC3bJOlCw&hash=a50480e2545b2694adf3df5db27eb5c83be154317fa6bec43a08fdd784fc90d9";
+            var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
+            //var initData = "query_id=AAEUWrBhAgAAABRasGGNFkj3&user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22ShahramOweisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&auth_date=1756993110&signature=-ocKtf_4K7y-b2woDpuUw8-B-EpXCQRraWGn7mSN37WEKLV4ZImdQtkU24GD1DS3UfvLsNijVsf74jC3bJOlCw&hash=a50480e2545b2694adf3df5db27eb5c83be154317fa6bec43a08fdd784fc90d9";
             if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
                 _logger.LogWarning("InitData is missing or empty");
