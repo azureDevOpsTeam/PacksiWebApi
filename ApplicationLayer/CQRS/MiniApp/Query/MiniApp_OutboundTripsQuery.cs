@@ -2,4 +2,4 @@
 
 namespace ApplicationLayer.CQRS.MiniApp.Query;
 
-public record MiniApp_OutboundTripsQuery : IRequest<HandlerResult>;
+public record MiniApp_GetRequestTripsQuery : IRequest<HandlerResult>;

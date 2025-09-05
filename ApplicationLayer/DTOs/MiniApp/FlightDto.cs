@@ -2,7 +2,7 @@
 
 namespace ApplicationLayer.DTOs.MiniApp;
 
-public class OutboundDto
+public class TripsDto
 {
     public int RequestId { get; set; }
 
@@ -65,4 +65,6 @@ public class OutboundDto
                 return RequestProcessStatus.FromValue(CurrentUserStatus.Value).PersianName;
         }
     }
+
+    public string RequestType { get; set; }
 }

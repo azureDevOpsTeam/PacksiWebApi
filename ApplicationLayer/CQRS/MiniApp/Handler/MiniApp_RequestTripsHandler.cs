@@ -5,12 +5,12 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class MiniApp_OutboundTripsHandler(IMiniAppServices miniAppServices, IUserAccountServices userAccountServices) : IRequestHandler<MiniApp_OutboundTripsQuery, HandlerResult>
+public class MiniApp_RequestTripsHandler(IMiniAppServices miniAppServices, IUserAccountServices userAccountServices) : IRequestHandler<MiniApp_GetRequestTripsQuery, HandlerResult>
 {
     private readonly IMiniAppServices _miniAppServices = miniAppServices;
     private readonly IUserAccountServices _userAccountServices = userAccountServices;
 
-    public async Task<HandlerResult> Handle(MiniApp_OutboundTripsQuery request, CancellationToken cancellationToken)
+    public async Task<HandlerResult> Handle(MiniApp_GetRequestTripsQuery request, CancellationToken cancellationToken)
     {
         var resultValidation = await _miniAppServices.ValidateTelegramMiniAppUserAsync();
         if (resultValidation.IsFailure)
@@ -20,7 +20,7 @@ public class MiniApp_OutboundTripsHandler(IMiniAppServices miniAppServices, IUse
         if (userAccount.IsFailure)
             return userAccount.ToHandlerResult();
 
-        var getOutbound = await _miniAppServices.OutboundTripsAsync(userAccount.Value);
+        var getOutbound = await _miniAppServices.GetRequestsAsync(userAccount.Value);
         return getOutbound.ToHandlerResult();
     }
 }

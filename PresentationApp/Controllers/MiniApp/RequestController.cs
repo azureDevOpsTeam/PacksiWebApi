@@ -25,9 +25,9 @@ namespace PresentationApp.Controllers.MiniApp
         public async Task<IActionResult> ItemTypeAsync()
             => await ResultHelper.GetResultAsync(_mediator, new ItemTypeQuery());
 
-        [HttpGet("OutboundTrips")]
-        public async Task<IActionResult> OutboundTripsAsync()
-            => await ResultHelper.GetResultAsync(_mediator, new MiniApp_OutboundTripsQuery());
+        [HttpGet("GetRequestTrips")]
+        public async Task<IActionResult> GetRequestTripsAsync()
+            => await ResultHelper.GetResultAsync(_mediator, new MiniApp_GetRequestTripsQuery());
 
         [HttpGet("InboundTrips")]
         public async Task<IActionResult> InboundTripsAsync()

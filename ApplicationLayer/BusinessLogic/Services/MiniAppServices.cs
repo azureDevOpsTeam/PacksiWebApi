@@ -155,7 +155,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         }
     }
 
-    public async Task<Result<List<OutboundDto>>> OutboundTripsAsync(UserAccount user)
+    public async Task<Result<List<TripsDto>>> GetRequestsAsync(UserAccount user)
     {
         try
         {
@@ -169,58 +169,199 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                 .Select(p => p.CountryId.Value)
                 .ToListAsync();
 
-            var outboundRequests = await _requestRepository.Query()
-                .Where(r =>
-                    r.OriginCity != null &&
-                    r.OriginCity.CountryId == userCountryId &&
-                    r.DestinationCity != null &&
-                    preferredCountryIds.Contains(r.DestinationCity.CountryId))
-                .Include(current => current.UserAccount)
-                    .ThenInclude(current => current.UserProfiles)
-                .Include(current => current.RequestSelections)
-                .Include(current => current.RequestItemTypes)
-                .Include(current => current.OriginCity)
-                    .ThenInclude(current => current.Country)
-                .Include(current => current.DestinationCity)
-                    .ThenInclude(current => current.Country)
-                .Select(current => new OutboundDto
+            var requests = await _requestRepository.Query()
+                .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
+                .Include(r => r.RequestSelections).ThenInclude(rs => rs.RequestStatusHistories)
+                .Include(r => r.RequestItemTypes)
+                .Include(r => r.OriginCity).ThenInclude(c => c.Country)
+                .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
+                .Select(r => new TripsDto
                 {
-                    RequestId = current.Id,
-                    UserAccountId = current.UserAccountId,
-                    FullName = current.UserAccount.UserProfiles.FirstOrDefault().DisplayName ?? current.UserAccount.UserProfiles.FirstOrDefault().FirstName,
-                    ArrivalDate = current.ArrivalDate,
-                    DepartureDate = current.DepartureDate,
-                    ArrivalDatePersian = DateTimeHelper.GetPersianDate(current.ArrivalDate),
-                    DepartureDatePersian = DateTimeHelper.GetPersianDate(current.DepartureDate),
-                    Description = current.Description,
-                    DestinationCity = current.DestinationCity.Name,
-                    DestinationCityFa = current.DestinationCity.PersianName,
-                    OriginCity = current.OriginCity.Name,
-                    OriginCityFa = current.OriginCity.PersianName,
-                    ItemTypes = current.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).Name).ToArray(),
-                    ItemTypesFa = current.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).PersianName).ToArray(),
-                    MaxHeightCm = current.MaxHeightCm,
-                    MaxLengthCm = current.MaxLengthCm,
-                    MaxWeightKg = current.MaxWeightKg,
-                    MaxWidthCm = current.MaxWidthCm,
-                    CurrentUserStatus = current.RequestSelections
-                    .Where(sel => sel.UserAccountId == user.Id)
-                    .SelectMany(sel => sel.RequestStatusHistories
-                    .OrderByDescending(h => h.Id)
-                    .Select(h => (int?)h.Status))
-                    .FirstOrDefault() ?? (int?)current.Status,
+                    RequestId = r.Id,
+                    UserAccountId = r.UserAccountId,
+                    FullName = r.UserAccount.UserProfiles.FirstOrDefault().DisplayName
+                               ?? r.UserAccount.UserProfiles.FirstOrDefault().FirstName,
+                    ArrivalDate = r.ArrivalDate,
+                    DepartureDate = r.DepartureDate,
+                    ArrivalDatePersian = DateTimeHelper.GetPersianDate(r.ArrivalDate),
+                    DepartureDatePersian = DateTimeHelper.GetPersianDate(r.DepartureDate),
+                    Description = r.Description,
+                    DestinationCity = r.DestinationCity.Name,
+                    DestinationCityFa = r.DestinationCity.PersianName,
+                    OriginCity = r.OriginCity.Name,
+                    OriginCityFa = r.OriginCity.PersianName,
+                    ItemTypes = r.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).Name).ToArray(),
+                    ItemTypesFa = r.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).PersianName).ToArray(),
+                    MaxHeightCm = r.MaxHeightCm,
+                    MaxLengthCm = r.MaxLengthCm,
+                    MaxWeightKg = r.MaxWeightKg,
+                    MaxWidthCm = r.MaxWidthCm,
+                    CurrentUserStatus = r.RequestSelections
+                        .Where(sel => sel.UserAccountId == user.Id)
+                        .SelectMany(sel => sel.RequestStatusHistories
+                            .OrderByDescending(h => h.Id)
+                            .Select(h => (int?)h.Status))
+                        .FirstOrDefault() ?? (int?)r.Status,
+
+                    // ✅ تعیین نوع درخواست
+                    RequestType =
+                        r.RequestSelections.Any(sel => sel.UserAccountId == user.Id)
+                            ? "selected"
+                            : r.OriginCity.CountryId == userCountryId
+                                ? "outbound"
+                                : r.DestinationCity.CountryId == userCountryId
+                                    ? "inbound"
+                                    : "favorite" // فعلا placeholder
                 }).ToListAsync();
 
-            return Result<List<OutboundDto>>.Success(outboundRequests);
+            var fakeRequests = new List<TripsDto>
+            {
+                new() {
+                    RequestId = 1,
+                    UserAccountId = 101,
+                    FullName = "Ali Ahmadi",
+                    OriginCity = "Tehran",
+                    OriginCityFa = "تهران",
+                    DestinationCity = "Berlin",
+                    DestinationCityFa = "برلین",
+                    DepartureDate = DateTime.Now.AddDays(5),
+                    DepartureDatePersian = "1404/06/15",
+                    ArrivalDate = DateTime.Now.AddDays(7),
+                    ArrivalDatePersian = "1404/06/17",
+                    Description = "حمل بسته کوچک",
+                    ItemTypes = new[] { "Electronics" },
+                    ItemTypesFa = new[] { "لوازم الکترونیکی" },
+                    MaxWeightKg = 10,
+                    CurrentUserStatus = 1,
+                    RequestType = "outbound"
+                },
+                new() {
+                    RequestId = 5,
+                    UserAccountId = 101,
+                    FullName = "Ali Ahmadi",
+                    OriginCity = "Tehran",
+                    OriginCityFa = "تهران",
+                    DestinationCity = "Berlin",
+                    DestinationCityFa = "برلین",
+                    DepartureDate = DateTime.Now.AddDays(5),
+                    DepartureDatePersian = "1404/06/15",
+                    ArrivalDate = DateTime.Now.AddDays(7),
+                    ArrivalDatePersian = "1404/06/17",
+                    Description = "حمل بسته کوچک",
+                    ItemTypes = new[] { "Electronics" },
+                    ItemTypesFa = new[] { "لوازم الکترونیکی" },
+                    MaxWeightKg = 10,
+                    CurrentUserStatus = 1,
+                    RequestType = "outbound"
+                },
+                new() {
+                    RequestId = 6,
+                    UserAccountId = 101,
+                    FullName = "Ali Ahmadi",
+                    OriginCity = "Tehran",
+                    OriginCityFa = "تهران",
+                    DestinationCity = "Berlin",
+                    DestinationCityFa = "برلین",
+                    DepartureDate = DateTime.Now.AddDays(5),
+                    DepartureDatePersian = "1404/06/15",
+                    ArrivalDate = DateTime.Now.AddDays(7),
+                    ArrivalDatePersian = "1404/06/17",
+                    Description = "حمل بسته کوچک",
+                    ItemTypes = new[] { "Electronics" },
+                    ItemTypesFa = new[] { "لوازم الکترونیکی" },
+                    MaxWeightKg = 10,
+                    CurrentUserStatus = 1,
+                    RequestType = "outbound"
+                },
+                new() {
+                    RequestId = 2,
+                    UserAccountId = 102,
+                    FullName = "Sara Mohammadi",
+                    OriginCity = "Paris",
+                    OriginCityFa = "پاریس",
+                    DestinationCity = "Tehran",
+                    DestinationCityFa = "تهران",
+                    DepartureDate = DateTime.Now.AddDays(10),
+                    DepartureDatePersian = "1404/06/20",
+                    ArrivalDate = DateTime.Now.AddDays(12),
+                    ArrivalDatePersian = "1404/06/22",
+                    Description = "حمل اسناد",
+                    ItemTypes = new[] { "Documents" },
+                    ItemTypesFa = new[] { "اسناد" },
+                    MaxWeightKg = 2,
+                    CurrentUserStatus = 2,
+                    RequestType = "inbound"
+                },
+                new() {
+                    RequestId = 3,
+                    UserAccountId = 103,
+                    FullName = "Reza Karimi",
+                    OriginCity = "Istanbul",
+                    OriginCityFa = "استانبول",
+                    DestinationCity = "Dubai",
+                    DestinationCityFa = "دبی",
+                    DepartureDate = DateTime.Now.AddDays(3),
+                    DepartureDatePersian = "1404/06/13",
+                    ArrivalDate = DateTime.Now.AddDays(4),
+                    ArrivalDatePersian = "1404/06/14",
+                    Description = "ارسال هدیه",
+                    ItemTypes = new[] { "Gift" },
+                    ItemTypesFa = new[] { "هدیه" },
+                    MaxWeightKg = 5,
+                    CurrentUserStatus = 101, // فرضاً کاربر انتخاب کرده
+                    RequestType = "selected"
+                },
+                new() {
+                    RequestId = 6,
+                    UserAccountId = 103,
+                    FullName = "Reza Karimi",
+                    OriginCity = "Istanbul",
+                    OriginCityFa = "استانبول",
+                    DestinationCity = "Dubai",
+                    DestinationCityFa = "دبی",
+                    DepartureDate = DateTime.Now.AddDays(3),
+                    DepartureDatePersian = "1404/06/13",
+                    ArrivalDate = DateTime.Now.AddDays(4),
+                    ArrivalDatePersian = "1404/06/14",
+                    Description = "ارسال هدیه",
+                    ItemTypes = new[] { "Gift" },
+                    ItemTypesFa = new[] { "هدیه" },
+                    MaxWeightKg = 5,
+                    CurrentUserStatus = 101, // فرضاً کاربر انتخاب کرده
+                    RequestType = "selected"
+                },
+                new() {
+                    RequestId = 4,
+                    UserAccountId = 104,
+                    FullName = "Mina Jafari",
+                    OriginCity = "Rome",
+                    OriginCityFa = "رم",
+                    DestinationCity = "Madrid",
+                    DestinationCityFa = "مادرید",
+                    DepartureDate = DateTime.Now.AddDays(15),
+                    DepartureDatePersian = "1404/06/25",
+                    ArrivalDate = DateTime.Now.AddDays(16),
+                    ArrivalDatePersian = "1404/06/26",
+                    Description = "حمل لباس",
+                    ItemTypes = new[] { "Clothes" },
+                    ItemTypesFa = new[] { "لباس" },
+                    MaxWeightKg = 8,
+                    CurrentUserStatus = 4,
+                    RequestType = "favorite"
+                }
+            };
+
+            //return Result<List<TripsDto>>.Success(requests);
+            return Result<List<TripsDto>>.Success(fakeRequests);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در دریافت پروازهای خروجی {UserId}", user.Id);
-            return Result<List<OutboundDto>>.GeneralFailure("خطا در دریافت پروازهای خروجی");
+            _logger.LogError(exception, "خطا در دریافت درخواست‌ها {UserId}", user.Id);
+            return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت درخواست‌ها");
         }
     }
 
-    public async Task<Result<List<OutboundDto>>> InboundTripsQueryAsync(UserAccount user)
+    public async Task<Result<List<TripsDto>>> InboundTripsQueryAsync(UserAccount user)
     {
         try
         {
@@ -247,7 +388,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     .ThenInclude(c => c.Country)
                 .Include(r => r.DestinationCity)
                     .ThenInclude(c => c.Country)
-                .Select(current => new OutboundDto
+                .Select(current => new TripsDto
                 {
                     RequestId = current.Id,
                     UserAccountId = current.UserAccountId,
@@ -275,12 +416,12 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     .FirstOrDefault() ?? (int?)current.Status,
                 }).ToListAsync();
 
-            return Result<List<OutboundDto>>.Success(inboundRequests);
+            return Result<List<TripsDto>>.Success(inboundRequests);
         }
         catch (Exception exception)
         {
             _logger.LogError(exception, "خطا در دریافت پروازهای ورودی {UserId}", user.Id);
-            return Result<List<OutboundDto>>.GeneralFailure("خطا در دریافت پروازهای ورودی");
+            return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت پروازهای ورودی");
         }
     }
 
