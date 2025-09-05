@@ -28,7 +28,8 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
         try
         {
             var requestSelections = await _requestSelectionRepository.Query()
-                .Where(rs => rs.UserAccountId == currentUser.Id && rs.Status == RequestProcessStatus.ConfirmedBySender)
+                .Where(rs => (rs.UserAccountId == currentUser.Id || rs.Request.UserAccountId == currentUser.Id) &&
+                rs.Status == RequestProcessStatus.ConfirmedBySender)
                 .Include(rs => rs.Request)
                     .ThenInclude(rs => rs.UserAccount)
                         .ThenInclude(u => u.UserProfiles)
