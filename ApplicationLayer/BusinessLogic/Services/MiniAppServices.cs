@@ -612,8 +612,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             {
                 Conversation conversation = new()
                 {
-                    User1Id = 8,
-                    User2Id = 7
+                    User1Id = request.UserAccountId,
+                    User2Id = userAccount.Id
                 };
                 await _conversationRepository.AddAsync(conversation);
             }
