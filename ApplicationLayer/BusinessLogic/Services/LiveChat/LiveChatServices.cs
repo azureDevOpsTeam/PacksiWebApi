@@ -34,6 +34,8 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                 .Include(rs => rs.Request)
                     .ThenInclude(rs => rs.UserAccount)
                         .ThenInclude(u => u.UserProfiles)
+                .Include(rs => rs.UserAccount)
+                    .ThenInclude(u => u.UserProfiles)
                     .ToListAsync();
 
             var chatList = requestSelections
@@ -42,8 +44,7 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                     RequestId = rs.RequestId,
                     RequestCreatorId = rs.Request.UserAccountId,
                     CurrentUserAccountId = currentUser.Id,
-                    RequestCreatorDisplayName = rs.Request.UserAccount.UserProfiles
-                        .FirstOrDefault()?.DisplayName,
+                    RequestCreatorDisplayName = rs.Request.UserAccountId != currentUser.Id ? rs.Request.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName : rs.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName,
                     Avatar = rs.Request.UserAccount.Avatar,
                     IsOnline = true,
                     LastSeenEn = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).En,
