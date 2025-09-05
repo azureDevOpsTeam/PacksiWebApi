@@ -52,12 +52,12 @@ public class DashboardService(IRepository<Request> requestRepository, IUserConte
             var reportTripsDto = new ReportTripsDto
             {
                 CarryerOutboundTrips = relatedRequests.Count(r =>
-                    r.RequestType == (int)RequestTypeEnum.Carryer &&
+                    r.RequestType == (int)RequestTypeEnum.Passenger &&
                     r.OriginCountryId == userCountryId &&
                     preferredCountryIds.Contains(r.DestinationCountryId)),
 
                 CarryerInboundTrips = relatedRequests.Count(r =>
-                    r.RequestType == (int)RequestTypeEnum.Carryer &&
+                    r.RequestType == (int)RequestTypeEnum.Passenger &&
                     preferredCountryIds.Contains(r.OriginCountryId) &&
                     r.DestinationCountryId == userCountryId),
 
@@ -135,11 +135,11 @@ public class DashboardService(IRepository<Request> requestRepository, IUserConte
 
             var result = new InboundOutboundTripsDto
             {
-                OutboundTrips = SelectTop3(outbound, (int)RequestTypeEnum.Carryer)
+                OutboundTrips = SelectTop3(outbound, (int)RequestTypeEnum.Passenger)
                     .Concat(SelectTop3(outbound, (int)RequestTypeEnum.Sender))
                     .ToList(),
 
-                InboundTrips = SelectTop3(inbound, (int)RequestTypeEnum.Carryer)
+                InboundTrips = SelectTop3(inbound, (int)RequestTypeEnum.Passenger)
                     .Concat(SelectTop3(inbound, (int)RequestTypeEnum.Sender))
                     .ToList()
             };

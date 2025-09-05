@@ -261,7 +261,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                             .OrderByDescending(h => h.Id)
                             .Select(h => (int?)h.Status))
                         .FirstOrDefault() ?? (int?)r.Status,
-                    RecordType = r.RequestType == RequestTypeEnum.Carryer ? "Passenger" : "Sender"
+                    RecordType = r.RequestType == RequestTypeEnum.Passenger ? RequestTypeEnum.Passenger.EnglishName : RequestTypeEnum.Sender.EnglishName
                 }).ToListAsync();
 
             return Result<List<TripsDto>>.Success(requests);
@@ -302,7 +302,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     {
                         FilePath = $"/uploads/{fileName}",
                         FileType = formFile.ContentType,
-                        AttachmentType = model.RequestType == RequestTypeEnum.Carryer ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
+                        AttachmentType = model.RequestType == RequestTypeEnum.Passenger ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
                     });
                 }
             }

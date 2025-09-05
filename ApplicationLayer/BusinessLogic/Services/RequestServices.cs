@@ -62,7 +62,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                         {
                             FilePath = $"/uploads/{fileName}",
                             FileType = formFile.ContentType,
-                            AttachmentType = model.RequestType == RequestTypeEnum.Carryer ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
+                            AttachmentType = model.RequestType == RequestTypeEnum.Passenger ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
                         });
                     }
                 }
@@ -168,7 +168,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                             RequestId = request.Id,
                             FilePath = $"/uploads/{fileName}",
                             FileType = formFile.ContentType,
-                            AttachmentType = dto.RequestType == RequestTypeEnum.Carryer ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
+                            AttachmentType = dto.RequestType == RequestTypeEnum.Passenger ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
                         });
                     }
                 }
