@@ -25,7 +25,7 @@ namespace ApplicationLayer.BusinessLogic.Services;
 public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository,
     IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation,
     IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo, IRepository<RequestSelection> requestSelection,
-    IRepository<RequestStatusHistory> requestStatusHistoryRepository,
+    IRepository<RequestStatusHistory> requestStatusHistoryRepository, IRepository<Conversation> conversationRepository,
     IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger, IMapper mapper) : IMiniAppServices
 {
     private readonly HttpClient _httpClient = httpClient;
@@ -37,6 +37,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     private readonly IRepository<RequestItemType> _itemTypeRepo = itemTypeRepo;
     private readonly IRepository<RequestSelection> _requestSelection = requestSelection;
     private readonly IRepository<RequestStatusHistory> _requestStatusHistoryRepository = requestStatusHistoryRepository;
+    private readonly IRepository<Conversation> _conversationRepository = conversationRepository;
     private readonly IConfiguration _configuration = configuration;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
@@ -594,7 +595,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-    public async Task<Result> ConfirmedBySenderAsync(RequestSelectionKeyDto model)
+    public async Task<Result> ConfirmedBySenderAsync(RequestSelectionKeyDto model, UserAccount userAccount)
     {
         try
         {
@@ -606,6 +607,16 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
             request.Status = RequestProcessStatus.ConfirmedBySender;
             await _requestSelection.UpdateAsync(request);
+
+            if (!await _conversationRepository.AnyAsync(current => current.User1Id == request.UserAccountId && current.User2Id == userAccount.Id))
+            {
+                Conversation conversation = new()
+                {
+                    User1Id = 8,
+                    User2Id = 7
+                };
+                await _conversationRepository.AddAsync(conversation);
+            }
 
             return Result.Success();
         }

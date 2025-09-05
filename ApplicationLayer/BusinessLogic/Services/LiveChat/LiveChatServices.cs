@@ -23,56 +23,100 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly ILogger<LiveChatServices> _logger = logger;
     private readonly IMapper _mapper = mapper;
-
     public async Task<Result<List<ChatListDto>>> GetUsersListAsync(UserAccount currentUser)
     {
         try
         {
-            var requestSelections = await _requestSelectionRepository.Query()
-                .Where(rs => (rs.UserAccountId == currentUser.Id || rs.Request.UserAccountId == currentUser.Id) &&
-                rs.Status == RequestProcessStatus.ConfirmedBySender)
-                .Include(rs => rs.Request)
-                    .ThenInclude(rs => rs.UserAccount)
-                        .ThenInclude(u => u.UserProfiles)
-                .Include(rs => rs.UserAccount)
+            var conversations = await _conversationRepository.Query()
+                .Where(c => c.User1Id == currentUser.Id || c.User2Id == currentUser.Id)
+                .Include(c => c.User1)
                     .ThenInclude(u => u.UserProfiles)
-                    .ToListAsync();
-
-            var requestConversation = await _requestSelectionRepository.Query()
-                .Where(rs => (rs.UserAccountId == currentUser.Id || rs.Request.UserAccountId == currentUser.Id) &&
-                rs.Status == RequestProcessStatus.ConfirmedBySender)
-                .Include(rs => rs.Request)
-                    .ThenInclude(rs => rs.UserAccount)
-                        .ThenInclude(u => u.UserProfiles)
-                .Include(rs => rs.UserAccount)
+                .Include(c => c.User2)
                     .ThenInclude(u => u.UserProfiles)
-                    .ToListAsync();
+                .Include(c => c.Messages.OrderByDescending(m => m.SentAt).Take(1)) // فقط آخرین پیام
+                .ToListAsync();
 
-            var chatList = requestSelections
-                .Select(rs => new ChatListDto
+            var chatList = conversations.Select(c =>
+            {
+                var otherUser = c.User1Id == currentUser.Id ? c.User2 : c.User1;
+                var lastMessage = c.Messages.OrderByDescending(m => m.SentAt).FirstOrDefault();
+
+                return new ChatListDto
                 {
-                    RequestId = rs.Request.Id,
-                    ReciverId = rs.Request.UserAccountId != currentUser.Id ?  rs.Request.UserAccountId : rs.UserAccount.Id,
-                    SenderId = currentUser.Id, 
-                    RequestCreatorDisplayName = rs.Request.UserAccountId != currentUser.Id ? rs.Request.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName : rs.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName,
-                    Avatar = rs.Request.UserAccount.Avatar,
-                    IsOnline = true,
+                    ConversationId = c.Id,
+                    SenderId = currentUser.Id,
+                    ReciverId = otherUser.Id,
+                    RequestCreatorDisplayName = currentUser.Id != c.User1Id ? currentUser.UserProfiles.FirstOrDefault()?.DisplayName : otherUser.UserProfiles.FirstOrDefault()?.DisplayName,
+                    Avatar = otherUser.Avatar,
+                    IsOnline = true, // اینو باید از Presence یا SignalR دربیاری
                     LastSeenEn = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).En,
+                    LastMessage = lastMessage?.Content ?? "No messages yet",
                     LastSeenFa = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).Fa,
-                    LastMessage = "click to see message",
-                    IsBlocked = false,
-                })
-                .DistinctBy(c => c.ReciverId)
-                .ToList();
+                    IsBlocked = (c.User1Id == currentUser.Id && c.IsUser1Blocked) ||
+                                (c.User2Id == currentUser.Id && c.IsUser2Blocked)
+                };
+            })
+            .DistinctBy(c => c.ReciverId)
+            .ToList();
 
             return Result<List<ChatListDto>>.Success(chatList);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در دریافت لیست کاربران {UserId}", currentUser.Id);
+            _logger.LogError(exception, "خطا در دریافت لیست کانورسیشن‌های کاربر {UserId}", currentUser.Id);
             return Result<List<ChatListDto>>.GeneralFailure("خطا در دریافت لیست کاربران");
         }
     }
+
+    //public async Task<Result<List<ChatListDto>>> GetUsersListAsync(UserAccount currentUser)
+    //{
+    //    try
+    //    {
+    //        var requestSelections = await _requestSelectionRepository.Query()
+    //            .Where(rs => (rs.UserAccountId == currentUser.Id || rs.Request.UserAccountId == currentUser.Id) &&
+    //            rs.Status == RequestProcessStatus.ConfirmedBySender)
+    //            .Include(rs => rs.Request)
+    //                .ThenInclude(rs => rs.UserAccount)
+    //                    .ThenInclude(u => u.UserProfiles)
+    //            .Include(rs => rs.UserAccount)
+    //                .ThenInclude(u => u.UserProfiles)
+    //                .ToListAsync();
+
+    //        var requestConversation = await _requestSelectionRepository.Query()
+    //            .Where(rs => (rs.UserAccountId == currentUser.Id || rs.Request.UserAccountId == currentUser.Id) &&
+    //            rs.Status == RequestProcessStatus.ConfirmedBySender)
+    //            .Include(rs => rs.Request)
+    //                .ThenInclude(rs => rs.UserAccount)
+    //                    .ThenInclude(u => u.UserProfiles)
+    //            .Include(rs => rs.UserAccount)
+    //                .ThenInclude(u => u.UserProfiles)
+    //                .ToListAsync();
+
+    //        var chatList = requestSelections
+    //            .Select(rs => new ChatListDto
+    //            {
+    //                RequestId = rs.Request.Id,
+    //                ReciverId = rs.Request.UserAccountId != currentUser.Id ?  rs.Request.UserAccountId : rs.UserAccount.Id,
+    //                SenderId = currentUser.Id, 
+    //                RequestCreatorDisplayName = rs.Request.UserAccountId != currentUser.Id ? rs.Request.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName : rs.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName,
+    //                Avatar = rs.Request.UserAccount.Avatar,
+    //                IsOnline = true,
+    //                LastSeenEn = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).En,
+    //                LastSeenFa = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).Fa,
+    //                LastMessage = "click to see message",
+    //                IsBlocked = false,
+    //            })
+    //            .DistinctBy(c => c.ReciverId)
+    //            .ToList();
+
+    //        return Result<List<ChatListDto>>.Success(chatList);
+    //    }
+    //    catch (Exception exception)
+    //    {
+    //        _logger.LogError(exception, "خطا در دریافت لیست کاربران {UserId}", currentUser.Id);
+    //        return Result<List<ChatListDto>>.GeneralFailure("خطا در دریافت لیست کاربران");
+    //    }
+    //}
 
     public async Task<Result<MessageDto>> SendMessageAsync(SendMessageDto model, UserAccount sender)
     {

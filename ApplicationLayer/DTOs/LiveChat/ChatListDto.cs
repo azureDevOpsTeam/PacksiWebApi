@@ -2,6 +2,8 @@ namespace ApplicationLayer.DTOs.LiveChat;
 
 public class ChatListDto
 {
+    public int ConversationId { get; set; }
+
     public int RequestId { get; set; }
 
     public int ReciverId { get; set; }
