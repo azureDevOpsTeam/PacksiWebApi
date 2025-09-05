@@ -300,6 +300,7 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 UserAccount userAccount = new()
                 {
+                    Avatar = model.PhotoUrl,
                     TelegramId = model.Id,
                     TelegramUserName = model.Username,
                     ConfirmEmail = false,

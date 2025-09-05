@@ -22,12 +22,13 @@ using System.Web;
 namespace ApplicationLayer.BusinessLogic.Services;
 
 [InjectAsScoped]
-public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository,
+public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository,
     IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation,
     IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo, IRepository<RequestSelection> requestSelection,
     IRepository<RequestStatusHistory> requestStatusHistoryRepository,
     IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger, IMapper mapper) : IMiniAppServices
 {
+    private readonly HttpClient _httpClient = httpClient;
     private readonly IRepository<TelegramUserInformation> _telegramUserRepository = telegramUserRepository;
     private readonly IRepository<UserAccount> _userAccountRepository = userAccountRepository;
     private readonly IRepository<UserProfile> _userProfileRepository = userProfileRepository;
@@ -46,9 +47,10 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
     {
         try
         {
+            //TODO For TEST
             var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
             var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
-            
+
             //TODO For TEST
             if (string.IsNullOrEmpty(initData))
                 initData = "user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&chat_instance=-2675852455221065738&chat_type=sender&auth_date=1757080096&signature=aQwFSYCv7hl42G0l0JJwhgbEyluQyTbBcI83UwnTYWprJ9tK_ki3inQ92JtpdMm8kYN5b9FAx5Jzdu6OelmRBw&hash=01902d3255aba73e70ff387e58237fd65d420adaee9f03862198bc36133b5fc3";
@@ -80,6 +82,12 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                 ExistUser = await _userAccountRepository.GetDbSet().AnyAsync(current => current.TelegramId == parsedData.User.Id)
             };
 
+            var result = await DownloadUserProfilePhotoAsync(validationResult.User.Id);
+            if (!string.IsNullOrEmpty(result))
+            {
+                validationResult.User.PhotoUrl = result;
+            }
+
             return Result<TelegramMiniAppValidationResultDto>.Success(validationResult);
         }
         catch (Exception exception)
@@ -87,6 +95,58 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
             _logger.LogError(exception, "خطا در اعتبارسنجی کاربر");
             return Result<TelegramMiniAppValidationResultDto>.GeneralFailure("خطای داخلی سرور");
         }
+    }
+
+    private async Task<string> DownloadUserProfilePhotoAsync(long userId)
+    {
+        //TODO For TEST
+        var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
+
+        // مسیر دایرکتوری برای کاربر
+        var directoryPath = Path.Combine($"/uploads", userId.ToString());
+
+        // اگر پوشه وجود دارد، هیچ کاری انجام نده
+        if (Directory.Exists(directoryPath))
+            return null;
+
+        Directory.CreateDirectory(directoryPath);
+
+        // مرحله 1: گرفتن عکس پروفایل
+        var photosResponse = await _httpClient.GetStringAsync(
+            $"https://api.telegram.org/bot{botToken}/getUserProfilePhotos?user_id={userId}&limit=1"
+        );
+
+        var photos = System.Text.Json.JsonDocument.Parse(photosResponse);
+        if (!photos.RootElement.GetProperty("result").GetProperty("photos").EnumerateArray().Any())
+            return null;
+
+        var fileId = photos.RootElement
+            .GetProperty("result")
+            .GetProperty("photos")[0][0]
+            .GetProperty("file_id")
+            .GetString();
+
+        // مرحله 2: گرفتن file_path
+        var fileResponse = await _httpClient.GetStringAsync(
+            $"https://api.telegram.org/bot{botToken}/getFile?file_id={fileId}"
+        );
+
+        var fileJson = System.Text.Json.JsonDocument.Parse(fileResponse);
+        var filePath = fileJson.RootElement
+            .GetProperty("result")
+            .GetProperty("file_path")
+            .GetString();
+
+        var extension = Path.GetExtension(filePath);
+
+        var savePath = Path.Combine(directoryPath, $"{userId}{extension}");
+
+        // مرحله 3: دانلود فایل
+        var fileUrl = $"https://api.telegram.org/file/bot{botToken}/{filePath}";
+        var fileBytes = await _httpClient.GetByteArrayAsync(fileUrl);
+
+        await File.WriteAllBytesAsync(savePath, fileBytes);
+        return savePath;
     }
 
     public async Task<Result<TelegramMiniAppUserDto>> ExtractUserInfoFromInitDataAsync(string initData)
@@ -304,7 +364,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
 
                     attachments.Add(new CreateRequestAttachmentDto
                     {
-                        FilePath = $"/uploads/{fileName}",
+                        FilePath = $"/uploads/request/{fileName}",
                         FileType = formFile.ContentType,
                         AttachmentType = model.RequestType == RequestTypeEnum.Passenger ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
                     });
