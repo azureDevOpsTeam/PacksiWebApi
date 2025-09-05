@@ -66,5 +66,5 @@ public class TripsDto
         }
     }
 
-    public string RequestType { get; set; }
+    public string RecordType { get; set; }
 }

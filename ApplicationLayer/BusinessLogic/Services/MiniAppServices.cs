@@ -204,7 +204,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                         .FirstOrDefault() ?? (int?)r.Status,
 
                     // ✅ تعیین نوع درخواست
-                    RequestType =
+                    RecordType =
                         r.RequestSelections.Any(sel => sel.UserAccountId == user.Id)
                             ? "selected"
                             : r.OriginCity.CountryId == userCountryId
@@ -233,7 +233,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     ItemTypesFa = new[] { "لوازم الکترونیکی" },
                     MaxWeightKg = 10,
                     CurrentUserStatus = 1,
-                    RequestType = "outbound"
+                    RecordType = "outbound"
                 },
                 new() {
                     RequestId = 5,
@@ -252,7 +252,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     ItemTypesFa = new[] { "لوازم الکترونیکی" },
                     MaxWeightKg = 10,
                     CurrentUserStatus = 1,
-                    RequestType = "outbound"
+                    RecordType = "outbound"
                 },
                 new() {
                     RequestId = 6,
@@ -271,7 +271,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     ItemTypesFa = new[] { "لوازم الکترونیکی" },
                     MaxWeightKg = 10,
                     CurrentUserStatus = 1,
-                    RequestType = "outbound"
+                    RecordType = "outbound"
                 },
                 new() {
                     RequestId = 2,
@@ -290,7 +290,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     ItemTypesFa = new[] { "اسناد" },
                     MaxWeightKg = 2,
                     CurrentUserStatus = 2,
-                    RequestType = "inbound"
+                    RecordType = "inbound"
                 },
                 new() {
                     RequestId = 3,
@@ -309,7 +309,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     ItemTypesFa = new[] { "هدیه" },
                     MaxWeightKg = 5,
                     CurrentUserStatus = 101, // فرضاً کاربر انتخاب کرده
-                    RequestType = "selected"
+                    RecordType = "selected"
                 },
                 new() {
                     RequestId = 6,
@@ -328,7 +328,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     ItemTypesFa = new[] { "هدیه" },
                     MaxWeightKg = 5,
                     CurrentUserStatus = 101, // فرضاً کاربر انتخاب کرده
-                    RequestType = "selected"
+                    RecordType = "selected"
                 },
                 new() {
                     RequestId = 4,
@@ -347,7 +347,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                     ItemTypesFa = new[] { "لباس" },
                     MaxWeightKg = 8,
                     CurrentUserStatus = 4,
-                    RequestType = "favorite"
+                    RecordType = "favorite"
                 }
             };
 
