@@ -51,7 +51,7 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
             var chatList = requestSelections
                 .Select(rs => new ChatListDto
                 {
-                    RequestId = rs.RequestId,
+                    RequestId = rs.Request.Id,
                     ReciverId = rs.Request.UserAccountId != currentUser.Id ?  rs.Request.UserAccountId : rs.UserAccount.Id,
                     SenderId = currentUser.Id, 
                     RequestCreatorDisplayName = rs.Request.UserAccountId != currentUser.Id ? rs.Request.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName : rs.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName,
