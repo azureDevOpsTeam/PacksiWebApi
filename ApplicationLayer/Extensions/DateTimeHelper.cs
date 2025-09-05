@@ -135,5 +135,41 @@ namespace ApplicationLayer.Extensions
             var list = new List<string>() { "فروردین", "اردبیهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند" };
             return list[currentMonth - 1];
         }
+
+        public static (string Fa, string En) GetTimeAgo(DateTime dateTime)
+        {
+            var now = DateTime.UtcNow;
+            var ts = now - dateTime.ToUniversalTime();
+
+            if (ts.TotalMinutes < 1)
+                return ("لحظاتی پیش", "just now");
+
+            if (ts.TotalMinutes < 60)
+            {
+                var minutes = (int)ts.TotalMinutes;
+                return ($"{minutes} دقیقه پیش", $"{minutes} minute{(minutes > 1 ? "s" : "")} ago");
+            }
+
+            if (ts.TotalHours < 24)
+            {
+                var hours = (int)ts.TotalHours;
+                return ($"{hours} ساعت پیش", $"{hours} hour{(hours > 1 ? "s" : "")} ago");
+            }
+
+            if (ts.TotalDays < 30)
+            {
+                var days = (int)ts.TotalDays;
+                return ($"{days} روز پیش", $"{days} day{(days > 1 ? "s" : "")} ago");
+            }
+
+            if (ts.TotalDays < 365)
+            {
+                var months = (int)(ts.TotalDays / 30);
+                return ($"{months} ماه پیش", $"{months} month{(months > 1 ? "s" : "")} ago");
+            }
+
+            var years = (int)(ts.TotalDays / 365);
+            return ($"{years} سال پیش", $"{years} year{(years > 1 ? "s" : "")} ago");
+        }
     }
 }

@@ -1,6 +1,7 @@
 using ApplicationLayer.BusinessLogic.Interfaces.LiveChat;
 using ApplicationLayer.DTOs;
 using ApplicationLayer.DTOs.LiveChat;
+using ApplicationLayer.Extensions;
 using ApplicationLayer.Extensions.SmartEnums;
 using AutoMapper;
 using DomainLayer.Common.Attributes;
@@ -45,7 +46,8 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                         .FirstOrDefault()?.DisplayName,
                     Avatar = "",
                     IsOnline = false,
-                    LastSeen = null,
+                    LastSeenEn = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).En,
+                    LastSeenFa = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).Fa,
                     LastMessage = null,
                     IsBlocked = false,
                 })
@@ -53,7 +55,6 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                 .ToList();
 
             return Result<List<ChatListDto>>.Success(chatList);
-
         }
         catch (Exception exception)
         {

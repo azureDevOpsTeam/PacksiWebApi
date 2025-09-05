@@ -18,5 +18,7 @@ public class ChatListDto
 
     public bool IsBlocked { get; set; }
 
-    public DateTime? LastSeen { get; set; }
+    public string LastSeenEn { get; set; }
+
+    public string LastSeenFa { get; set; }
 }
