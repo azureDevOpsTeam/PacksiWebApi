@@ -81,7 +81,7 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
             // Check if receiver exists
             var receiver = await _userAccountRepository.GetByIdAsync(model.ReceiverId);
             if (receiver == null)
-                return Result<MessageDto>.NotFound("کاربر مقصد یافت نشد");
+                return Result<MessageDto>.NotFound($"کاربر مقصد یافت نشد{model.ReceiverId}");
 
             // Get or create conversation
             var conversationResult = await GetOrCreateConversationAsync(model.ReceiverId, sender);
