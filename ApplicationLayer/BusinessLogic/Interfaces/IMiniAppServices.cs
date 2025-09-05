@@ -1,5 +1,4 @@
 using ApplicationLayer.CQRS.MiniApp.Command;
-using ApplicationLayer.CQRS.Requests.Command;
 using ApplicationLayer.DTOs;
 using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.Requests;
@@ -23,7 +22,7 @@ public interface IMiniAppServices
 
     Task<Result<List<TripsDto>>> GetRequestsAsync(UserAccount user);
 
-    Task<Result<List<TripsDto>>> InboundTripsQueryAsync(UserAccount user);
+    //Task<Result<List<TripsDto>>> InboundTripsQueryAsync(UserAccount user);
 
     //Task<Result<List<TripsDto>>> OutboundTripsAsync(UserAccount user);
 
@@ -64,4 +63,5 @@ public interface IMiniAppServices
     Task<Result> RejectSelectionAsync(RequestSelectionKeyDto model);
 
     Task<Result> AddHistoryStatusAsync(RequestSelection requestSelection, RequestProcessStatus processStatus, UserAccount user);
+    Task<Result<List<TripsDto>>> GetMyRequestsAsync(UserAccount user);
 }

@@ -170,6 +170,7 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                 .ToListAsync();
 
             var requests = await _requestRepository.Query()
+                .Where(current => current.UserAccount != user)
                 .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
                 .Include(r => r.RequestSelections).ThenInclude(rs => rs.RequestStatusHistories)
                 .Include(r => r.RequestItemTypes)
@@ -222,67 +223,53 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
         }
     }
 
-    public async Task<Result<List<TripsDto>>> InboundTripsQueryAsync(UserAccount user)
+    public async Task<Result<List<TripsDto>>> GetMyRequestsAsync(UserAccount user)
     {
         try
         {
-            var userCountryId = await _userProfileRepository.Query()
-               .Where(p => p.UserAccountId == user.Id)
-               .Select(p => p.CountryOfResidenceId)
-               .FirstOrDefaultAsync();
-
-            var preferredCountryIds = await _userPreferredLocation.Query()
-                .Where(p => p.UserAccountId == user.Id && p.CountryId != null)
-                .Select(p => p.CountryId.Value)
-                .ToListAsync();
-
-            var inboundRequests = await _requestRepository.Query()
-                .Where(r =>
-                    r.OriginCity != null &&
-                    preferredCountryIds.Contains(r.OriginCity.CountryId) &&
-                    r.DestinationCity != null &&
-                    r.DestinationCity.CountryId == userCountryId)
-                .Include(current => current.UserAccount)
-                    .ThenInclude(current => current.UserProfiles)
-                .Include(current => current.RequestItemTypes)
-                .Include(r => r.OriginCity)
-                    .ThenInclude(c => c.Country)
-                .Include(r => r.DestinationCity)
-                    .ThenInclude(c => c.Country)
-                .Select(current => new TripsDto
+            var requests = await _requestRepository.Query()
+                .Where(current => current.UserAccount == user)
+                .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
+                .Include(r => r.RequestSelections).ThenInclude(rs => rs.RequestStatusHistories)
+                .Include(r => r.RequestItemTypes)
+                .Include(r => r.OriginCity).ThenInclude(c => c.Country)
+                .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
+                .Select(r => new TripsDto
                 {
-                    RequestId = current.Id,
-                    UserAccountId = current.UserAccountId,
-                    FullName = current.UserAccount.UserProfiles.FirstOrDefault().DisplayName ?? current.UserAccount.UserProfiles.FirstOrDefault().FirstName,
-                    ArrivalDate = current.ArrivalDate,
-                    DepartureDate = current.DepartureDate,
-                    ArrivalDatePersian = DateTimeHelper.GetPersianDate(current.ArrivalDate),
-                    DepartureDatePersian = DateTimeHelper.GetPersianDate(current.DepartureDate),
-                    Description = current.Description,
-                    DestinationCity = current.DestinationCity.Name,
-                    DestinationCityFa = current.DestinationCity.PersianName,
-                    OriginCity = current.OriginCity.Name,
-                    OriginCityFa = current.OriginCity.PersianName,
-                    ItemTypes = current.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.Id).Name).ToArray(),
-                    ItemTypesFa = current.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.Id).PersianName).ToArray(),
-                    MaxHeightCm = current.MaxHeightCm,
-                    MaxLengthCm = current.MaxLengthCm,
-                    MaxWeightKg = current.MaxWeightKg,
-                    MaxWidthCm = current.MaxWidthCm,
-                    CurrentUserStatus = current.RequestSelections
-                    .Where(sel => sel.UserAccountId == user.Id)
-                    .SelectMany(sel => sel.RequestStatusHistories
-                    .OrderByDescending(h => h.Id)
-                    .Select(h => (int?)h.Status))
-                    .FirstOrDefault() ?? (int?)current.Status,
+                    RequestId = r.Id,
+                    UserAccountId = r.UserAccountId,
+                    FullName = r.UserAccount.UserProfiles.FirstOrDefault().DisplayName
+                               ?? r.UserAccount.UserProfiles.FirstOrDefault().FirstName,
+                    ArrivalDate = r.ArrivalDate,
+                    DepartureDate = r.DepartureDate,
+                    ArrivalDatePersian = DateTimeHelper.GetPersianDate(r.ArrivalDate),
+                    DepartureDatePersian = DateTimeHelper.GetPersianDate(r.DepartureDate),
+                    Description = r.Description,
+                    DestinationCity = r.DestinationCity.Name,
+                    DestinationCityFa = r.DestinationCity.PersianName,
+                    OriginCity = r.OriginCity.Name,
+                    OriginCityFa = r.OriginCity.PersianName,
+                    ItemTypes = r.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).Name).ToArray(),
+                    ItemTypesFa = r.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).PersianName).ToArray(),
+                    MaxHeightCm = r.MaxHeightCm,
+                    MaxLengthCm = r.MaxLengthCm,
+                    MaxWeightKg = r.MaxWeightKg,
+                    MaxWidthCm = r.MaxWidthCm,
+                    CurrentUserStatus = r.RequestSelections
+                        .Where(sel => sel.UserAccountId == user.Id)
+                        .SelectMany(sel => sel.RequestStatusHistories
+                            .OrderByDescending(h => h.Id)
+                            .Select(h => (int?)h.Status))
+                        .FirstOrDefault() ?? (int?)r.Status,
+                    RecordType = "Passenger"
                 }).ToListAsync();
 
-            return Result<List<TripsDto>>.Success(inboundRequests);
+            return Result<List<TripsDto>>.Success(requests);
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در دریافت پروازهای ورودی {UserId}", user.Id);
-            return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت پروازهای ورودی");
+            _logger.LogError(exception, "خطا در دریافت درخواست‌ها {UserId}", user.Id);
+            return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت درخواست‌ها");
         }
     }
 
@@ -942,4 +929,68 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
     }
 
     #endregion Private Methods
+
+    private async Task<Result<List<TripsDto>>> InboundTripsQueryAsync(UserAccount user)
+    {
+        try
+        {
+            var userCountryId = await _userProfileRepository.Query()
+               .Where(p => p.UserAccountId == user.Id)
+               .Select(p => p.CountryOfResidenceId)
+               .FirstOrDefaultAsync();
+
+            var preferredCountryIds = await _userPreferredLocation.Query()
+                .Where(p => p.UserAccountId == user.Id && p.CountryId != null)
+                .Select(p => p.CountryId.Value)
+                .ToListAsync();
+
+            var inboundRequests = await _requestRepository.Query()
+                .Where(r =>
+                    r.OriginCity != null &&
+                    preferredCountryIds.Contains(r.OriginCity.CountryId) &&
+                    r.DestinationCity != null &&
+                    r.DestinationCity.CountryId == userCountryId)
+                .Include(current => current.UserAccount)
+                    .ThenInclude(current => current.UserProfiles)
+                .Include(current => current.RequestItemTypes)
+                .Include(r => r.OriginCity)
+                    .ThenInclude(c => c.Country)
+                .Include(r => r.DestinationCity)
+                    .ThenInclude(c => c.Country)
+                .Select(current => new TripsDto
+                {
+                    RequestId = current.Id,
+                    UserAccountId = current.UserAccountId,
+                    FullName = current.UserAccount.UserProfiles.FirstOrDefault().DisplayName ?? current.UserAccount.UserProfiles.FirstOrDefault().FirstName,
+                    ArrivalDate = current.ArrivalDate,
+                    DepartureDate = current.DepartureDate,
+                    ArrivalDatePersian = DateTimeHelper.GetPersianDate(current.ArrivalDate),
+                    DepartureDatePersian = DateTimeHelper.GetPersianDate(current.DepartureDate),
+                    Description = current.Description,
+                    DestinationCity = current.DestinationCity.Name,
+                    DestinationCityFa = current.DestinationCity.PersianName,
+                    OriginCity = current.OriginCity.Name,
+                    OriginCityFa = current.OriginCity.PersianName,
+                    ItemTypes = current.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.Id).Name).ToArray(),
+                    ItemTypesFa = current.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.Id).PersianName).ToArray(),
+                    MaxHeightCm = current.MaxHeightCm,
+                    MaxLengthCm = current.MaxLengthCm,
+                    MaxWeightKg = current.MaxWeightKg,
+                    MaxWidthCm = current.MaxWidthCm,
+                    CurrentUserStatus = current.RequestSelections
+                    .Where(sel => sel.UserAccountId == user.Id)
+                    .SelectMany(sel => sel.RequestStatusHistories
+                    .OrderByDescending(h => h.Id)
+                    .Select(h => (int?)h.Status))
+                    .FirstOrDefault() ?? (int?)current.Status,
+                }).ToListAsync();
+
+            return Result<List<TripsDto>>.Success(inboundRequests);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در دریافت پروازهای ورودی {UserId}", user.Id);
+            return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت پروازهای ورودی");
+        }
+    }
 }

@@ -1,4 +1,4 @@
-﻿using DomainLayer.Common.BaseEntities;
+using DomainLayer.Common.BaseEntities;
 
 namespace DomainLayer.Entities
 {
@@ -63,5 +63,11 @@ namespace DomainLayer.Entities
         public ICollection<Advertisement> Advertisements { get; set; } = [];
 
         public ICollection<Comment> Comments { get; set; } = [];
+
+        public ICollection<Conversation> ConversationsAsUser1 { get; set; } = [];
+
+        public ICollection<Conversation> ConversationsAsUser2 { get; set; } = [];
+
+        public ICollection<Message> SentMessages { get; set; } = [];
     }
 }
