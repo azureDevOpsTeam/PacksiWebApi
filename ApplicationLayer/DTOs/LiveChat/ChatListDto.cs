@@ -4,11 +4,11 @@ public class ChatListDto
 {
     public int RequestId { get; set; }
 
-    public int RequestCreatorId { get; set; }
+    public int ReciverId { get; set; }
 
     public string RequestCreatorDisplayName { get; set; }
 
-    public int CurrentUserAccountId { get; set; }
+    public int SenderId { get; set; }
 
     public string Avatar { get; set; }
 

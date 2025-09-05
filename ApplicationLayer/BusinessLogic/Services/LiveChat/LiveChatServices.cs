@@ -38,12 +38,22 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                     .ThenInclude(u => u.UserProfiles)
                     .ToListAsync();
 
+            var requestConversation = await _requestSelectionRepository.Query()
+                .Where(rs => (rs.UserAccountId == currentUser.Id || rs.Request.UserAccountId == currentUser.Id) &&
+                rs.Status == RequestProcessStatus.ConfirmedBySender)
+                .Include(rs => rs.Request)
+                    .ThenInclude(rs => rs.UserAccount)
+                        .ThenInclude(u => u.UserProfiles)
+                .Include(rs => rs.UserAccount)
+                    .ThenInclude(u => u.UserProfiles)
+                    .ToListAsync();
+
             var chatList = requestSelections
                 .Select(rs => new ChatListDto
                 {
                     RequestId = rs.RequestId,
-                    RequestCreatorId = rs.Request.UserAccountId,
-                    CurrentUserAccountId = currentUser.Id,
+                    ReciverId = rs.Request.UserAccountId != currentUser.Id ?  rs.Request.UserAccountId : rs.UserAccount.Id,
+                    SenderId = currentUser.Id, 
                     RequestCreatorDisplayName = rs.Request.UserAccountId != currentUser.Id ? rs.Request.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName : rs.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName,
                     Avatar = rs.Request.UserAccount.Avatar,
                     IsOnline = true,
@@ -52,7 +62,7 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                     LastMessage = "click to see message",
                     IsBlocked = false,
                 })
-                .DistinctBy(c => c.RequestCreatorId)
+                .DistinctBy(c => c.ReciverId)
                 .ToList();
 
             return Result<List<ChatListDto>>.Success(chatList);
