@@ -103,13 +103,14 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
 
         // مسیر دایرکتوری برای کاربر
-        var directoryPath = Path.Combine($"/uploads", userId.ToString());
+        var wwwrootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+        // مسیر پوشه کاربر
+        var directoryPath = Path.Combine(wwwrootPath, "uploads", userId.ToString());
 
-        // اگر پوشه وجود دارد، هیچ کاری انجام نده
-        if (Directory.Exists(directoryPath))
-            return null;
+        // اگر پوشه وجود ندارد، بساز
+        if (Directory.Exists(directoryPath) == false)
+            Directory.CreateDirectory(directoryPath);
 
-        Directory.CreateDirectory(directoryPath);
 
         // مرحله 1: گرفتن عکس پروفایل
         var photosResponse = await _httpClient.GetStringAsync(
