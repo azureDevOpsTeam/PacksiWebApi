@@ -203,7 +203,6 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                             .Select(h => (int?)h.Status))
                         .FirstOrDefault() ?? (int?)r.Status,
 
-                    // ✅ تعیین نوع درخواست
                     RecordType =
                         r.RequestSelections.Any(sel => sel.UserAccountId == user.Id)
                             ? "selected"
@@ -211,148 +210,10 @@ public class MiniAppServices(IRepository<TelegramUserInformation> telegramUserRe
                                 ? "outbound"
                                 : r.DestinationCity.CountryId == userCountryId
                                     ? "inbound"
-                                    : "favorite" // فعلا placeholder
+                                    : "favorite"
                 }).ToListAsync();
 
-            var fakeRequests = new List<TripsDto>
-            {
-                new() {
-                    RequestId = 1,
-                    UserAccountId = 101,
-                    FullName = "Ali Ahmadi",
-                    OriginCity = "Tehran",
-                    OriginCityFa = "تهران",
-                    DestinationCity = "Berlin",
-                    DestinationCityFa = "برلین",
-                    DepartureDate = DateTime.Now.AddDays(5),
-                    DepartureDatePersian = "1404/06/15",
-                    ArrivalDate = DateTime.Now.AddDays(7),
-                    ArrivalDatePersian = "1404/06/17",
-                    Description = "حمل بسته کوچک",
-                    ItemTypes = new[] { "Electronics" },
-                    ItemTypesFa = new[] { "لوازم الکترونیکی" },
-                    MaxWeightKg = 10,
-                    CurrentUserStatus = 1,
-                    RecordType = "outbound"
-                },
-                new() {
-                    RequestId = 5,
-                    UserAccountId = 101,
-                    FullName = "Ali Ahmadi",
-                    OriginCity = "Tehran",
-                    OriginCityFa = "تهران",
-                    DestinationCity = "Berlin",
-                    DestinationCityFa = "برلین",
-                    DepartureDate = DateTime.Now.AddDays(5),
-                    DepartureDatePersian = "1404/06/15",
-                    ArrivalDate = DateTime.Now.AddDays(7),
-                    ArrivalDatePersian = "1404/06/17",
-                    Description = "حمل بسته کوچک",
-                    ItemTypes = new[] { "Electronics" },
-                    ItemTypesFa = new[] { "لوازم الکترونیکی" },
-                    MaxWeightKg = 10,
-                    CurrentUserStatus = 1,
-                    RecordType = "outbound"
-                },
-                new() {
-                    RequestId = 6,
-                    UserAccountId = 101,
-                    FullName = "Ali Ahmadi",
-                    OriginCity = "Tehran",
-                    OriginCityFa = "تهران",
-                    DestinationCity = "Berlin",
-                    DestinationCityFa = "برلین",
-                    DepartureDate = DateTime.Now.AddDays(5),
-                    DepartureDatePersian = "1404/06/15",
-                    ArrivalDate = DateTime.Now.AddDays(7),
-                    ArrivalDatePersian = "1404/06/17",
-                    Description = "حمل بسته کوچک",
-                    ItemTypes = new[] { "Electronics" },
-                    ItemTypesFa = new[] { "لوازم الکترونیکی" },
-                    MaxWeightKg = 10,
-                    CurrentUserStatus = 1,
-                    RecordType = "outbound"
-                },
-                new() {
-                    RequestId = 2,
-                    UserAccountId = 102,
-                    FullName = "Sara Mohammadi",
-                    OriginCity = "Paris",
-                    OriginCityFa = "پاریس",
-                    DestinationCity = "Tehran",
-                    DestinationCityFa = "تهران",
-                    DepartureDate = DateTime.Now.AddDays(10),
-                    DepartureDatePersian = "1404/06/20",
-                    ArrivalDate = DateTime.Now.AddDays(12),
-                    ArrivalDatePersian = "1404/06/22",
-                    Description = "حمل اسناد",
-                    ItemTypes = new[] { "Documents" },
-                    ItemTypesFa = new[] { "اسناد" },
-                    MaxWeightKg = 2,
-                    CurrentUserStatus = 2,
-                    RecordType = "inbound"
-                },
-                new() {
-                    RequestId = 3,
-                    UserAccountId = 103,
-                    FullName = "Reza Karimi",
-                    OriginCity = "Istanbul",
-                    OriginCityFa = "استانبول",
-                    DestinationCity = "Dubai",
-                    DestinationCityFa = "دبی",
-                    DepartureDate = DateTime.Now.AddDays(3),
-                    DepartureDatePersian = "1404/06/13",
-                    ArrivalDate = DateTime.Now.AddDays(4),
-                    ArrivalDatePersian = "1404/06/14",
-                    Description = "ارسال هدیه",
-                    ItemTypes = new[] { "Gift" },
-                    ItemTypesFa = new[] { "هدیه" },
-                    MaxWeightKg = 5,
-                    CurrentUserStatus = 101, // فرضاً کاربر انتخاب کرده
-                    RecordType = "selected"
-                },
-                new() {
-                    RequestId = 6,
-                    UserAccountId = 103,
-                    FullName = "Reza Karimi",
-                    OriginCity = "Istanbul",
-                    OriginCityFa = "استانبول",
-                    DestinationCity = "Dubai",
-                    DestinationCityFa = "دبی",
-                    DepartureDate = DateTime.Now.AddDays(3),
-                    DepartureDatePersian = "1404/06/13",
-                    ArrivalDate = DateTime.Now.AddDays(4),
-                    ArrivalDatePersian = "1404/06/14",
-                    Description = "ارسال هدیه",
-                    ItemTypes = new[] { "Gift" },
-                    ItemTypesFa = new[] { "هدیه" },
-                    MaxWeightKg = 5,
-                    CurrentUserStatus = 101, // فرضاً کاربر انتخاب کرده
-                    RecordType = "selected"
-                },
-                new() {
-                    RequestId = 4,
-                    UserAccountId = 104,
-                    FullName = "Mina Jafari",
-                    OriginCity = "Rome",
-                    OriginCityFa = "رم",
-                    DestinationCity = "Madrid",
-                    DestinationCityFa = "مادرید",
-                    DepartureDate = DateTime.Now.AddDays(15),
-                    DepartureDatePersian = "1404/06/25",
-                    ArrivalDate = DateTime.Now.AddDays(16),
-                    ArrivalDatePersian = "1404/06/26",
-                    Description = "حمل لباس",
-                    ItemTypes = new[] { "Clothes" },
-                    ItemTypesFa = new[] { "لباس" },
-                    MaxWeightKg = 8,
-                    CurrentUserStatus = 4,
-                    RecordType = "favorite"
-                }
-            };
-
-            //return Result<List<TripsDto>>.Success(requests);
-            return Result<List<TripsDto>>.Success(fakeRequests);
+            return Result<List<TripsDto>>.Success(requests);
         }
         catch (Exception exception)
         {
