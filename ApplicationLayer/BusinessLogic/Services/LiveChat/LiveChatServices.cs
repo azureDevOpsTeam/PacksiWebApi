@@ -49,8 +49,8 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                     RequestCreatorDisplayName = currentUser.Id != c.User1Id ? currentUser.UserProfiles.FirstOrDefault()?.DisplayName : otherUser.UserProfiles.FirstOrDefault()?.DisplayName,
                     Avatar = otherUser.Avatar,
                     IsOnline = true, // اینو باید از Presence یا SignalR دربیاری
-                    LastSeenEn = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).En,
                     LastMessage = lastMessage?.Content ?? "No messages yet",
+                    LastSeenEn = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).En,
                     LastSeenFa = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).Fa,
                     IsBlocked = (c.User1Id == currentUser.Id && c.IsUser1Blocked) ||
                                 (c.User2Id == currentUser.Id && c.IsUser2Blocked)

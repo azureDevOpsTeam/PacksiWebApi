@@ -1,29 +1,31 @@
+using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.BusinessLogic.Interfaces.LiveChat;
 using ApplicationLayer.DTOs.LiveChat;
 using ApplicationLayer.Interfaces;
 using DomainLayer.Entities;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace PresentationApp.Hubs;
 
-[Authorize]
-public class ChatHub : Hub
+public class ChatHub(IMiniAppServices miniAppServices, IUserAccountServices userAccountServices, ILiveChatServices liveChatServices, ILogger<ChatHub> logger, IUserContextService userContextService) : Hub
 {
-    private readonly ILiveChatServices _liveChatServices;
-    private readonly ILogger<ChatHub> _logger;
-    private readonly IUserContextService _userContextService;
-
-    public ChatHub(ILiveChatServices liveChatServices, ILogger<ChatHub> logger, IUserContextService userContextService)
-    {
-        _liveChatServices = liveChatServices;
-        _logger = logger;
-        _userContextService = userContextService;
-    }
+    private readonly IMiniAppServices _miniAppServices = miniAppServices;
+    private readonly IUserAccountServices _userAccountServices = userAccountServices;
+    private readonly ILiveChatServices _liveChatServices = liveChatServices;
+    private readonly ILogger<ChatHub> _logger = logger;
+    private readonly IUserContextService _userContextService = userContextService;
 
     public override async Task OnConnectedAsync()
     {
-        var userId = Context.UserIdentifier;
+        var validation = await _miniAppServices.ValidateTelegramMiniAppUserAsync();
+        if (validation.IsFailure)
+            return;
+
+        var userAccount = await _userAccountServices.GetUserAccountByTelegramIdAsync(validation.Value.User.Id);
+        if (userAccount.IsFailure)
+            return;
+        var userId = userAccount.Value.Id.ToString();
+
         if (!string.IsNullOrEmpty(userId))
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"User_{userId}");
@@ -61,7 +63,7 @@ public class ChatHub : Hub
             {
                 // Send to sender
                 await Clients.Group($"User_{currentUser.Id}").SendAsync("MessageSent", result.Value);
-                
+
                 // Send to receiver
                 await Clients.Group($"User_{messageDto.ReceiverId}").SendAsync("MessageReceived", result.Value);
             }

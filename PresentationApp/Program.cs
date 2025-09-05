@@ -59,6 +59,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Map SignalR Hub
-app.MapHub<ChatHub>("/chathub");
+app.MapHub<ChatHub>("/chathub").RequireCors("AllowSpecificOrigin");
 
 app.Run();
