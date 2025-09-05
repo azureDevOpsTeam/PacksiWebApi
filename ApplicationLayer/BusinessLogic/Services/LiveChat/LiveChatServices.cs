@@ -45,7 +45,7 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                     RequestCreatorDisplayName = rs.Request.UserAccount.UserProfiles
                         .FirstOrDefault()?.DisplayName,
                     Avatar = "",
-                    IsOnline = false,
+                    IsOnline = true,
                     LastSeenEn = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).En,
                     LastSeenFa = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).Fa,
                     LastMessage = null,
