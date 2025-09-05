@@ -48,7 +48,7 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                     IsOnline = true,
                     LastSeenEn = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).En,
                     LastSeenFa = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).Fa,
-                    LastMessage = null,
+                    LastMessage = "click to see message",
                     IsBlocked = false,
                 })
                 .DistinctBy(c => c.RequestCreatorId)
