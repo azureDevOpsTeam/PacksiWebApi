@@ -42,7 +42,6 @@ public class ChatHub(
 
             var userId = userAccount.Value.Id.ToString();
             Context.Items["UserId"] = userId;
-
             await Groups.AddToGroupAsync(Context.ConnectionId, $"User_{userId}");
             _logger.LogInformation("User {UserId} connected to chat hub with connection {ConnectionId}", userId, Context.ConnectionId);
 

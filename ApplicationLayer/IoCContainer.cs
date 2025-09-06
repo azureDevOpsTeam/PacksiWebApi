@@ -39,9 +39,10 @@ namespace ApplicationLayer
             services.RateLimitingConfiguration(configuration);
             services.AddCors(opt => opt.AddPolicy("AllowSpecificOrigin", builder =>
             {
-                builder.AllowAnyOrigin()
+                builder.WithOrigins("https://tg.packsi.net", "https://api.packsi.net", "https://panel.packsi.net")
                 .AllowAnyMethod()
-                .AllowAnyHeader();
+                .AllowAnyHeader()
+                .AllowCredentials();
             }));
 
             services.AddHsts(options =>
