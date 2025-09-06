@@ -1,6 +1,8 @@
 using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.BusinessLogic.Interfaces.LiveChat;
 using ApplicationLayer.DTOs.LiveChat;
+using ApplicationLayer.DTOs.TelegramApis;
+using ApplicationLayer.Extensions.SmartEnums;
 using ApplicationLayer.Interfaces;
 using DomainLayer.Entities;
 using Microsoft.AspNetCore.SignalR;
@@ -35,9 +37,35 @@ public class ChatHub(
             var userAccount = await _userAccountServices.GetUserAccountByTelegramIdAsync(validation.Value.User.Id);
             if (userAccount.IsFailure)
             {
-                _logger.LogWarning("No user account found for TelegramId {TelegramId}", validation.Value.User.Id);
-                Context.Abort();
-                return;
+                // Check if this is a test user and create account automatically
+                var testUserIds = new[] { 5933914644L, 1234567890L, 9876543210L };
+                if (testUserIds.Contains(validation.Value.User.Id))
+                {
+                    _logger.LogInformation("Creating test user account for TelegramId {TelegramId}", validation.Value.User.Id);
+                    
+                    var testUserDto = new TelegramMiniAppUserDto
+                    {
+                        Id = validation.Value.User.Id,
+                        FirstName = validation.Value.User.FirstName,
+                        LastName = validation.Value.User.LastName,
+                        Username = validation.Value.User.Username,
+                        LanguageCode = validation.Value.User.LanguageCode,
+                        PhotoUrl = validation.Value.User.PhotoUrl
+                    };
+                    
+                    var createResult = await _userAccountServices.MiniApp_AddUserAccountAsync(testUserDto);
+                    if (createResult.RequestStatus == RequestStatus.Successful)
+                    {
+                        userAccount = await _userAccountServices.GetUserAccountByTelegramIdAsync(validation.Value.User.Id);
+                    }
+                }
+                
+                if (userAccount.IsFailure)
+                {
+                    _logger.LogWarning("No user account found for TelegramId {TelegramId}", validation.Value.User.Id);
+                    Context.Abort();
+                    return;
+                }
             }
 
             var userId = userAccount.Value.Id.ToString();
@@ -83,7 +111,13 @@ public class ChatHub(
                 return;
             }
 
-            var currentUser = new UserAccount { Id = _userContextService.UserId.Value };
+            if (!int.TryParse(userId, out int userIdInt))
+            {
+                await Clients.Caller.SendAsync("Error", "شناسه کاربر نامعتبر است");
+                return;
+            }
+
+            var currentUser = new UserAccount { Id = userIdInt };
             var result = await _liveChatServices.SendMessageAsync(messageDto, currentUser);
 
             if (result.IsSuccess)
@@ -140,7 +174,10 @@ public class ChatHub(
             if (string.IsNullOrEmpty(userId))
                 return;
 
-            var currentUser = new UserAccount { Id = _userContextService.UserId.Value };
+            if (!int.TryParse(userId, out int userIdInt))
+                return;
+
+            var currentUser = new UserAccount { Id = userIdInt };
             var result = await _liveChatServices.MarkMessagesAsReadAsync(conversationId, currentUser);
 
             if (result.IsSuccess)
