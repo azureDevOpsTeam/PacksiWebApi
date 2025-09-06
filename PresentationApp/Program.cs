@@ -49,6 +49,7 @@ await ApplicationDbSeeder.SeedAsync(app.Services);
 // }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseIpRateLimiting();
 app.UseClientRateLimiting();
 
