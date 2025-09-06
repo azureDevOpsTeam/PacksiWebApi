@@ -60,5 +60,6 @@ app.MapControllers();
 
 // Map SignalR Hub
 app.MapHub<ChatHub>("/chathub").RequireCors("AllowSpecificOrigin");
+app.MapHub<TestHub>("/testhub").RequireCors("AllowSpecificOrigin");
 
 app.Run();
