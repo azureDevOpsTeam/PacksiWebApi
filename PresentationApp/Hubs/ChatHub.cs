@@ -7,7 +7,12 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace PresentationApp.Hubs;
 
-public class ChatHub(IMiniAppServices miniAppServices, IUserAccountServices userAccountServices, ILiveChatServices liveChatServices, ILogger<ChatHub> logger, IUserContextService userContextService) : Hub
+public class ChatHub(
+    IMiniAppServices miniAppServices,
+    IUserAccountServices userAccountServices,
+    ILiveChatServices liveChatServices,
+    ILogger<ChatHub> logger,
+    IUserContextService userContextService) : Hub
 {
     private readonly IMiniAppServices _miniAppServices = miniAppServices;
     private readonly IUserAccountServices _userAccountServices = userAccountServices;
@@ -17,39 +22,62 @@ public class ChatHub(IMiniAppServices miniAppServices, IUserAccountServices user
 
     public override async Task OnConnectedAsync()
     {
-        var validation = await _miniAppServices.ValidateTelegramMiniAppUserAsync();
-        if (validation.IsFailure)
-            return;
-
-        var userAccount = await _userAccountServices.GetUserAccountByTelegramIdAsync(validation.Value.User.Id);
-        if (userAccount.IsFailure)
-            return;
-        var userId = userAccount.Value.Id.ToString();
-
-        if (!string.IsNullOrEmpty(userId))
+        try
         {
+            var validation = await _miniAppServices.ValidateTelegramMiniAppUserAsync();
+            if (validation.IsFailure)
+            {
+                _logger.LogWarning("Telegram mini app validation failed for connection {ConnectionId}", Context.ConnectionId);
+                Context.Abort();
+                return;
+            }
+
+            var userAccount = await _userAccountServices.GetUserAccountByTelegramIdAsync(validation.Value.User.Id);
+            if (userAccount.IsFailure)
+            {
+                _logger.LogWarning("No user account found for TelegramId {TelegramId}", validation.Value.User.Id);
+                Context.Abort();
+                return;
+            }
+
+            var userId = userAccount.Value.Id.ToString();
+            Context.Items["UserId"] = userId;
+
             await Groups.AddToGroupAsync(Context.ConnectionId, $"User_{userId}");
-            _logger.LogInformation($"User {userId} connected to chat hub");
+            _logger.LogInformation("User {UserId} connected to chat hub with connection {ConnectionId}", userId, Context.ConnectionId);
+
+            await base.OnConnectedAsync();
         }
-        await base.OnConnectedAsync();
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in OnConnectedAsync for connection {ConnectionId}", Context.ConnectionId);
+            Context.Abort();
+        }
     }
 
     public override async Task OnDisconnectedAsync(Exception exception)
     {
-        var userId = Context.UserIdentifier;
-        if (!string.IsNullOrEmpty(userId))
+        try
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"User_{userId}");
-            _logger.LogInformation($"User {userId} disconnected from chat hub");
+            var userId = Context.Items["UserId"]?.ToString();
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"User_{userId}");
+                _logger.LogInformation("User {UserId} disconnected from chat hub", userId);
+            }
+            await base.OnDisconnectedAsync(exception);
         }
-        await base.OnDisconnectedAsync(exception);
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during OnDisconnectedAsync");
+        }
     }
 
     public async Task SendMessage(SendMessageDto messageDto)
     {
         try
         {
-            var userId = Context.UserIdentifier;
+            var userId = Context.Items["UserId"]?.ToString();
             if (string.IsNullOrEmpty(userId))
             {
                 await Clients.Caller.SendAsync("Error", "کاربر احراز هویت نشده است");
@@ -61,10 +89,10 @@ public class ChatHub(IMiniAppServices miniAppServices, IUserAccountServices user
 
             if (result.IsSuccess)
             {
-                // Send to sender
+                // ارسال به خود کاربر (فرستنده)
                 await Clients.Group($"User_{currentUser.Id}").SendAsync("MessageSent", result.Value);
 
-                // Send to receiver
+                // ارسال به گیرنده
                 await Clients.Group($"User_{messageDto.ReceiverId}").SendAsync("MessageReceived", result.Value);
             }
             else
@@ -84,11 +112,11 @@ public class ChatHub(IMiniAppServices miniAppServices, IUserAccountServices user
         try
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, $"Conversation_{conversationId}");
-            _logger.LogInformation($"User {Context.UserIdentifier} joined conversation {conversationId}");
+            _logger.LogInformation("User {UserId} joined conversation {ConversationId}", Context.Items["UserId"], conversationId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error occurred while joining conversation {conversationId}");
+            _logger.LogError(ex, "Error occurred while joining conversation {ConversationId}", conversationId);
         }
     }
 
@@ -97,11 +125,11 @@ public class ChatHub(IMiniAppServices miniAppServices, IUserAccountServices user
         try
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"Conversation_{conversationId}");
-            _logger.LogInformation($"User {Context.UserIdentifier} left conversation {conversationId}");
+            _logger.LogInformation("User {UserId} left conversation {ConversationId}", Context.Items["UserId"], conversationId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error occurred while leaving conversation {conversationId}");
+            _logger.LogError(ex, "Error occurred while leaving conversation {ConversationId}", conversationId);
         }
     }
 
@@ -109,16 +137,22 @@ public class ChatHub(IMiniAppServices miniAppServices, IUserAccountServices user
     {
         try
         {
+            var userId = Context.Items["UserId"]?.ToString();
+            if (string.IsNullOrEmpty(userId))
+                return;
+
             var currentUser = new UserAccount { Id = _userContextService.UserId.Value };
             var result = await _liveChatServices.MarkMessagesAsReadAsync(conversationId, currentUser);
+
             if (result.IsSuccess)
             {
-                await Clients.Group($"Conversation_{conversationId}").SendAsync("MessagesMarkedAsRead", conversationId);
+                await Clients.Group($"Conversation_{conversationId}")
+                    .SendAsync("MessagesMarkedAsRead", conversationId);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error occurred while marking messages as read for conversation {conversationId}");
+            _logger.LogError(ex, "Error occurred while marking messages as read for conversation {ConversationId}", conversationId);
         }
     }
 }
