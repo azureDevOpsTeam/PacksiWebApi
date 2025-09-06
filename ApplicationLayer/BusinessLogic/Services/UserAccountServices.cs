@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.BusinessLogic.Interfaces;
+using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.DTOs;
 using ApplicationLayer.DTOs.Identity;
 using ApplicationLayer.DTOs.MiniApp;
@@ -64,10 +64,17 @@ namespace ApplicationLayer.BusinessLogic.Services
         }
 
         public async Task<Result<UserAccount>> GetUserAccountByTelegramIdAsync(long telegramId)
-            => await Task.Run(() => _userAccountRepository.GetDbSet()
-            .Include(current => current.UserProfiles)
-            .Include(current => current.UserPreferredLocations)
-            .FirstOrDefaultAsync(row => row.TelegramId == telegramId));
+        {
+            var userAccount = await _userAccountRepository.GetDbSet()
+                .Include(current => current.UserProfiles)
+                .Include(current => current.UserPreferredLocations)
+                .FirstOrDefaultAsync(row => row.TelegramId == telegramId);
+
+            if (userAccount == null)
+                return Result<UserAccount>.NotFound("کاربر یافت نشد");
+
+            return Result<UserAccount>.Success(userAccount);
+        }
 
         public async Task<UserAccount> GetUserByIdAsync(int accountId)
             => await Task.Run(() => _userAccountRepository.GetDbSet()

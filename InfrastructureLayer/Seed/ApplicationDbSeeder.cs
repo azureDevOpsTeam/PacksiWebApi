@@ -1,7 +1,9 @@
-﻿using DomainLayer.Entities;
+using DomainLayer.Entities;
 using InfrastructureLayer.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ApplicationLayer.Extensions;
+using ApplicationLayer.Extensions.SmartEnums;
 
 namespace InfrastructureLayer.Seed
 {
@@ -86,55 +88,90 @@ namespace InfrastructureLayer.Seed
             }
 
             // Seed User
-            //if (!await context.Set<UserAccount>().AnyAsync())
-            //{
-            //    var securityStamp = Guid.NewGuid().ToString();
-            //    UserAccount userAccount = new()
-            //    {
-            //        UserName = "+989190693530",
-            //        PhonePrefix = "+98",
-            //        PhoneNumber = "9190693530",
-            //        ConfirmEmail = true,
-            //        ConfirmPhoneNumber = true,
-            //        SecurityStamp = securityStamp,
-            //        Password = HashGenerator.GenerateHashChangePassword("Aa123456@", securityStamp),
-            //    };
-            //
-            //    await context.Set<UserAccount>().AddAsync(userAccount);
-            //    await context.SaveChangesAsync();
-            //
-            //    List<UserRole> userRoles = new();
-            //    foreach (var role in AllRole)
-            //    {
-            //        userRoles.Add(new UserRole
-            //        {
-            //            RoleId = role.Id,
-            //            UserAccount = userAccount
-            //        });
-            //    }
-            //    await context.Set<UserRole>().AddRangeAsync(userRoles);
-            //
-            //    UserProfile userProfile = new()
-            //    {
-            //        UserAccount = userAccount,
-            //        DisplayName = "شهرام",
-            //        FirstName = "شهرام",
-            //        LastName = "اویسی",
-            //        Gender = GenderEnum.Male,
-            //        CountryOfResidenceId = PreferredIranId
-            //    };
-            //
-            //    await context.Set<UserProfile>().AddAsync(userProfile);
-            //
-            //    UserPreferredLocation userPreferredLocation = new()
-            //    {
-            //        UserAccount = userAccount,
-            //        CountryId = PreferredCanadaId
-            //    };
-            //
-            //    await context.Set<UserPreferredLocation>().AddAsync(userPreferredLocation);
-            //    await context.SaveChangesAsync();
-            //}
+            if (!await context.Set<UserAccount>().AnyAsync())
+            {
+                var securityStamp1 = Guid.NewGuid().ToString();
+                UserAccount userAccount1 = new()
+                {
+                    UserName = "+989190693530",
+                    PhonePrefix = "+98",
+                    PhoneNumber = "9190693530",
+                    ConfirmEmail = true,
+                    ConfirmPhoneNumber = true,
+                    SecurityStamp = securityStamp1,
+                    Password = HashGenerator.GenerateHashChangePassword("Aa123456@", securityStamp1),
+                    TelegramId = 123456789 // Added TelegramId for testing
+                };
+
+                var securityStamp2 = Guid.NewGuid().ToString();
+                UserAccount userAccount2 = new()
+                {
+                    UserName = "+989190693531",
+                    PhonePrefix = "+98",
+                    PhoneNumber = "9190693531",
+                    ConfirmEmail = true,
+                    ConfirmPhoneNumber = true,
+                    SecurityStamp = securityStamp2,
+                    Password = HashGenerator.GenerateHashChangePassword("Aa123456@", securityStamp2),
+                    TelegramId = 1030212127 // Added TelegramId for Shahram's test
+                };
+
+                await context.Set<UserAccount>().AddRangeAsync(userAccount1, userAccount2);
+                await context.SaveChangesAsync();
+
+                List<UserRole> userRoles = new();
+                foreach (var role in AllRole)
+                {
+                    userRoles.Add(new UserRole
+                    {
+                        RoleId = role.Id,
+                        UserAccount = userAccount1
+                    });
+                    userRoles.Add(new UserRole
+                    {
+                        RoleId = role.Id,
+                        UserAccount = userAccount2
+                    });
+                }
+                await context.Set<UserRole>().AddRangeAsync(userRoles);
+
+                UserProfile userProfile1 = new()
+                {
+                    UserAccount = userAccount1,
+                    DisplayName = "تست کاربر",
+                    FirstName = "تست",
+                    LastName = "کاربر",
+                    Gender = GenderEnum.Male,
+                    CountryOfResidenceId = PreferredIranId
+                };
+
+                UserProfile userProfile2 = new()
+                {
+                    UserAccount = userAccount2,
+                    DisplayName = "شهرام",
+                    FirstName = "شهرام",
+                    LastName = "اویسی",
+                    Gender = GenderEnum.Male,
+                    CountryOfResidenceId = PreferredIranId
+                };
+
+                await context.Set<UserProfile>().AddRangeAsync(userProfile1, userProfile2);
+
+                UserPreferredLocation userPreferredLocation1 = new()
+                {
+                    UserAccount = userAccount1,
+                    CountryId = PreferredCanadaId
+                };
+
+                UserPreferredLocation userPreferredLocation2 = new()
+                {
+                    UserAccount = userAccount2,
+                    CountryId = PreferredCanadaId
+                };
+
+                await context.Set<UserPreferredLocation>().AddRangeAsync(userPreferredLocation1, userPreferredLocation2);
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

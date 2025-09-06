@@ -84,7 +84,7 @@ public class ChatHub(
                 return;
             }
 
-            var currentUser = new UserAccount { Id = _userContextService.UserId.Value };
+            var currentUser = new UserAccount { Id = int.Parse(userId) };
             var result = await _liveChatServices.SendMessageAsync(messageDto, currentUser);
 
             if (result.IsSuccess)
@@ -141,7 +141,7 @@ public class ChatHub(
             if (string.IsNullOrEmpty(userId))
                 return;
 
-            var currentUser = new UserAccount { Id = _userContextService.UserId.Value };
+            var currentUser = new UserAccount { Id = int.Parse(userId) };
             var result = await _liveChatServices.MarkMessagesAsReadAsync(conversationId, currentUser);
 
             if (result.IsSuccess)

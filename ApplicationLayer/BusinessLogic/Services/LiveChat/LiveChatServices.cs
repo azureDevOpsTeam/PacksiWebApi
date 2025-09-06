@@ -181,7 +181,7 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                 Id = message.Id,
                 ConversationId = message.ConversationId,
                 SenderId = message.SenderId,
-                SenderName = sender.UserName,
+                SenderName = sender.UserName ?? sender.TelegramUserName ?? $"User{sender.Id}",
                 Content = message.Content,
                 SentAt = message.SentAt,
                 IsRead = message.IsRead,

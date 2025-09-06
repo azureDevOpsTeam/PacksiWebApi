@@ -1,4 +1,4 @@
-﻿#region Usings
+#region Usings
 
 using ApplicationLayer.Common.Validations;
 using ApplicationLayer.Extensions.SmartEnums;
@@ -60,6 +60,7 @@ public class ValidationPipelineBehavior<TRequest, TResponse>
         catch (Exception ex)
         {
             var m = ex.Message;
+            throw; // Re-throw to see the actual error
         }
 
         return await next();

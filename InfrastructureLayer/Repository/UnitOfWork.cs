@@ -87,6 +87,8 @@ namespace InfrastructureLayer.Repository
             var result = await _context.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
             _context.ChangeTracker.AutoDetectChangesEnabled = true;
 
+            await PublishDomainEventsAsync(cancellationToken);
+
             return result;
         }
 
