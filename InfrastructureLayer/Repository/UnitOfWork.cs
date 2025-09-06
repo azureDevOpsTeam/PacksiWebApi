@@ -70,11 +70,11 @@ namespace InfrastructureLayer.Repository
         {
             BeforeSaveTriggers();
 
+            await PublishDomainEventsAsync(cancellationToken);
+
             _context.ChangeTracker.AutoDetectChangesEnabled = false;
             var result = await _context.SaveChangesAsync(cancellationToken);
             _context.ChangeTracker.AutoDetectChangesEnabled = true;
-
-            await PublishDomainEventsAsync(cancellationToken);
 
             return result;
         }
@@ -82,6 +82,8 @@ namespace InfrastructureLayer.Repository
         public async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = new CancellationToken())
         {
             BeforeSaveTriggers();
+
+            await PublishDomainEventsAsync(cancellationToken);
 
             _context.ChangeTracker.AutoDetectChangesEnabled = false;
             var result = await _context.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
