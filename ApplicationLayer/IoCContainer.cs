@@ -1,4 +1,4 @@
-﻿#region Usings
+#region Usings
 
 using ApplicationLayer.Behaviors;
 using ApplicationLayer.Common.Validations;
@@ -214,7 +214,17 @@ namespace ApplicationLayer
 
         private static void MediatRDependency(this IServiceCollection services)
         {
-            services.AddMediatR(m => m.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()))
+            services.AddMediatR(m => 
+            {
+                m.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+                // Register handlers from PresentationApp assembly for domain events
+                var presentationAssembly = AppDomain.CurrentDomain.GetAssemblies()
+                    .FirstOrDefault(a => a.GetName().Name == "PresentationApp");
+                if (presentationAssembly != null)
+                {
+                    m.RegisterServicesFromAssembly(presentationAssembly);
+                }
+            })
                 .AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationPipelineBehavior<,>));
         }
 

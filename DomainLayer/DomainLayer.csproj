@@ -7,4 +7,8 @@
 		<FileScopedNamespace>true</FileScopedNamespace>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<PackageReference Include="MediatR" Version="13.0.0" />
+	</ItemGroup>
+
 </Project>

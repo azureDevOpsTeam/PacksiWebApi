@@ -6,6 +6,7 @@ using ApplicationLayer.Extensions.SmartEnums;
 using AutoMapper;
 using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
+using DomainLayer.Events;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -160,6 +161,18 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                 conversationEntity.LastMessageAt = DateTime.UtcNow;
                 await _conversationRepository.UpdateAsync(conversationEntity);
             }
+
+            // Add domain event for real-time messaging
+            var messageSentEvent = new MessageSentEvent(
+                message.Id,
+                message.ConversationId,
+                sender.Id,
+                model.ReceiverId,
+                message.Content,
+                message.SentAt
+            );
+            
+            message.AddDomainEvent(messageSentEvent);
 
             await _unitOfWork.SaveChangesAsync();
 

@@ -1,9 +1,12 @@
-﻿using ApplicationLayer;
+using ApplicationLayer;
 using ApplicationLayer.Extensions;
 using DNTPersianUtils.Core;
+using DomainLayer.Common.BaseEntities;
+using DomainLayer.Common.Events;
 using InfrastructureLayer.Context;
 using InfrastructureLayer.Extensions;
 using InfrastructureLayer.Helpers;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -12,9 +15,10 @@ using Microsoft.Extensions.Logging;
 
 namespace InfrastructureLayer.Repository
 {
-    public class UnitOfWork(ApplicationDbContext context) : IUnitOfWork
+    public class UnitOfWork(ApplicationDbContext context, IMediator mediator) : IUnitOfWork
     {
         private readonly ApplicationDbContext _context = context;
+        private readonly IMediator _mediator = mediator;
 
         #region Fields
 
@@ -70,6 +74,8 @@ namespace InfrastructureLayer.Repository
             var result = await _context.SaveChangesAsync(cancellationToken);
             _context.ChangeTracker.AutoDetectChangesEnabled = true;
 
+            await PublishDomainEventsAsync(cancellationToken);
+
             return result;
         }
 
@@ -85,6 +91,32 @@ namespace InfrastructureLayer.Repository
         }
 
         #endregion SaveChanges
+
+        #region Domain Events
+
+        private async Task PublishDomainEventsAsync(CancellationToken cancellationToken)
+        {
+            var entitiesWithEvents = _context.ChangeTracker.Entries<BaseEntity<int>>()
+                .Where(e => e.Entity.DomainEvents.Any())
+                .Select(e => e.Entity)
+                .ToList();
+
+            var domainEvents = entitiesWithEvents
+                .SelectMany(e => e.DomainEvents)
+                .ToList();
+
+            foreach (var entity in entitiesWithEvents)
+            {
+                entity.ClearDomainEvents();
+            }
+
+            foreach (var domainEvent in domainEvents)
+            {
+                await _mediator.Publish(domainEvent, cancellationToken);
+            }
+        }
+
+        #endregion Domain Events
 
         #region Utility
 
