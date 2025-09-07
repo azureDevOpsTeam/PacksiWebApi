@@ -103,7 +103,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         // TODO: Temporarily disabled for testing
         return null;
-        
+
         //TODO For TEST
         var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
 
@@ -241,8 +241,13 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
             var requests = await _requestRepository.Query()
                 .Where(current => current.UserAccount != user)
-                .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
-                .Include(r => r.RequestSelections).ThenInclude(rs => rs.RequestStatusHistories)
+                .Include(r => r.UserAccount)
+                    .ThenInclude(u => u.UserProfiles)
+                .Include(r => r.RequestSelections)
+                    .ThenInclude(rs => rs.RequestStatusHistories)
+                .Include(r => r.RequestSelections)
+                    .ThenInclude(r => r.Request)
+                        .ThenInclude(u => u.UserAccount)
                 .Include(r => r.RequestItemTypes)
                 .Include(r => r.OriginCity).ThenInclude(c => c.Country)
                 .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
@@ -275,7 +280,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         .FirstOrDefault() ?? (int?)r.Status,
 
                     RecordType =
-                        r.RequestSelections.Any(sel => sel.UserAccountId == user.Id)
+                        r.RequestSelections.Any(sel => sel.Request.UserAccountId == user.Id)
                             ? "selected"
                             : r.OriginCity.CountryId == userCountryId
                                 ? "outbound"
@@ -943,7 +948,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         // TODO: Temporarily disabled for testing
         return true;
-        
+
         try
         {
             var parameters = HttpUtility.ParseQueryString(initData);
