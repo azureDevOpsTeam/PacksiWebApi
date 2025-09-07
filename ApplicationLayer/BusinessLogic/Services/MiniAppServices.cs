@@ -23,8 +23,8 @@ namespace ApplicationLayer.BusinessLogic.Services;
 
 [InjectAsScoped]
 public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository,
-    IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation,
-    IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo, IRepository<RequestSelection> requestSelection,
+    IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation, IRepository<Suggestion> suggestionRepository,
+    IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo,
     IRepository<RequestStatusHistory> requestStatusHistoryRepository, IRepository<Conversation> conversationRepository,
     IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger, IMapper mapper) : IMiniAppServices
 {
@@ -35,9 +35,9 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     private readonly IRepository<UserPreferredLocation> _userPreferredLocation = userPreferredLocation;
     private readonly IRepository<Request> _requestRepository = requestRepository;
     private readonly IRepository<RequestItemType> _itemTypeRepo = itemTypeRepo;
-    private readonly IRepository<RequestSelection> _requestSelection = requestSelection;
     private readonly IRepository<RequestStatusHistory> _requestStatusHistoryRepository = requestStatusHistoryRepository;
     private readonly IRepository<Conversation> _conversationRepository = conversationRepository;
+    private readonly IRepository<Suggestion> _suggestionRepository = suggestionRepository;
     private readonly IConfiguration _configuration = configuration;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
@@ -101,9 +101,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
     private async Task<string> DownloadUserProfilePhotoAsync(long userId)
     {
-        // TODO: Temporarily disabled for testing
-        return null;
-
         //TODO For TEST
         var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
 
@@ -115,7 +112,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         // اگر پوشه وجود ندارد، بساز
         if (Directory.Exists(directoryPath) == false)
             Directory.CreateDirectory(directoryPath);
-
 
         // مرحله 1: گرفتن عکس پروفایل
         var photosResponse = await _httpClient.GetStringAsync(
@@ -243,9 +239,9 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 .Where(current => current.UserAccount != user)
                 .Include(r => r.UserAccount)
                     .ThenInclude(u => u.UserProfiles)
-                .Include(r => r.RequestSelections)
+                .Include(r => r.Suggestions)
                     .ThenInclude(rs => rs.RequestStatusHistories)
-                .Include(r => r.RequestSelections)
+                .Include(r => r.Suggestions)
                     .ThenInclude(r => r.Request)
                         .ThenInclude(u => u.UserAccount)
                 .Include(r => r.RequestItemTypes)
@@ -272,7 +268,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     MaxLengthCm = r.MaxLengthCm,
                     MaxWeightKg = r.MaxWeightKg,
                     MaxWidthCm = r.MaxWidthCm,
-                    CurrentUserStatus = r.RequestSelections
+                    CurrentUserStatus = r.Suggestions
                         .Where(sel => sel.UserAccountId == user.Id)
                         .SelectMany(sel => sel.RequestStatusHistories
                             .OrderByDescending(h => h.Id)
@@ -280,7 +276,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         .FirstOrDefault() ?? (int?)r.Status,
 
                     RecordType =
-                        r.RequestSelections.Any(sel => sel.Request.UserAccountId == user.Id)
+                        r.Suggestions.Any(sel => sel.Request.UserAccountId == user.Id)
                             ? "selected"
                             : r.OriginCity.CountryId == userCountryId
                                 ? "outbound"
@@ -305,7 +301,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             var requests = await _requestRepository.Query()
                 .Where(current => current.UserAccount == user)
                 .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
-                .Include(r => r.RequestSelections).ThenInclude(rs => rs.RequestStatusHistories)
+                .Include(r => r.Suggestions).ThenInclude(rs => rs.RequestStatusHistories)
                 .Include(r => r.RequestItemTypes)
                 .Include(r => r.OriginCity).ThenInclude(c => c.Country)
                 .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
@@ -330,7 +326,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     MaxLengthCm = r.MaxLengthCm,
                     MaxWeightKg = r.MaxWeightKg,
                     MaxWidthCm = r.MaxWidthCm,
-                    CurrentUserStatus = r.RequestSelections
+                    CurrentUserStatus = r.Suggestions
                         .Where(sel => sel.UserAccountId == user.Id)
                         .SelectMany(sel => sel.RequestStatusHistories
                             .OrderByDescending(h => h.Id)
@@ -420,7 +416,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         {
             var request = await _requestRepository.Query()
                 .Where(r => r.Id == model.RequestId)
-                .Include(r => r.RequestSelections)
+                .Include(r => r.Suggestions)
                 .Include(r => r.OriginCity).ThenInclude(c => c.Country)
                 .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
                 .Include(r => r.Attachments)
@@ -522,7 +518,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         {
             var result = await _requestRepository.Query()
                 .Where(r => r.UserAccountId == user.Id)
-                .SelectMany(r => r.RequestSelections
+                .SelectMany(r => r.Suggestions
                     .Where(rs => rs.UserAccountId != user.Id)
                     .GroupBy(rs => rs.UserAccountId)
                     .Select(g => g.OrderByDescending(x => x.Id).FirstOrDefault())
@@ -553,7 +549,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         {
             var result = await _requestRepository.Query()
                 .Include(r => r.OriginCity)
-                .Where(r => r.RequestSelections.Any(current => current.UserAccountId == user.Id))
+                .Where(r => r.Suggestions.Any(current => current.UserAccountId == user.Id))
                 .Select(current => new UserRequestsDto
                 {
                     RequestId = current.Id,
@@ -577,45 +573,18 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
     #region Change Status
 
-    public async Task<Result<RequestSelection>> SelectedRequestAsync(RequestKeyDto model, UserAccount user)
-    {
-        try
-        {
-            var request = await _requestRepository.Query()
-                .Where(r => r.Id == model.RequestId).FirstOrDefaultAsync();
-
-            if (request == null)
-                return Result<RequestSelection>.NotFound();
-
-            RequestSelection requestSelection = new()
-            {
-                UserAccount = user,
-                Request = request,
-                Status = RequestProcessStatus.Selected,
-            };
-
-            await _requestSelection.AddAsync(requestSelection);
-            return Result<RequestSelection>.Success(requestSelection);
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "خطا در دریافت درخواست های کاربر {UserId}", user.Id);
-            return Result<RequestSelection>.GeneralFailure("خطا در دریافت درخواست های کاربر");
-        }
-    }
-
     public async Task<Result> ConfirmedBySenderAsync(RequestSelectionKeyDto model, UserAccount userAccount)
     {
         try
         {
-            var request = await _requestSelection.Query()
+            var request = await _suggestionRepository.Query()
                 .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
 
             request.Status = RequestProcessStatus.ConfirmedBySender;
-            await _requestSelection.UpdateAsync(request);
+            await _suggestionRepository.UpdateAsync(request);
 
             if (!await _conversationRepository.AnyAsync(current => current.User1Id == request.UserAccountId && current.User2Id == userAccount.Id))
             {
@@ -640,14 +609,14 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
-            var request = await _requestSelection.Query()
+            var request = await _suggestionRepository.Query()
                 .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
 
             request.Status = RequestProcessStatus.ConfirmedBySender;
-            await _requestSelection.UpdateAsync(request);
+            await _suggestionRepository.UpdateAsync(request);
 
             return Result.Success();
         }
@@ -706,14 +675,14 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
-            var request = await _requestSelection.Query()
+            var request = await _suggestionRepository.Query()
                 .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
 
             request.Status = RequestProcessStatus.ReadyToPickup;
-            await _requestSelection.UpdateAsync(request);
+            await _suggestionRepository.UpdateAsync(request);
 
             return Result.Success();
         }
@@ -728,14 +697,14 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
-            var request = await _requestSelection.Query()
+            var request = await _suggestionRepository.Query()
                 .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
 
             request.Status = RequestProcessStatus.PickedUp;
-            await _requestSelection.UpdateAsync(request);
+            await _suggestionRepository.UpdateAsync(request);
 
             return Result.Success();
         }
@@ -750,14 +719,14 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
-            var request = await _requestSelection.Query()
+            var request = await _suggestionRepository.Query()
                 .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
 
             request.Status = RequestProcessStatus.InTransit;
-            await _requestSelection.UpdateAsync(request);
+            await _suggestionRepository.UpdateAsync(request);
 
             return Result.Success();
         }
@@ -772,14 +741,14 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
-            var request = await _requestSelection.Query()
+            var request = await _suggestionRepository.Query()
                 .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
 
             request.Status = RequestProcessStatus.ReadyToDeliver;
-            await _requestSelection.UpdateAsync(request);
+            await _suggestionRepository.UpdateAsync(request);
 
             return Result.Success();
         }
@@ -800,11 +769,11 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             if (request == null)
                 return Result.NotFound();
 
-            var requestRecord = await _requestSelection.Query()
+            var requestRecord = await _suggestionRepository.Query()
                 .FirstOrDefaultAsync(current => current.UserAccountId == user.Id && current.RequestId == request.Id);
 
             requestRecord.Status = RequestProcessStatus.Delivered;
-            await _requestSelection.UpdateAsync(requestRecord);
+            await _suggestionRepository.UpdateAsync(requestRecord);
 
             return Result.Success();
         }
@@ -819,21 +788,43 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
-            var request = await _requestSelection.Query()
+            var request = await _suggestionRepository.Query()
                 .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
 
             request.Status = RequestProcessStatus.NotDelivered;
-            await _requestSelection.UpdateAsync(request);
+            await _suggestionRepository.UpdateAsync(request);
 
             return Result.Success();
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در ثبت وضعیت عدم تحویل  {UserId}", model.RequestSelectionId);
+            _logger.LogError(exception, "خطا در ثبت وضعیت عدم تحویل  {RequestSelectionId}", model.RequestSelectionId);
             return Result.GeneralFailure("خطا در ثبت وضعیت عدم تحویل");
+        }
+    }
+
+    public async Task<Result<Suggestion>> CreateSuggestionAsync(CreateSuggestionDto model, UserAccount user)
+    {
+        try
+        {
+            Suggestion suggestion = new()
+            {
+                UserAccount = user,
+                SuggestionPrice = model.SuggestionPrice,
+                Currency = model.Currency,
+                Description = model.Description,
+                RequestId = model.RequestId
+            };
+            await _suggestionRepository.AddAsync(suggestion);
+            return Result<Suggestion>.Success(suggestion);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, $"خطا در ثبت پیشنهاد قیمت  {model.RequestId} {user.Id}");
+            return Result<Suggestion>.GeneralFailure("خطا در ثبت پیشنهاد قیمت");
         }
     }
 
@@ -878,14 +869,14 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-    public async Task<Result> AddHistoryStatusAsync(RequestSelection requestSelection, RequestProcessStatus processStatus, UserAccount user)
+    public async Task<Result> AddHistoryStatusAsync(Suggestion suggestion, RequestProcessStatus processStatus, UserAccount user)
     {
         try
         {
             RequestStatusHistory requestStatusHistory = new()
             {
                 UserAccount = user,
-                RequestSelection = requestSelection,
+                Suggestion = suggestion,
                 Status = processStatus,
             };
 
@@ -992,88 +983,4 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     }
 
     #endregion Private Methods
-
-    private async Task<Result<List<TripsDto>>> InboundTripsQueryAsync(UserAccount user)
-    {
-        try
-        {
-            var userCountryId = await _userProfileRepository.Query()
-               .Where(p => p.UserAccountId == user.Id)
-               .Select(p => p.CountryOfResidenceId)
-               .FirstOrDefaultAsync();
-
-            var preferredCountryIds = await _userPreferredLocation.Query()
-                .Where(p => p.UserAccountId == user.Id && p.CountryId != null)
-                .Select(p => p.CountryId.Value)
-                .ToListAsync();
-
-            var inboundRequests = await _requestRepository.Query()
-                .Where(r =>
-                    r.OriginCity != null &&
-                    preferredCountryIds.Contains(r.OriginCity.CountryId) &&
-                    r.DestinationCity != null &&
-                    r.DestinationCity.CountryId == userCountryId)
-                .Include(current => current.UserAccount)
-                    .ThenInclude(current => current.UserProfiles)
-                .Include(current => current.RequestItemTypes)
-                .Include(r => r.OriginCity)
-                    .ThenInclude(c => c.Country)
-                .Include(r => r.DestinationCity)
-                    .ThenInclude(c => c.Country)
-                .Select(current => new TripsDto
-                {
-                    RequestId = current.Id,
-                    UserAccountId = current.UserAccountId,
-                    FullName = current.UserAccount.UserProfiles.FirstOrDefault().DisplayName ?? current.UserAccount.UserProfiles.FirstOrDefault().FirstName,
-                    ArrivalDate = current.ArrivalDate,
-                    DepartureDate = current.DepartureDate,
-                    ArrivalDatePersian = DateTimeHelper.GetPersianDate(current.ArrivalDate),
-                    DepartureDatePersian = DateTimeHelper.GetPersianDate(current.DepartureDate),
-                    Description = current.Description,
-                    DestinationCity = current.DestinationCity.Name,
-                    DestinationCityFa = current.DestinationCity.PersianName,
-                    OriginCity = current.OriginCity.Name,
-                    OriginCityFa = current.OriginCity.PersianName,
-                    ItemTypes = current.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.Id).Name).ToArray(),
-                    ItemTypesFa = current.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.Id).PersianName).ToArray(),
-                    MaxHeightCm = current.MaxHeightCm,
-                    MaxLengthCm = current.MaxLengthCm,
-                    MaxWeightKg = current.MaxWeightKg,
-                    MaxWidthCm = current.MaxWidthCm,
-                    CurrentUserStatus = current.RequestSelections
-                    .Where(sel => sel.UserAccountId == user.Id)
-                    .SelectMany(sel => sel.RequestStatusHistories
-                    .OrderByDescending(h => h.Id)
-                    .Select(h => (int?)h.Status))
-                    .FirstOrDefault() ?? (int?)current.Status,
-                }).ToListAsync();
-
-            return Result<List<TripsDto>>.Success(inboundRequests);
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "خطا در دریافت پروازهای ورودی {UserId}", user.Id);
-            return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت پروازهای ورودی");
-        }
-    }
-
-    private async Task<ServiceResult> AddRequestSelectionAsync(int requestId, UserAccount userAccount, CancellationToken cancellationToken)
-    {
-        try
-        {
-            RequestSelection requestSelection = new()
-            {
-                RequestId = requestId,
-                UserAccountId = userAccount.Id
-            };
-
-            await _requestSelection.AddAsync(requestSelection);
-
-            return new ServiceResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
-        }
-        catch (Exception exception)
-        {
-            return new ServiceResult().Failed(_logger, exception, CommonExceptionMessage.AddFailed("ثبت وضعیت درخواست"));
-        }
-    }
 }

@@ -2,11 +2,17 @@
 
 namespace DomainLayer.Entities;
 
-public class RequestSelection : BaseEntityModel, IAuditableEntity
+public class Suggestion : BaseEntityModel, IAuditableEntity
 {
+    public int RequestId { get; set; }
+
     public int UserAccountId { get; set; }
 
-    public int RequestId { get; set; }
+    public decimal SuggestionPrice { get; set; }
+
+    public int Currency { get; set; }
+
+    public string Description { get; set; }
 
     public int Status { get; set; }
 

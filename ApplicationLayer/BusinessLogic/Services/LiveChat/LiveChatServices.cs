@@ -14,16 +14,15 @@ namespace ApplicationLayer.BusinessLogic.Services.LiveChat;
 
 [InjectAsScoped]
 public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IRepository<Conversation> conversationRepository,
-    IRepository<RequestSelection> requestSelectionRepository, IRepository<Message> messageRepository, IUnitOfWork unitOfWork,
-    ILogger<LiveChatServices> logger, IMapper mapper) : ILiveChatServices
+    IRepository<Message> messageRepository, IUnitOfWork unitOfWork, ILogger<LiveChatServices> logger, IMapper mapper) : ILiveChatServices
 {
-    private readonly IRepository<RequestSelection> _requestSelectionRepository = requestSelectionRepository;
     private readonly IRepository<UserAccount> _userAccountRepository = userAccountRepository;
     private readonly IRepository<Conversation> _conversationRepository = conversationRepository;
     private readonly IRepository<Message> _messageRepository = messageRepository;
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly ILogger<LiveChatServices> _logger = logger;
     private readonly IMapper _mapper = mapper;
+
     public async Task<Result<List<ChatListDto>>> GetUsersListAsync(UserAccount currentUser)
     {
         try
@@ -98,7 +97,7 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
     //            {
     //                RequestId = rs.Request.Id,
     //                ReciverId = rs.Request.UserAccountId != currentUser.Id ?  rs.Request.UserAccountId : rs.UserAccount.Id,
-    //                SenderId = currentUser.Id, 
+    //                SenderId = currentUser.Id,
     //                RequestCreatorDisplayName = rs.Request.UserAccountId != currentUser.Id ? rs.Request.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName : rs.UserAccount.UserProfiles.FirstOrDefault()?.DisplayName,
     //                Avatar = rs.Request.UserAccount.Avatar,
     //                IsOnline = true,
@@ -171,7 +170,7 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                 message.Content,
                 message.SentAt
             );
-            
+
             message.AddDomainEvent(messageSentEvent);
 
             await _unitOfWork.SaveChangesAsync();

@@ -14,8 +14,8 @@ using Microsoft.Extensions.Logging;
 namespace ApplicationLayer.BusinessLogic.Services
 {
     [InjectAsScoped]
-    public class RequestServices(IRepository<Request> requestRepository, IRepository<RequestSelection> requestSelection, IRepository<RequestItemType> itemTypeRepo,
-        IRepository<RequestAttachment> attachmentRepo, IRepository<UserPreferredLocation> userPreferredLocation,
+    public class RequestServices(IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo,
+        IRepository<RequestAttachment> attachmentRepo, IRepository<UserPreferredLocation> userPreferredLocation, IRepository<Suggestion> suggestionRepository,
         IRepository<RequestItemType> requestItemTypeRepository, IRepository<RequestAvailableOrigin> requestAvailableOriginRepository, IRepository<RequestAvailableDestination> requestAvailableDestinationRepository,
         IRepository<UserProfile> userProfileRepository, IMapper mapper,
         ILogger<ManagerService> logger, IUserContextService userContextService) : IRequestServices
@@ -23,9 +23,9 @@ namespace ApplicationLayer.BusinessLogic.Services
         private readonly IRepository<UserProfile> _userProfileRepository = userProfileRepository;
         private readonly IRepository<UserPreferredLocation> _userPreferredLocation = userPreferredLocation;
         private readonly IRepository<Request> _requestRepository = requestRepository;
-        private readonly IRepository<RequestSelection> _requestSelection = requestSelection;
         private readonly IRepository<RequestItemType> _itemTypeRepo = itemTypeRepo;
         private readonly IRepository<RequestAttachment> _attachmentRepo = attachmentRepo;
+        private readonly IRepository<Suggestion> _suggestionRepository = suggestionRepository;
         private readonly IUserContextService _userContextService = userContextService;
         private readonly ILogger<ManagerService> _logger = logger;
         private readonly IMapper _mapper = mapper;
@@ -116,13 +116,13 @@ namespace ApplicationLayer.BusinessLogic.Services
             {
                 var currentUserId = _userContextService.UserId;
 
-                RequestSelection requestSelection = new()
+                Suggestion requestSelection = new()
                 {
                     RequestId = requestId,
                     UserAccountId = currentUserId.Value
                 };
 
-                await _requestSelection.AddAsync(requestSelection);
+                await _suggestionRepository.AddAsync(requestSelection);
 
                 return new ServiceResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
             }
@@ -286,7 +286,7 @@ namespace ApplicationLayer.BusinessLogic.Services
             {
                 var request = await _requestRepository.Query()
                     .Where(r => r.Id == model.RequestId)
-                    .Include(r => r.RequestSelections)
+                    .Include(r => r.Suggestions)
                     .Include(r => r.OriginCity).ThenInclude(c => c.Country)
                     .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
                     .Include(r => r.Attachments)
@@ -392,7 +392,7 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 var outboundRequests = await _requestRepository.Query()
                     .Where(r => r.UserAccountId == currentUserId)
-                    .SelectMany(r => r.RequestSelections
+                    .SelectMany(r => r.Suggestions
                         .Where(rs => rs.UserAccountId != currentUserId)
                         .GroupBy(rs => rs.UserAccountId)
                         .Select(g => g.OrderByDescending(x => x.Id).FirstOrDefault())
@@ -424,7 +424,7 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 var outboundRequests = await _requestRepository.Query()
                     .Include(r => r.OriginCity)
-                    .Where(r => r.RequestSelections.Any(current => current.UserAccountId == currentUserId))
+                    .Where(r => r.Suggestions.Any(current => current.UserAccountId == currentUserId))
                     .Select(current => new UserRequestsDto
                     {
                         RequestId = current.Id,
@@ -458,13 +458,13 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (request == null)
                     return new ServiceResult().NotFound();
 
-                RequestSelection requestSelection = new()
+                Suggestion requestSelection = new()
                 {
                     UserAccountId = currentUserId.Value,
                     RequestId = model.RequestId
                 };
 
-                await _requestSelection.AddAsync(requestSelection);
+                await _suggestionRepository.AddAsync(requestSelection);
                 return new ServiceResult().Successful();
             }
             catch (Exception exception)
@@ -477,14 +477,14 @@ namespace ApplicationLayer.BusinessLogic.Services
         {
             try
             {
-                var request = await _requestSelection.Query()
+                var request = await _suggestionRepository.Query()
                     .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
 
                 //request.Status = RequestStatusEnum.ConfirmedBySender;
-                await _requestSelection.UpdateAsync(request);
+                await _suggestionRepository.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -498,14 +498,14 @@ namespace ApplicationLayer.BusinessLogic.Services
         {
             try
             {
-                var request = await _requestSelection.Query()
+                var request = await _suggestionRepository.Query()
                     .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
 
                 //request.Status = RequestStatusEnum.ConfirmedBySender;
-                await _requestSelection.UpdateAsync(request);
+                await _suggestionRepository.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -525,11 +525,11 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (request == null)
                     return new ServiceResult().NotFound();
 
-                var requestRecord = await _requestSelection.Query()
+                var requestRecord = await _suggestionRepository.Query()
                     .FirstOrDefaultAsync(current => current.RequestId == request.Id);
 
                 //requestRecord.Status = RequestStatusEnum.RejectedByManager;
-                await _requestSelection.UpdateAsync(requestRecord);
+                await _suggestionRepository.UpdateAsync(requestRecord);
 
                 return new ServiceResult().Successful();
             }
@@ -549,11 +549,11 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (request == null)
                     return new ServiceResult().NotFound();
 
-                var requestRecord = await _requestSelection.Query()
+                var requestRecord = await _suggestionRepository.Query()
                     .FirstOrDefaultAsync(current => current.RequestId == request.Id);
 
                 //requestRecord.Status = RequestStatusEnum.Published;
-                await _requestSelection.UpdateAsync(requestRecord);
+                await _suggestionRepository.UpdateAsync(requestRecord);
 
                 return new ServiceResult().Successful();
             }
@@ -567,14 +567,14 @@ namespace ApplicationLayer.BusinessLogic.Services
         {
             try
             {
-                var request = await _requestSelection.Query()
+                var request = await _suggestionRepository.Query()
                     .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
 
                 //request.Status = RequestStatusEnum.ReadyToPickup;
-                await _requestSelection.UpdateAsync(request);
+                await _suggestionRepository.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -588,14 +588,14 @@ namespace ApplicationLayer.BusinessLogic.Services
         {
             try
             {
-                var request = await _requestSelection.Query()
+                var request = await _suggestionRepository.Query()
                     .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
 
                 //request.Status = RequestStatusEnum.PickedUp;
-                await _requestSelection.UpdateAsync(request);
+                await _suggestionRepository.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -609,14 +609,14 @@ namespace ApplicationLayer.BusinessLogic.Services
         {
             try
             {
-                var request = await _requestSelection.Query()
+                var request = await _suggestionRepository.Query()
                     .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
 
                 //request.Status = RequestStatusEnum.InTransit;
-                await _requestSelection.UpdateAsync(request);
+                await _suggestionRepository.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -630,14 +630,14 @@ namespace ApplicationLayer.BusinessLogic.Services
         {
             try
             {
-                var request = await _requestSelection.Query()
+                var request = await _suggestionRepository.Query()
                     .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
 
                 //request.Status = RequestStatusEnum.ReadyToDeliver;
-                await _requestSelection.UpdateAsync(request);
+                await _suggestionRepository.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }
@@ -658,11 +658,11 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (request == null)
                     return new ServiceResult().NotFound();
 
-                var requestRecord = await _requestSelection.Query()
+                var requestRecord = await _suggestionRepository.Query()
                     .FirstOrDefaultAsync(current => current.UserAccountId == currentUserId && current.RequestId == request.Id);
 
                 //requestRecord.Status = RequestStatusEnum.Delivered;
-                await _requestSelection.UpdateAsync(requestRecord);
+                await _suggestionRepository.UpdateAsync(requestRecord);
 
                 return new ServiceResult().Successful();
             }
@@ -676,14 +676,14 @@ namespace ApplicationLayer.BusinessLogic.Services
         {
             try
             {
-                var request = await _requestSelection.Query()
+                var request = await _suggestionRepository.Query()
                     .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
 
                 //request.Status = RequestStatusEnum.NotDelivered;
-                await _requestSelection.UpdateAsync(request);
+                await _suggestionRepository.UpdateAsync(request);
 
                 return new ServiceResult().Successful();
             }

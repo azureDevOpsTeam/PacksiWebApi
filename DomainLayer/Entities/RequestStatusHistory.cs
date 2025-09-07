@@ -16,6 +16,6 @@ namespace DomainLayer.Entities
 
         public UserAccount UserAccount { get; set; }
 
-        public RequestSelection RequestSelection { get; set; }
+        public Suggestion Suggestion { get; set; }
     }
 }

@@ -17,6 +17,9 @@
             phonePrefix = phonePrefix.Trim().Replace(" ", "");
             phoneNumber = phoneNumber.Trim().Replace(" ", "").Replace("-", "");
 
+            if (phonePrefix.StartsWith("00"))
+                phonePrefix = phonePrefix.Trim().Replace("00", "");
+
             // اطمینان از اینکه کد کشور با "+" شروع می‌شود
             if (!phonePrefix.StartsWith("+"))
                 phonePrefix = "+" + phonePrefix;

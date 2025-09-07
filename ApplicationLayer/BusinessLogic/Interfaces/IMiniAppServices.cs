@@ -34,8 +34,6 @@ public interface IMiniAppServices
 
     Task<ServiceResult> AddRequestItemTypeAsync(MiniApp_CreateRequestCommand model, int requestId);
 
-    Task<Result<RequestSelection>> SelectedRequestAsync(RequestKeyDto model, UserAccount user);
-
     Task<Result> ConfirmedBySenderAsync(RequestSelectionKeyDto model, UserAccount userAccount);
 
     Task<Result> RejectByManagerAsync(RequestKeyDto model);
@@ -56,7 +54,9 @@ public interface IMiniAppServices
 
     Task<Result> RejectSelectionAsync(RequestSelectionKeyDto model);
 
-    Task<Result> AddHistoryStatusAsync(RequestSelection requestSelection, RequestProcessStatus processStatus, UserAccount user);
+    Task<Result> AddHistoryStatusAsync(Suggestion suggestion, RequestProcessStatus processStatus, UserAccount user);
 
     Task<Result<List<TripsDto>>> GetMyRequestsAsync(UserAccount user);
+
+    Task<Result<Suggestion>> CreateSuggestionAsync(CreateSuggestionDto model, UserAccount user);
 }

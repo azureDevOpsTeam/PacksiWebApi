@@ -37,6 +37,6 @@ public class RequestProfile : Profile
             .ForMember(dest => dest.SuggestedPrice, opt => opt.Ignore())
             .ForMember(dest => dest.AvailableOrigins, opt => opt.Ignore())
             .ForMember(dest => dest.AvailableDestinations, opt => opt.Ignore())
-            .ForMember(dest => dest.RequestSelections, opt => opt.Ignore());
+            .ForMember(dest => dest.Suggestions, opt => opt.Ignore());
     }
 }

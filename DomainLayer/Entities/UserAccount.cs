@@ -60,8 +60,6 @@ namespace DomainLayer.Entities
 
         public ICollection<UserPreferredLocation> UserPreferredLocations { get; set; } = [];
 
-        public ICollection<RequestSelection> RequestSelections { get; set; } = [];
-
         public ICollection<Advertisement> Advertisements { get; set; } = [];
 
         public ICollection<Comment> Comments { get; set; } = [];
@@ -71,5 +69,7 @@ namespace DomainLayer.Entities
         public ICollection<Conversation> ConversationsAsUser2 { get; set; } = [];
 
         public ICollection<Message> SentMessages { get; set; } = [];
+
+        public ICollection<Suggestion> Suggestions { get; set; } = [];
     }
 }
