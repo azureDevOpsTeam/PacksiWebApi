@@ -11,8 +11,16 @@ public class ChatHub : Hub
 {
     public override async Task OnConnectedAsync()
     {
+        Console.WriteLine($"✅ Connected: {Context.ConnectionId}");
         await base.OnConnectedAsync();
     }
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        Console.WriteLine($"❌ Disconnected: {Context.ConnectionId}");
+        await base.OnDisconnectedAsync(exception);
+    }
+
     public async Task SendMessage(string user, string message)
     {
         await Clients.All.SendAsync("ReceiveMessage", user, message);
