@@ -11,7 +11,6 @@ public class ChatHub : Hub
 {
     public override async Task OnConnectedAsync()
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, $"User_{13}");
         await base.OnConnectedAsync();
     }
     public async Task SendMessage(string user, string message)
