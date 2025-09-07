@@ -132,8 +132,7 @@ namespace ApplicationLayer
 
         private static void JwtAuthorizeConfiguration(this IServiceCollection services, IConfiguration configuration)
         {
-            //var jwtKey = configuration["JWT:Key"];
-            var jwtKey = "aZwT42Qp7JF3LCDBYcK1VUhMgzT5NrWkv9RoxO6EdytnsmPq8XSblGHfjAe";
+            var jwtKey = configuration["JWT:Key"];
             if (string.IsNullOrEmpty(jwtKey))
                 throw new ArgumentException("JWT Key is not configured");
 
