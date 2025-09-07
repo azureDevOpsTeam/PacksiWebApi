@@ -237,7 +237,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
             var requests = await _requestRepository.Query()
                 .Where(current => current.UserAccount != user
-                    || current.Suggestions.Any(s => s.UserAccountId != user.Id))
+                    || current.Suggestions.Any(s => s.Request.UserAccountId != user.Id))
                 .Include(r => r.UserAccount)
                     .ThenInclude(u => u.UserProfiles)
                 .Include(r => r.Suggestions)
