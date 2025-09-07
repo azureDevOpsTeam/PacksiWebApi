@@ -98,6 +98,7 @@ namespace InfrastructureLayer.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     TelegramId = table.Column<long>(type: "bigint", nullable: true),
                     TelegramUserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     Password = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
@@ -235,6 +236,48 @@ namespace InfrastructureLayer.Migrations
                     table.ForeignKey(
                         name: "FK_Comment_UserAccount_UserAccountId",
                         column: x => x.UserAccountId,
+                        principalSchema: "dbo",
+                        principalTable: "UserAccount",
+                        principalColumn: "UserAccountId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Conversation",
+                schema: "dbo",
+                columns: table => new
+                {
+                    ConversationId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    User1Id = table.Column<int>(type: "int", nullable: false),
+                    User2Id = table.Column<int>(type: "int", nullable: false),
+                    LastMessageAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsUser1Blocked = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    IsUser2Blocked = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    CreatedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    CreatedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    ModifiedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    ModifiedByUserId = table.Column<int>(type: "int", nullable: true),
+                    ModifiedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Conversation", x => x.ConversationId);
+                    table.CheckConstraint("CK_Conversation_DifferentUsers", "[User1Id] <> [User2Id]");
+                    table.ForeignKey(
+                        name: "FK_Conversation_UserAccount_User1Id",
+                        column: x => x.User1Id,
+                        principalSchema: "dbo",
+                        principalTable: "UserAccount",
+                        principalColumn: "UserAccountId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Conversation_UserAccount_User2Id",
+                        column: x => x.User2Id,
                         principalSchema: "dbo",
                         principalTable: "UserAccount",
                         principalColumn: "UserAccountId",
@@ -598,6 +641,50 @@ namespace InfrastructureLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Message",
+                schema: "dbo",
+                columns: table => new
+                {
+                    MessageId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ConversationId = table.Column<int>(type: "int", nullable: false),
+                    SenderId = table.Column<int>(type: "int", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: false),
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    ReadAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsEdited = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    EditedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    CreatedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    ModifiedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    ModifiedByUserId = table.Column<int>(type: "int", nullable: true),
+                    ModifiedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Message", x => x.MessageId);
+                    table.ForeignKey(
+                        name: "FK_Message_Conversation_ConversationId",
+                        column: x => x.ConversationId,
+                        principalSchema: "dbo",
+                        principalTable: "Conversation",
+                        principalColumn: "ConversationId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Message_UserAccount_SenderId",
+                        column: x => x.SenderId,
+                        principalSchema: "dbo",
+                        principalTable: "UserAccount",
+                        principalColumn: "UserAccountId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Commission",
                 schema: "dbo",
                 columns: table => new
@@ -787,14 +874,17 @@ namespace InfrastructureLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RequestSelection",
+                name: "Suggestion",
                 schema: "dbo",
                 columns: table => new
                 {
-                    RequestSelectionId = table.Column<int>(type: "int", nullable: false)
+                    SuggestionId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserAccountId = table.Column<int>(type: "int", nullable: false),
                     RequestId = table.Column<int>(type: "int", nullable: false),
+                    UserAccountId = table.Column<int>(type: "int", nullable: false),
+                    SuggestionPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Currency = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
                     CreatedByIp = table.Column<string>(type: "char(15)", nullable: true),
                     CreatedByUserId = table.Column<int>(type: "int", nullable: true),
@@ -808,16 +898,16 @@ namespace InfrastructureLayer.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RequestSelection", x => x.RequestSelectionId);
+                    table.PrimaryKey("PK_Suggestion", x => x.SuggestionId);
                     table.ForeignKey(
-                        name: "FK_RequestSelection_Request_RequestId",
+                        name: "FK_Suggestion_Request_RequestId",
                         column: x => x.RequestId,
                         principalSchema: "dbo",
                         principalTable: "Request",
                         principalColumn: "RequestId",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_RequestSelection_UserAccount_UserAccountId",
+                        name: "FK_Suggestion_UserAccount_UserAccountId",
                         column: x => x.UserAccountId,
                         principalSchema: "dbo",
                         principalTable: "UserAccount",
@@ -851,11 +941,11 @@ namespace InfrastructureLayer.Migrations
                 {
                     table.PrimaryKey("PK_RequestStatusHistory", x => x.RequestStatusHistoryId);
                     table.ForeignKey(
-                        name: "FK_RequestStatusHistory_RequestSelection_RequestSelectionId",
+                        name: "FK_RequestStatusHistory_Suggestion_RequestSelectionId",
                         column: x => x.RequestSelectionId,
                         principalSchema: "dbo",
-                        principalTable: "RequestSelection",
-                        principalColumn: "RequestSelectionId",
+                        principalTable: "Suggestion",
+                        principalColumn: "SuggestionId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_RequestStatusHistory_UserAccount_UserAccountId",
@@ -909,6 +999,19 @@ namespace InfrastructureLayer.Migrations
                 column: "RequestId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Conversation_User2Id",
+                schema: "dbo",
+                table: "Conversation",
+                column: "User2Id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Conversation_Users",
+                schema: "dbo",
+                table: "Conversation",
+                columns: new[] { "User1Id", "User2Id" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Invitation_Code",
                 schema: "dbo",
                 table: "Invitation",
@@ -920,6 +1023,18 @@ namespace InfrastructureLayer.Migrations
                 schema: "dbo",
                 table: "Invitation",
                 column: "InviterUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Message_Conversation_SentAt",
+                schema: "dbo",
+                table: "Message",
+                columns: new[] { "ConversationId", "SentAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Message_SenderId",
+                schema: "dbo",
+                table: "Message",
+                column: "SenderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshToken_UserAccountId",
@@ -982,18 +1097,6 @@ namespace InfrastructureLayer.Migrations
                 column: "RequestId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RequestSelection_RequestId",
-                schema: "dbo",
-                table: "RequestSelection",
-                column: "RequestId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RequestSelection_UserAccountId",
-                schema: "dbo",
-                table: "RequestSelection",
-                column: "UserAccountId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_RequestStatusHistory_RequestSelectionId",
                 schema: "dbo",
                 table: "RequestStatusHistory",
@@ -1003,6 +1106,18 @@ namespace InfrastructureLayer.Migrations
                 name: "IX_RequestStatusHistory_UserAccountId",
                 schema: "dbo",
                 table: "RequestStatusHistory",
+                column: "UserAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Suggestion_RequestId",
+                schema: "dbo",
+                table: "Suggestion",
+                column: "RequestId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Suggestion_UserAccountId",
+                schema: "dbo",
+                table: "Suggestion",
                 column: "UserAccountId");
 
             migrationBuilder.CreateIndex(
@@ -1086,6 +1201,10 @@ namespace InfrastructureLayer.Migrations
                 schema: "dbo");
 
             migrationBuilder.DropTable(
+                name: "Message",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
                 name: "PostPricing",
                 schema: "dbo");
 
@@ -1134,7 +1253,11 @@ namespace InfrastructureLayer.Migrations
                 schema: "dbo");
 
             migrationBuilder.DropTable(
-                name: "RequestSelection",
+                name: "Conversation",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
+                name: "Suggestion",
                 schema: "dbo");
 
             migrationBuilder.DropTable(

@@ -1072,63 +1072,6 @@ namespace InfrastructureLayer.Migrations
                     b.ToTable("RequestItemType", "dbo");
                 });
 
-            modelBuilder.Entity("DomainLayer.Entities.RequestSelection", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("RequestSelectionId");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CreatedByIp")
-                        .HasColumnType("char(15)");
-
-                    b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("CreatedDateTime")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ModifiedByIp")
-                        .HasColumnType("char(15)");
-
-                    b.Property<int?>("ModifiedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset?>("ModifiedDateTime")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("RequestId")
-                        .HasColumnType("int");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserAccountId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RequestId");
-
-                    b.HasIndex("UserAccountId");
-
-                    b.ToTable("RequestSelection", "dbo");
-                });
-
             modelBuilder.Entity("DomainLayer.Entities.RequestStatusHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -1238,6 +1181,72 @@ namespace InfrastructureLayer.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Role", "dbo");
+                });
+
+            modelBuilder.Entity("DomainLayer.Entities.Suggestion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("SuggestionId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedByIp")
+                        .HasColumnType("char(15)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedDateTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Currency")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModifiedByIp")
+                        .HasColumnType("char(15)");
+
+                    b.Property<int?>("ModifiedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("ModifiedDateTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SuggestionPrice")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<int>("UserAccountId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequestId");
+
+                    b.HasIndex("UserAccountId");
+
+                    b.ToTable("Suggestion", "dbo");
                 });
 
             modelBuilder.Entity("DomainLayer.Entities.TelegramPostLog", b =>
@@ -1878,28 +1887,9 @@ namespace InfrastructureLayer.Migrations
                     b.Navigation("Request");
                 });
 
-            modelBuilder.Entity("DomainLayer.Entities.RequestSelection", b =>
-                {
-                    b.HasOne("DomainLayer.Entities.Request", "Request")
-                        .WithMany("RequestSelections")
-                        .HasForeignKey("RequestId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("DomainLayer.Entities.UserAccount", "UserAccount")
-                        .WithMany("RequestSelections")
-                        .HasForeignKey("UserAccountId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Request");
-
-                    b.Navigation("UserAccount");
-                });
-
             modelBuilder.Entity("DomainLayer.Entities.RequestStatusHistory", b =>
                 {
-                    b.HasOne("DomainLayer.Entities.RequestSelection", "RequestSelection")
+                    b.HasOne("DomainLayer.Entities.Suggestion", "Suggestion")
                         .WithMany("RequestStatusHistories")
                         .HasForeignKey("RequestSelectionId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -1910,7 +1900,26 @@ namespace InfrastructureLayer.Migrations
                         .HasForeignKey("UserAccountId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("RequestSelection");
+                    b.Navigation("Suggestion");
+
+                    b.Navigation("UserAccount");
+                });
+
+            modelBuilder.Entity("DomainLayer.Entities.Suggestion", b =>
+                {
+                    b.HasOne("DomainLayer.Entities.Request", "Request")
+                        .WithMany("Suggestions")
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DomainLayer.Entities.UserAccount", "UserAccount")
+                        .WithMany("Suggestions")
+                        .HasForeignKey("UserAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Request");
 
                     b.Navigation("UserAccount");
                 });
@@ -2042,17 +2051,17 @@ namespace InfrastructureLayer.Migrations
 
                     b.Navigation("RequestItemTypes");
 
-                    b.Navigation("RequestSelections");
-                });
-
-            modelBuilder.Entity("DomainLayer.Entities.RequestSelection", b =>
-                {
-                    b.Navigation("RequestStatusHistories");
+                    b.Navigation("Suggestions");
                 });
 
             modelBuilder.Entity("DomainLayer.Entities.Role", b =>
                 {
                     b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("DomainLayer.Entities.Suggestion", b =>
+                {
+                    b.Navigation("RequestStatusHistories");
                 });
 
             modelBuilder.Entity("DomainLayer.Entities.UserAccount", b =>
@@ -2071,11 +2080,11 @@ namespace InfrastructureLayer.Migrations
 
                     b.Navigation("RefreshTokens");
 
-                    b.Navigation("RequestSelections");
-
                     b.Navigation("SentMessages");
 
                     b.Navigation("StatusHistories");
+
+                    b.Navigation("Suggestions");
 
                     b.Navigation("TelegramUserInformations");
 
