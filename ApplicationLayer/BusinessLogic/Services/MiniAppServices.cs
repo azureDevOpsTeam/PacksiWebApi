@@ -277,7 +277,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         .FirstOrDefault() ?? (int?)r.Status,
 
                     RecordType =
-                        r.Suggestions.Any(sel => sel.Request.UserAccountId == user.Id)
+                        r.Suggestions.Any(sel => sel.UserAccountId == user.Id)
                             ? "selected"
                             : r.OriginCity.CountryId == userCountryId
                                 ? "outbound"
