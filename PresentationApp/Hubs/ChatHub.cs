@@ -85,11 +85,11 @@ public class ChatHub(IMiniAppServices miniAppServices, IUserAccountServices user
 
             if (result.IsSuccess)
             {
-                // ارسال به خود کاربر (فرستنده)
-                await Clients.Group($"User_{currentUser.Id}").SendAsync("MessageSent", result.Value);
+                var message = result.Value;
 
-                // ارسال به گیرنده
-                await Clients.Group($"User_{messageDto.ReceiverId}").SendAsync("MessageReceived", result.Value);
+                // ارسال به گروه کانورسیشن (همه اعضا)
+                await Clients.Group($"Conversation_{result.Value.ConversationId}")
+                    .SendAsync("ReceiveMessage", result.Value);
             }
             else
             {
