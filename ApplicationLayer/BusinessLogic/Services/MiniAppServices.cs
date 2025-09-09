@@ -283,6 +283,9 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     {
                         SuggestionId = s.Id,
                         UserAccountId = s.UserAccountId,
+                        Currency = s.Currency,
+                        Price = s.SuggestionPrice,
+                        Description = s.Description,
                         FullName = s.UserAccount.UserProfiles.FirstOrDefault().DisplayName
                                    ?? s.UserAccount.UserProfiles.FirstOrDefault().FirstName,
                         LastStatus = s.RequestStatusHistories

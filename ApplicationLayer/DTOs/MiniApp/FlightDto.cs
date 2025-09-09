@@ -83,6 +83,8 @@ public class SuggestionDto
 
     public decimal Price { get; set; }
 
+    public int Currency { get; set; }
+
     public string Description { get; set; }
 
     public int? LastStatus { get; set; }
