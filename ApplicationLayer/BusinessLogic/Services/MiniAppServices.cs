@@ -367,26 +367,27 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
             Directory.CreateDirectory(uploadsRoot);
 
-            foreach (var formFile in model.Files)
-            {
-                if (formFile.Length > 0)
+            if (model.Files != null)
+                foreach (var formFile in model.Files)
                 {
-                    var fileName = Guid.NewGuid() + Path.GetExtension(formFile.FileName);
-                    var filePath = Path.Combine(uploadsRoot, fileName);
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    if (formFile.Length > 0)
                     {
-                        await formFile.CopyToAsync(stream);
+                        var fileName = Guid.NewGuid() + Path.GetExtension(formFile.FileName);
+                        var filePath = Path.Combine(uploadsRoot, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await formFile.CopyToAsync(stream);
+                        }
+
+                        attachments.Add(new CreateRequestAttachmentDto
+                        {
+                            FilePath = $"/uploads/request/{fileName}",
+                            FileType = formFile.ContentType,
+                            AttachmentType = model.RequestType == RequestTypeEnum.Passenger ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
+                        });
                     }
-
-                    attachments.Add(new CreateRequestAttachmentDto
-                    {
-                        FilePath = $"/uploads/request/{fileName}",
-                        FileType = formFile.ContentType,
-                        AttachmentType = model.RequestType == RequestTypeEnum.Passenger ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
-                    });
                 }
-            }
 
             await _requestRepository.AddAsync(request);
             return Result<Request>.Success(request);
