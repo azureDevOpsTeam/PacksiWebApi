@@ -42,16 +42,16 @@ public class TripsDto
 
     public double? MaxHeightCm { get; set; }
 
-    public int? CurrentUserStatus { get; set; }
+    public int? LastStatus { get; set; }
 
     public string CurrentUserStatusEn
     {
         get
         {
-            if (CurrentUserStatus < 100)
-                return RequestLifecycleStatus.FromValue(CurrentUserStatus.Value).EnglishName;
+            if (LastStatus < 100)
+                return RequestLifecycleStatus.FromValue(LastStatus.Value).EnglishName;
             else
-                return RequestProcessStatus.FromValue(CurrentUserStatus.Value).EnglishName;
+                return RequestProcessStatus.FromValue(LastStatus.Value).EnglishName;
         }
     }
 
@@ -59,12 +59,14 @@ public class TripsDto
     {
         get
         {
-            if (CurrentUserStatus < 100)
-                return RequestLifecycleStatus.FromValue(CurrentUserStatus.Value).PersianName;
+            if (LastStatus < 100)
+                return RequestLifecycleStatus.FromValue(LastStatus.Value).PersianName;
             else
-                return RequestProcessStatus.FromValue(CurrentUserStatus.Value).PersianName;
+                return RequestProcessStatus.FromValue(LastStatus.Value).PersianName;
         }
     }
 
-    public string RecordType { get; set; }
+    public string TripType { get; set; }
+
+    public string SelectStatus { get; set; }
 }

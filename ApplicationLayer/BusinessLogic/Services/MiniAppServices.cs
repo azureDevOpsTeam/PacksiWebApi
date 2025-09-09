@@ -269,21 +269,19 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     MaxLengthCm = r.MaxLengthCm,
                     MaxWeightKg = r.MaxWeightKg,
                     MaxWidthCm = r.MaxWidthCm,
-                    CurrentUserStatus = r.Suggestions
+                    LastStatus = r.Suggestions
                         .Where(sel => sel.UserAccountId == user.Id)
                         .SelectMany(sel => sel.RequestStatusHistories
                             .OrderByDescending(h => h.Id)
                             .Select(h => (int?)h.Status))
                         .FirstOrDefault() ?? (int?)r.Status,
 
-                    RecordType =
-                        r.Suggestions.Any(sel => sel.UserAccountId == user.Id)
-                            ? "selected"
-                            : r.OriginCity.CountryId == userCountryId
+                    TripType = r.OriginCity.CountryId == userCountryId
                                 ? "outbound"
                                 : r.DestinationCity.CountryId == userCountryId
                                     ? "inbound"
-                                    : "favorite"
+                                    : "",
+                    SelectStatus = r.Suggestions.Any(sel => sel.UserAccountId == user.Id) ? "ipicked" : r.Suggestions.Any(sel => sel.UserAccountId == user.Id) ? "pickedme" : "",
                 }).ToListAsync();
 
             return Result<List<TripsDto>>.Success(requests);
@@ -327,13 +325,13 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     MaxLengthCm = r.MaxLengthCm,
                     MaxWeightKg = r.MaxWeightKg,
                     MaxWidthCm = r.MaxWidthCm,
-                    CurrentUserStatus = r.Suggestions
+                    LastStatus = r.Suggestions
                         .Where(sel => sel.UserAccountId == user.Id)
                         .SelectMany(sel => sel.RequestStatusHistories
                             .OrderByDescending(h => h.Id)
                             .Select(h => (int?)h.Status))
                         .FirstOrDefault() ?? (int?)r.Status,
-                    RecordType = r.RequestType == RequestTypeEnum.Passenger ? RequestTypeEnum.Passenger.EnglishName : RequestTypeEnum.Sender.EnglishName
+                    TripType = r.RequestType == RequestTypeEnum.Passenger ? RequestTypeEnum.Passenger.EnglishName : RequestTypeEnum.Sender.EnglishName
                 }).ToListAsync();
 
             return Result<List<TripsDto>>.Success(requests);
