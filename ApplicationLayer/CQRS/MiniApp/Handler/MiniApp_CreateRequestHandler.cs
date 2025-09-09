@@ -28,13 +28,19 @@ public class MiniApp_CreateRequestHandler(IUnitOfWork unitOfWork, IUserAccountSe
             var resultAddRequest = await _miniAppServices.AddRequestAsync(request, userAccount.Value, cancellationToken);
 
             if (resultAddRequest.IsFailure)
+            {
+                await _unitOfWork.RollbackAsync();
                 return resultAddRequest.ToHandlerResult();
+            }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             var resultItemtype = await _miniAppServices.AddRequestItemTypeAsync(request, resultAddRequest.Value.Id);
             if (resultItemtype.IsFailure)
+            {
+                await _unitOfWork.RollbackAsync();
                 return resultItemtype.ToHandlerResult();
+            }
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _unitOfWork.CommitAsync();
