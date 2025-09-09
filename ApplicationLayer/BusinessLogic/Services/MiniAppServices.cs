@@ -107,12 +107,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             //TODO For TEST
             var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
 
-            // مسیر دایرکتوری برای کاربر
-            var wwwrootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot");
-            // مسیر پوشه کاربر
-            var directoryPath = Path.Combine(wwwrootPath, "uploads", userId.ToString());
-
-            // اگر پوشه وجود ندارد، بساز
+            var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", userId.ToString());
             if (Directory.Exists(directoryPath) == false)
                 Directory.CreateDirectory(directoryPath);
 
@@ -371,11 +366,13 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             var request = _mapper.Map<Request>(model);
             request.UserAccountId = userAccount.Id;
 
-            request.Status = model.IsDraft ? RequestLifecycleStatus.Created : RequestLifecycleStatus.Draft;
+            request.Status = model.IsDraft
+                ? RequestLifecycleStatus.Created
+                : RequestLifecycleStatus.Draft;
 
             var attachments = new List<CreateRequestAttachmentDto>();
-            var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-            if (Directory.Exists(uploadsRoot) == false)
+            var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "request");
+            if (!Directory.Exists(uploadsRoot))
                 Directory.CreateDirectory(uploadsRoot);
 
             if (model.Files != null)

@@ -1,6 +1,7 @@
-using ApplicationLayer.BusinessLogic.Interfaces;
+﻿using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.Extensions;
+using ApplicationLayer.Extensions.SmartEnums;
 using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
@@ -20,18 +21,30 @@ public class MiniApp_CreateRequestHandler(IUnitOfWork unitOfWork, IUserAccountSe
         var userTelegramInfo = resultValidation.Value.User;
         var userAccount = await _userAccountServices.GetUserAccountByTelegramIdAsync(userTelegramInfo.Id);
 
-        var resultAddRequest = await _miniAppServices.AddRequestAsync(request, userAccount.Value, cancellationToken);
+        await _unitOfWork.BeginTransactionAsync();
 
-        if (resultAddRequest.IsFailure)
-            return resultAddRequest.ToHandlerResult();
+        try
+        {
+            var resultAddRequest = await _miniAppServices.AddRequestAsync(request, userAccount.Value, cancellationToken);
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+            if (resultAddRequest.IsFailure)
+                return resultAddRequest.ToHandlerResult();
 
-        var resultItemtype = await _miniAppServices.AddRequestItemTypeAsync(request, resultAddRequest.Value.Id);
-        if (resultItemtype.IsFailure)
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var resultItemtype = await _miniAppServices.AddRequestItemTypeAsync(request, resultAddRequest.Value.Id);
+            if (resultItemtype.IsFailure)
+                return resultItemtype.ToHandlerResult();
+
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            await _unitOfWork.CommitAsync();
+
             return resultItemtype.ToHandlerResult();
-
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-        return resultAddRequest.ToHandlerResult();
+        }
+        catch (Exception exception)
+        {
+            await _unitOfWork.RollbackAsync();
+            return new HandlerResult() { ObjectResult = RequestStatus.Failed, Message = "خطا در ثبت درخواست" };
+        }
     }
 }
