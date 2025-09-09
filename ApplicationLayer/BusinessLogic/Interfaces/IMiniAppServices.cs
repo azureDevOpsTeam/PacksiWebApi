@@ -59,4 +59,6 @@ public interface IMiniAppServices
     Task<Result<List<TripsDto>>> GetMyRequestsAsync(UserAccount user);
 
     Task<Result<Suggestion>> CreateSuggestionAsync(CreateSuggestionDto model, UserAccount user);
+
+    Task<Result<RequestSuggestionDto>> GetSuggestionAsync(RequestSuggestionKeyDto model);
 }

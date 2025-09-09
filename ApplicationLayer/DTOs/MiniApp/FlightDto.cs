@@ -69,4 +69,17 @@ public class TripsDto
     public string TripType { get; set; }
 
     public string SelectStatus { get; set; }
+
+    public List<SuggestionDto> Suggestions { get; set; }
+}
+
+public class SuggestionDto
+{
+    public int SuggestionId { get; set; }
+
+    public int UserAccountId { get; set; }
+
+    public string FullName { get; set; }
+
+    public int? LastStatus { get; set; }
 }

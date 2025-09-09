@@ -252,7 +252,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     RequestId = r.Id,
                     UserAccountId = r.UserAccountId,
                     FullName = r.UserAccount.UserProfiles.FirstOrDefault().DisplayName
-                               ?? r.UserAccount.UserProfiles.FirstOrDefault().FirstName,
+                        ?? r.UserAccount.UserProfiles.FirstOrDefault().FirstName,
                     ArrivalDate = r.ArrivalDate,
                     DepartureDate = r.DepartureDate,
                     ArrivalDatePersian = DateTimeHelper.GetPersianDate(r.ArrivalDate),
@@ -268,23 +268,28 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     MaxLengthCm = r.MaxLengthCm,
                     MaxWeightKg = r.MaxWeightKg,
                     MaxWidthCm = r.MaxWidthCm,
-                    LastStatus = r.Suggestions
-                        .Where(sel => sel.UserAccountId == user.Id)
+                    LastStatus = r.Suggestions.Where(sel => sel.UserAccountId == user.Id)
                         .SelectMany(sel => sel.RequestStatusHistories
-                            .OrderByDescending(h => h.Id)
-                            .Select(h => (int?)h.Status))
+                        .OrderByDescending(h => h.Id)
+                        .Select(h => (int?)h.Status))
                         .FirstOrDefault() ?? (int?)r.Status,
-
-                    TripType = r.OriginCity.CountryId == userCountryId
-                                ? "outbound"
-                                : r.DestinationCity.CountryId == userCountryId
-                                    ? "inbound"
-                                    : "",
+                    TripType = r.OriginCity.CountryId == userCountryId ? "outbound"
+                        : r.DestinationCity.CountryId == userCountryId ? "inbound" : "",
                     SelectStatus = r.Suggestions.Any(sel => sel.UserAccountId == user.Id)
-                    ? "ipicked"
-                    : (r.UserAccountId == user.Id && r.Suggestions.Any(sel => sel.UserAccountId != user.Id))
-                    ? "pickedme"
-                    : ""
+                        ? "ipicked"
+                            : (r.UserAccountId == user.Id && r.Suggestions.Any(sel => sel.UserAccountId != user.Id))
+                        ? "pickedme" : "",
+                    Suggestions = r.Suggestions.Select(s => new SuggestionDto
+                    {
+                        SuggestionId = s.Id,
+                        UserAccountId = s.UserAccountId,
+                        FullName = s.UserAccount.UserProfiles.FirstOrDefault().DisplayName
+                                   ?? s.UserAccount.UserProfiles.FirstOrDefault().FirstName,
+                        LastStatus = s.RequestStatusHistories
+                            .OrderByDescending(h => h.Id)
+                            .Select(h => (int?)h.Status)
+                            .FirstOrDefault()
+                    }).ToList()
                 }).ToListAsync();
 
             return Result<List<TripsDto>>.Success(requests);
@@ -569,6 +574,31 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         {
             _logger.LogError(exception, "خطا در دریافت درخواست های کاربر {UserId}", user.Id);
             return Result<List<UserRequestsDto>>.GeneralFailure("خطا در دریافت درخواست های کاربر");
+        }
+    }
+
+    public async Task<Result<RequestSuggestionDto>> GetSuggestionAsync(RequestSuggestionKeyDto model)
+    {
+        try
+        {
+            var result = await _suggestionRepository.Query()
+                .Include(r => r.Request)
+                .Where(r => r.Id == model.RequestSuggestionId)
+                .Select(current => new RequestSuggestionDto
+                {
+                    RequestSuggestionId = current.Id,
+                    RequestId = current.RequestId,
+                    SuggestionPrice = current.SuggestionPrice,
+                    Description = current.Description
+                })
+                .FirstOrDefaultAsync();
+
+            return Result<RequestSuggestionDto>.Success(result);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در دریافت درخواست های کاربر {UserId}", model.RequestSuggestionId);
+            return Result<RequestSuggestionDto>.GeneralFailure("خطا در دریافت پیشنهاد قیمت");
         }
     }
 
