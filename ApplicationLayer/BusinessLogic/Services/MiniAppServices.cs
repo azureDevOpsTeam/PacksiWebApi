@@ -375,7 +375,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
             var attachments = new List<CreateRequestAttachmentDto>();
             var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-            Directory.CreateDirectory(uploadsRoot);
+            if (Directory.Exists(uploadsRoot) == false)
+                Directory.CreateDirectory(uploadsRoot);
 
             if (model.Files != null)
                 foreach (var formFile in model.Files)
