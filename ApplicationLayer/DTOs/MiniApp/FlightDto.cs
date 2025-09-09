@@ -81,5 +81,31 @@ public class SuggestionDto
 
     public string FullName { get; set; }
 
+    public decimal Price { get; set; }
+
+    public string Description { get; set; }
+
     public int? LastStatus { get; set; }
+
+    public string LastStatusEn
+    {
+        get
+        {
+            if (LastStatus.HasValue)
+                if (LastStatus > 100)
+                    return RequestProcessStatus.FromValue(LastStatus.Value).EnglishName;
+            return string.Empty;
+        }
+    }
+
+    public string LastStatusFa
+    {
+        get
+        {
+            if (LastStatus.HasValue)
+                if (LastStatus > 100)
+                    return RequestProcessStatus.FromValue(LastStatus.Value).PersianName;
+            return string.Empty;
+        }
+    }
 }
