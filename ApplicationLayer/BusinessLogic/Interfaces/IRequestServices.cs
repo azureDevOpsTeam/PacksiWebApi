@@ -29,21 +29,21 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
 
         Task<ServiceResult> SelectedRequestAsync(RequestKeyDto model);
 
-        Task<ServiceResult> RejectSelectionAsync(RequestSelectionKeyDto model);
+        Task<ServiceResult> RejectSelectionAsync(RequestSuggestionKeyDto model);
 
-        Task<ServiceResult> ConfirmedBySenderAsync(RequestSelectionKeyDto model);
+        Task<ServiceResult> ConfirmedBySenderAsync(RequestSuggestionKeyDto model);
 
-        Task<ServiceResult> ReadyToPickupAsync(RequestSelectionKeyDto model);
+        Task<ServiceResult> ReadyToPickupAsync(RequestSuggestionKeyDto model);
 
-        Task<ServiceResult> InTransitAsync(RequestSelectionKeyDto model);
+        Task<ServiceResult> InTransitAsync(RequestSuggestionKeyDto model);
 
         Task<ServiceResult> DeliveredAsync(RequestKeyDto model);
 
-        Task<ServiceResult> NotDeliveredAsync(RequestSelectionKeyDto model);
+        Task<ServiceResult> NotDeliveredAsync(RequestSuggestionKeyDto model);
 
-        Task<ServiceResult> PickedUpAsync(RequestSelectionKeyDto model);
+        Task<ServiceResult> PickedUpAsync(RequestSuggestionKeyDto model);
 
-        Task<ServiceResult> ReadyToDeliverAsync(RequestSelectionKeyDto model);
+        Task<ServiceResult> ReadyToDeliverAsync(RequestSuggestionKeyDto model);
 
         Task<ServiceResult> AddRequestSelectionAsync(int requestId, CancellationToken cancellationToken);
 

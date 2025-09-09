@@ -30,29 +30,29 @@ public interface IMiniAppServices
 
     Task<Result<RequestDetailDto>> GetRequestByIdAsync(RequestKeyDto model);
 
-    Task<ServiceResult> AddRequestAsync(MiniApp_CreateRequestCommand model, UserAccount userAccount, CancellationToken cancellationToken);
+    Task<Result<Request>> AddRequestAsync(MiniApp_CreateRequestCommand model, UserAccount userAccount, CancellationToken cancellationToken);
 
-    Task<ServiceResult> AddRequestItemTypeAsync(MiniApp_CreateRequestCommand model, int requestId);
+    Task<Result> AddRequestItemTypeAsync(MiniApp_CreateRequestCommand model, int requestId);
 
-    Task<Result> ConfirmedBySenderAsync(RequestSelectionKeyDto model, UserAccount userAccount);
+    Task<Result> ConfirmedBySenderAsync(RequestSuggestionKeyDto model, UserAccount userAccount);
 
     Task<Result> RejectByManagerAsync(RequestKeyDto model);
 
     Task<Result> PublishedRequestAsync(RequestKeyDto model);
 
-    Task<Result> ReadyToPickupAsync(RequestSelectionKeyDto model);
+    Task<Result> ReadyToPickupAsync(RequestSuggestionKeyDto model);
 
-    Task<Result> PickedUpAsync(RequestSelectionKeyDto model);
+    Task<Result> PickedUpAsync(RequestSuggestionKeyDto model);
 
-    Task<Result> InTransitAsync(RequestSelectionKeyDto model);
+    Task<Result> InTransitAsync(RequestSuggestionKeyDto model);
 
-    Task<Result> ReadyToDeliverAsync(RequestSelectionKeyDto model);
+    Task<Result> ReadyToDeliverAsync(RequestSuggestionKeyDto model);
 
     Task<Result> DeliveredAsync(RequestKeyDto model, UserAccount user);
 
-    Task<Result> NotDeliveredAsync(RequestSelectionKeyDto model);
+    Task<Result> NotDeliveredAsync(RequestSuggestionKeyDto model);
 
-    Task<Result> RejectSelectionAsync(RequestSelectionKeyDto model);
+    Task<Result> RejectSelectionAsync(RequestSuggestionKeyDto model);
 
     Task<Result> AddHistoryStatusAsync(Suggestion suggestion, RequestProcessStatus processStatus, UserAccount user);
 

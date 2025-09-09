@@ -473,12 +473,12 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
-        public async Task<ServiceResult> ConfirmedBySenderAsync(RequestSelectionKeyDto model)
+        public async Task<ServiceResult> ConfirmedBySenderAsync(RequestSuggestionKeyDto model)
         {
             try
             {
                 var request = await _suggestionRepository.Query()
-                    .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                    .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
@@ -494,12 +494,12 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
-        public async Task<ServiceResult> RejectSelectionAsync(RequestSelectionKeyDto model)
+        public async Task<ServiceResult> RejectSelectionAsync(RequestSuggestionKeyDto model)
         {
             try
             {
                 var request = await _suggestionRepository.Query()
-                    .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                    .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
@@ -563,12 +563,12 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
-        public async Task<ServiceResult> ReadyToPickupAsync(RequestSelectionKeyDto model)
+        public async Task<ServiceResult> ReadyToPickupAsync(RequestSuggestionKeyDto model)
         {
             try
             {
                 var request = await _suggestionRepository.Query()
-                    .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                    .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
@@ -584,12 +584,12 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
-        public async Task<ServiceResult> PickedUpAsync(RequestSelectionKeyDto model)
+        public async Task<ServiceResult> PickedUpAsync(RequestSuggestionKeyDto model)
         {
             try
             {
                 var request = await _suggestionRepository.Query()
-                    .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                    .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
@@ -605,12 +605,12 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
-        public async Task<ServiceResult> InTransitAsync(RequestSelectionKeyDto model)
+        public async Task<ServiceResult> InTransitAsync(RequestSuggestionKeyDto model)
         {
             try
             {
                 var request = await _suggestionRepository.Query()
-                    .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                    .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
@@ -626,12 +626,12 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
-        public async Task<ServiceResult> ReadyToDeliverAsync(RequestSelectionKeyDto model)
+        public async Task<ServiceResult> ReadyToDeliverAsync(RequestSuggestionKeyDto model)
         {
             try
             {
                 var request = await _suggestionRepository.Query()
-                    .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                    .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();
@@ -672,12 +672,12 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
-        public async Task<ServiceResult> NotDeliveredAsync(RequestSelectionKeyDto model)
+        public async Task<ServiceResult> NotDeliveredAsync(RequestSuggestionKeyDto model)
         {
             try
             {
                 var request = await _suggestionRepository.Query()
-                    .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                    .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
                 if (request == null)
                     return new ServiceResult().NotFound();

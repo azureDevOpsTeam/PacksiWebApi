@@ -2,4 +2,4 @@
 using MediatR;
 
 namespace ApplicationLayer.CQRS.Requests.Command;
-public record ConfirmedBySenderCommand(RequestSelectionKeyDto Model) : IRequest<HandlerResult>;
+public record ConfirmedBySenderCommand(RequestSuggestionKeyDto Model) : IRequest<HandlerResult>;

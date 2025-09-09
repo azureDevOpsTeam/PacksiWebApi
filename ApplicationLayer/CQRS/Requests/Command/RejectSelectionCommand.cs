@@ -2,4 +2,4 @@
 using MediatR;
 
 namespace ApplicationLayer.CQRS.Requests.Command;
-public record RejectSelectionCommand(RequestSelectionKeyDto Model) : IRequest<HandlerResult>;
+public record RejectSelectionCommand(RequestSuggestionKeyDto Model) : IRequest<HandlerResult>;

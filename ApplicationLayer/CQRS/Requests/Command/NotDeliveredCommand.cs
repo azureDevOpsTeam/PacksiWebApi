@@ -2,4 +2,4 @@
 using MediatR;
 
 namespace ApplicationLayer.CQRS.Requests.Command;
-public record NotDeliveredCommand(RequestSelectionKeyDto Model) : IRequest<HandlerResult>;
+public record NotDeliveredCommand(RequestSuggestionKeyDto Model) : IRequest<HandlerResult>;

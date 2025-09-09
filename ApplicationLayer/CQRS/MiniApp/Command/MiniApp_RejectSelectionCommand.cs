@@ -3,4 +3,4 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Command;
 
-public record MiniApp_RejectSelectionCommand(RequestSelectionKeyDto Model) : IRequest<HandlerResult>;
+public record MiniApp_RejectSelectionCommand(RequestSuggestionKeyDto Model) : IRequest<HandlerResult>;

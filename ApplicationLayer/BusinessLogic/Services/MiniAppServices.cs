@@ -5,7 +5,6 @@ using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.Requests;
 using ApplicationLayer.DTOs.TelegramApis;
 using ApplicationLayer.Extensions;
-using ApplicationLayer.Extensions.ServiceMessages;
 using ApplicationLayer.Extensions.SmartEnums;
 using AutoMapper;
 using DomainLayer.Common.Attributes;
@@ -347,7 +346,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-    public async Task<ServiceResult> AddRequestAsync(MiniApp_CreateRequestCommand model, UserAccount userAccount, CancellationToken cancellationToken)
+    public async Task<Result<Request>> AddRequestAsync(MiniApp_CreateRequestCommand model, UserAccount userAccount, CancellationToken cancellationToken)
     {
         try
         {
@@ -382,16 +381,16 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             }
 
             await _requestRepository.AddAsync(request);
-
-            return new ServiceResult { RequestStatus = RequestStatus.Successful, Data = request, Message = CommonMessages.Successful };
+            return Result<Request>.Success(request);
         }
         catch (Exception exception)
         {
-            return new ServiceResult().Failed(_logger, exception, CommonExceptionMessage.AddFailed("ثبت درخواست"));
+            _logger.LogError(exception, "خطا در ثبت درخواست  {UserId}", userAccount.Id);
+            return Result<Request>.GeneralFailure("خطا در درخواست");
         }
     }
 
-    public async Task<ServiceResult> AddRequestItemTypeAsync(MiniApp_CreateRequestCommand model, int requestId)
+    public async Task<Result> AddRequestItemTypeAsync(MiniApp_CreateRequestCommand model, int requestId)
     {
         try
         {
@@ -403,11 +402,12 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     ItemType = itemType
                 });
             }
-            return new ServiceResult { RequestStatus = RequestStatus.Successful, Message = CommonMessages.Successful };
+            return Result.Success();
         }
         catch (Exception exception)
         {
-            return new ServiceResult().Failed(_logger, exception, CommonExceptionMessage.AddFailed("ثبت درخواست"));
+            _logger.LogError(exception, "خطا در ثبت اقلام  {RequestId}", requestId);
+            return Result.GeneralFailure("خطا در ثبت اقلام");
         }
     }
 
@@ -576,12 +576,12 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
     #region Change Status
 
-    public async Task<Result> ConfirmedBySenderAsync(RequestSelectionKeyDto model, UserAccount userAccount)
+    public async Task<Result> ConfirmedBySenderAsync(RequestSuggestionKeyDto model, UserAccount userAccount)
     {
         try
         {
             var request = await _suggestionRepository.Query()
-                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
@@ -603,17 +603,17 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در تایید درخواست انتخاب شده {RequestSelectionId}", model.RequestSelectionId);
+            _logger.LogError(exception, "خطا در تایید درخواست انتخاب شده {RequestSelectionId}", model.RequestSuggestionId);
             return Result.GeneralFailure("خطا در تایید درخواست انتخاب شده");
         }
     }
 
-    public async Task<Result> RejectSelectionAsync(RequestSelectionKeyDto model)
+    public async Task<Result> RejectSelectionAsync(RequestSuggestionKeyDto model)
     {
         try
         {
             var request = await _suggestionRepository.Query()
-                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
@@ -625,7 +625,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در رد کردن درخواست انتخاب شده  {RequestSelectionId}", model.RequestSelectionId);
+            _logger.LogError(exception, "خطا در رد کردن درخواست انتخاب شده  {RequestSelectionId}", model.RequestSuggestionId);
             return Result.GeneralFailure("خطا در رد درخوااست انتخاب شده");
         }
     }
@@ -674,12 +674,12 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-    public async Task<Result> ReadyToPickupAsync(RequestSelectionKeyDto model)
+    public async Task<Result> ReadyToPickupAsync(RequestSuggestionKeyDto model)
     {
         try
         {
             var request = await _suggestionRepository.Query()
-                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
@@ -691,17 +691,17 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در ثبت وضعیت آماده برای دریافت بار  {RequestSelectionId}", model.RequestSelectionId);
+            _logger.LogError(exception, "خطا در ثبت وضعیت آماده برای دریافت بار  {RequestSelectionId}", model.RequestSuggestionId);
             return Result.GeneralFailure("خطا در ثبت وضعیت آماده برای دریافت بار");
         }
     }
 
-    public async Task<Result> PickedUpAsync(RequestSelectionKeyDto model)
+    public async Task<Result> PickedUpAsync(RequestSuggestionKeyDto model)
     {
         try
         {
             var request = await _suggestionRepository.Query()
-                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
@@ -713,17 +713,17 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در ثبت وضعیت دریافت بار  {RequestSelectionId}", model.RequestSelectionId);
+            _logger.LogError(exception, "خطا در ثبت وضعیت دریافت بار  {RequestSelectionId}", model.RequestSuggestionId);
             return Result.GeneralFailure("خطا در ثبت وضعیت دریافت بار");
         }
     }
 
-    public async Task<Result> InTransitAsync(RequestSelectionKeyDto model)
+    public async Task<Result> InTransitAsync(RequestSuggestionKeyDto model)
     {
         try
         {
             var request = await _suggestionRepository.Query()
-                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
@@ -735,17 +735,17 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در ثبت وضعیت در حال پرواز  {RequestSelectionId}", model.RequestSelectionId);
+            _logger.LogError(exception, "خطا در ثبت وضعیت در حال پرواز  {RequestSelectionId}", model.RequestSuggestionId);
             return Result.GeneralFailure("خطا در ثبت وضعیت در حال پرواز");
         }
     }
 
-    public async Task<Result> ReadyToDeliverAsync(RequestSelectionKeyDto model)
+    public async Task<Result> ReadyToDeliverAsync(RequestSuggestionKeyDto model)
     {
         try
         {
             var request = await _suggestionRepository.Query()
-                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
@@ -757,7 +757,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در ثبت وضعیت آماده تحویل  {RequestSelectionId}", model.RequestSelectionId);
+            _logger.LogError(exception, "خطا در ثبت وضعیت آماده تحویل  {RequestSelectionId}", model.RequestSuggestionId);
             return Result.GeneralFailure("خطا در ثبت وضعیت آماده تحویل");
         }
     }
@@ -787,12 +787,12 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-    public async Task<Result> NotDeliveredAsync(RequestSelectionKeyDto model)
+    public async Task<Result> NotDeliveredAsync(RequestSuggestionKeyDto model)
     {
         try
         {
             var request = await _suggestionRepository.Query()
-                .Where(r => r.Id == model.RequestSelectionId).FirstOrDefaultAsync();
+                .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
@@ -804,7 +804,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در ثبت وضعیت عدم تحویل  {RequestSelectionId}", model.RequestSelectionId);
+            _logger.LogError(exception, "خطا در ثبت وضعیت عدم تحویل  {RequestSelectionId}", model.RequestSuggestionId);
             return Result.GeneralFailure("خطا در ثبت وضعیت عدم تحویل");
         }
     }
