@@ -281,7 +281,11 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                                 : r.DestinationCity.CountryId == userCountryId
                                     ? "inbound"
                                     : "",
-                    SelectStatus = r.Suggestions.Any(sel => sel.UserAccountId == user.Id) ? "ipicked" : r.Suggestions.Any(sel => sel.UserAccountId == user.Id) ? "pickedme" : "",
+                    SelectStatus = r.Suggestions.Any(sel => sel.UserAccountId == user.Id)
+                    ? "ipicked"
+                    : (r.UserAccountId == user.Id && r.Suggestions.Any(sel => sel.UserAccountId != user.Id))
+                    ? "pickedme"
+                    : ""
                 }).ToListAsync();
 
             return Result<List<TripsDto>>.Success(requests);
