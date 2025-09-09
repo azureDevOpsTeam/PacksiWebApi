@@ -87,6 +87,12 @@ namespace InfrastructureLayer.Repository
         public void AddRange(IEnumerable<TEntity> entities)
            => _entities.AddRange(entities);
 
+        public Task AddRangeAsync(IEnumerable<TEntity> entities)
+        {
+            _entities.AddRange(entities);
+            return Task.CompletedTask;
+        }
+
         public void Update(TEntity entity)
             => _entities.Update(entity);
 

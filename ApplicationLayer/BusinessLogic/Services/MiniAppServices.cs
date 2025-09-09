@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -82,13 +83,14 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 Hash = parsedData.Hash,
                 ExistUser = await _userAccountRepository.GetDbSet().AnyAsync(current => current.TelegramId == parsedData.User.Id)
             };
-
-            var result = await DownloadUserProfilePhotoAsync(validationResult.User.Id);
-            if (!string.IsNullOrEmpty(result))
+            if (!validationResult.ExistUser)
             {
-                validationResult.User.PhotoUrl = result;
+                var result = await DownloadUserProfilePhotoAsync(validationResult.User.Id);
+                if (!string.IsNullOrEmpty(result))
+                {
+                    validationResult.User.PhotoUrl = result;
+                }
             }
-
             return Result<TelegramMiniAppValidationResultDto>.Success(validationResult);
         }
         catch (Exception exception)
@@ -100,54 +102,62 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
     private async Task<string> DownloadUserProfilePhotoAsync(long userId)
     {
-        //TODO For TEST
-        var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
+        try
+        {
+            //TODO For TEST
+            var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
 
-        // مسیر دایرکتوری برای کاربر
-        var wwwrootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot");
-        // مسیر پوشه کاربر
-        var directoryPath = Path.Combine(wwwrootPath, "uploads", userId.ToString());
+            // مسیر دایرکتوری برای کاربر
+            var wwwrootPath = Path.Combine(AppContext.BaseDirectory, "wwwroot");
+            // مسیر پوشه کاربر
+            var directoryPath = Path.Combine(wwwrootPath, "uploads", userId.ToString());
 
-        // اگر پوشه وجود ندارد، بساز
-        if (Directory.Exists(directoryPath) == false)
-            Directory.CreateDirectory(directoryPath);
+            // اگر پوشه وجود ندارد، بساز
+            if (Directory.Exists(directoryPath) == false)
+                Directory.CreateDirectory(directoryPath);
 
-        // مرحله 1: گرفتن عکس پروفایل
-        var photosResponse = await _httpClient.GetStringAsync(
-            $"https://api.telegram.org/bot{botToken}/getUserProfilePhotos?user_id={userId}&limit=1"
-        );
+            // مرحله 1: گرفتن عکس پروفایل
+            var photosResponse = await _httpClient.GetStringAsync(
+                $"https://api.telegram.org/bot{botToken}/getUserProfilePhotos?user_id={userId}&limit=1"
+            );
 
-        var photos = System.Text.Json.JsonDocument.Parse(photosResponse);
-        if (!photos.RootElement.GetProperty("result").GetProperty("photos").EnumerateArray().Any())
+            var photos = System.Text.Json.JsonDocument.Parse(photosResponse);
+            if (!photos.RootElement.GetProperty("result").GetProperty("photos").EnumerateArray().Any())
+                return null;
+
+            var fileId = photos.RootElement
+                .GetProperty("result")
+                .GetProperty("photos")[0][0]
+                .GetProperty("file_id")
+                .GetString();
+
+            // مرحله 2: گرفتن file_path
+            var fileResponse = await _httpClient.GetStringAsync(
+                $"https://api.telegram.org/bot{botToken}/getFile?file_id={fileId}"
+            );
+
+            var fileJson = System.Text.Json.JsonDocument.Parse(fileResponse);
+            var filePath = fileJson.RootElement
+                .GetProperty("result")
+                .GetProperty("file_path")
+                .GetString();
+
+            var extension = Path.GetExtension(filePath);
+
+            var savePath = Path.Combine(directoryPath, $"{userId}{extension}");
+
+            // مرحله 3: دانلود فایل
+            var fileUrl = $"https://api.telegram.org/file/bot{botToken}/{filePath}";
+            var fileBytes = await _httpClient.GetByteArrayAsync(fileUrl);
+
+            await File.WriteAllBytesAsync(savePath, fileBytes);
+            return savePath;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در اعتبارسنجی کاربر");
             return null;
-
-        var fileId = photos.RootElement
-            .GetProperty("result")
-            .GetProperty("photos")[0][0]
-            .GetProperty("file_id")
-            .GetString();
-
-        // مرحله 2: گرفتن file_path
-        var fileResponse = await _httpClient.GetStringAsync(
-            $"https://api.telegram.org/bot{botToken}/getFile?file_id={fileId}"
-        );
-
-        var fileJson = System.Text.Json.JsonDocument.Parse(fileResponse);
-        var filePath = fileJson.RootElement
-            .GetProperty("result")
-            .GetProperty("file_path")
-            .GetString();
-
-        var extension = Path.GetExtension(filePath);
-
-        var savePath = Path.Combine(directoryPath, $"{userId}{extension}");
-
-        // مرحله 3: دانلود فایل
-        var fileUrl = $"https://api.telegram.org/file/bot{botToken}/{filePath}";
-        var fileBytes = await _httpClient.GetByteArrayAsync(fileUrl);
-
-        await File.WriteAllBytesAsync(savePath, fileBytes);
-        return savePath;
+        }
     }
 
     public async Task<Result<TelegramMiniAppUserDto>> ExtractUserInfoFromInitDataAsync(string initData)
@@ -403,14 +413,16 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
+            List<RequestItemType> itemTypes = new();
             foreach (var itemType in model.ItemTypeIds)
             {
-                await _itemTypeRepo.AddAsync(new RequestItemType
+                itemTypes.Add(new RequestItemType
                 {
                     RequestId = requestId,
                     ItemType = itemType
                 });
             }
+            await _itemTypeRepo.AddRangeAsync(itemTypes);
             return Result.Success();
         }
         catch (Exception exception)

@@ -31,6 +31,8 @@ namespace ApplicationLayer
 
         void AddRange(IEnumerable<TEntity> entities);
 
+        Task AddRangeAsync(IEnumerable<TEntity> entities);
+
         void Update(TEntity entity);
 
         void UpdateRange(IEnumerable<TEntity> entities);
@@ -48,6 +50,7 @@ namespace ApplicationLayer
         Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate);
 
         bool Any(Expression<Func<TEntity, bool>> predicate);
+
         Task UpdateAsync(TEntity entity);
     }
 }
