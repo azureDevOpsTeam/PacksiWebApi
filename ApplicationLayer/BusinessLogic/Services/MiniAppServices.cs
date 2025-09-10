@@ -967,7 +967,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 result.ChatInstance = parameters["chat_instance"];
 
             if (parameters["start_param"] != null)
-                result.StartParam = parameters["start_param"];
+                result.StartParam = HttpUtility.UrlDecode(parameters["start_param"]);
 
             if (parameters["auth_date"] != null && long.TryParse(parameters["auth_date"], out var authDate))
                 result.AuthDate = authDate;

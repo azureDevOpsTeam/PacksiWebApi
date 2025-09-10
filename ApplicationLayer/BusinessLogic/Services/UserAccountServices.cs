@@ -315,7 +315,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     TelegramUserName = model.Username,
                     ConfirmEmail = false,
                     ConfirmPhoneNumber = false,
-                    ReferredByUserId = model.ReferredByUserId,
+                    ReferredByUserId = model.ReferredByUserId.Value,
                     InviteCode = Guid.NewGuid().ToString("N")[..15]
                 };
 
