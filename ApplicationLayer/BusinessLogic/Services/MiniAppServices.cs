@@ -662,7 +662,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             if (request == null)
                 return Result.NotFound();
 
-            request.Status = RequestProcessStatus.ConfirmedBySender;
+            request.Status = RequestProcessStatus.RejectedBySender;
             await _suggestionRepository.UpdateAsync(request);
 
             return Result.Success();
@@ -861,6 +861,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             {
                 UserAccount = user,
                 SuggestionPrice = model.SuggestionPrice,
+                Status = RequestProcessStatus.Selected,
                 Currency = model.Currency,
                 Description = model.Description,
                 RequestId = model.RequestId
