@@ -1,5 +1,4 @@
-﻿using DomainLayer.Entities;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace ApplicationLayer.DTOs.MiniApp
 {
@@ -31,5 +30,7 @@ namespace ApplicationLayer.DTOs.MiniApp
                 return (CountryOfResidenceId > 0 && SetPreferredLocation && FirstName is not null && LastName is not null);
             }
         }
+
+        public bool IsAcceptRules { get; set; }
     }
 }

@@ -447,7 +447,8 @@ namespace ApplicationLayer.BusinessLogic.Services
                     LastName = user.Value.UserProfiles.FirstOrDefault()?.LastName,
                     ConfirmPhoneNumber = user.Value.ConfirmPhoneNumber,
                     CountryOfResidenceId = user.Value.UserProfiles.FirstOrDefault()?.CountryOfResidenceId,
-                    SetPreferredLocation = user.Value.UserPreferredLocations.Count != 0
+                    SetPreferredLocation = user.Value.UserPreferredLocations.Count != 0,
+                    IsAcceptRules = true
                 };
 
                 return new ServiceResult().Successful(userInfo);
