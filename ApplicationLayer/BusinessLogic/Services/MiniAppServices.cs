@@ -240,7 +240,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 .ToListAsync();
 
             var requests = await _requestRepository.Query()
-                .Where(current => current.UserAccount != user
+                .Where(current => (current.UserAccount != user && current.Status != RequestProcessStatus.RejectedBySender)
                 || current.Suggestions.Any(s => s.UserAccount != user))
                 .Include(r => r.UserAccount)
                     .ThenInclude(u => u.UserProfiles)
