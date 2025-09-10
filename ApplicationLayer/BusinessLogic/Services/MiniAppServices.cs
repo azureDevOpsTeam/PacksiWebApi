@@ -81,6 +81,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 User = parsedData.User,
                 AuthDate = authDate,
                 Hash = parsedData.Hash,
+                StartParam = parsedData.StartParam,
                 ExistUser = await _userAccountRepository.GetDbSet().AnyAsync(current => current.TelegramId == parsedData.User.Id)
             };
             if (!validationResult.ExistUser)
@@ -240,7 +241,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 .ToListAsync();
 
             var requests = await _requestRepository.Query()
-                .Where(current => (current.UserAccount != user && current.Status != RequestProcessStatus.RejectedBySender)
+                .Where(current => (current.UserAccount != user)
                 || current.Suggestions.Any(s => s.UserAccount != user))
                 .Include(r => r.UserAccount)
                     .ThenInclude(u => u.UserProfiles)

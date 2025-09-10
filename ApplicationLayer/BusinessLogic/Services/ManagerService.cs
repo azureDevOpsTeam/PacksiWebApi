@@ -26,7 +26,7 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 var invite = new Invitation
                 {
-                    Code = Guid.NewGuid().ToString("N")[..10],
+                    Code = Guid.NewGuid().ToString("N")[..15],
                     InviterUserId = inviterId.Value,
                     MaxUsageCount = maxUsageCount,
                     ExpireDate = expireDate,

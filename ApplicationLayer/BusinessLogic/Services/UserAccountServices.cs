@@ -43,6 +43,9 @@ namespace ApplicationLayer.BusinessLogic.Services
         public async Task<UserAccount> GetUserAccountByIdAsync(int accountId)
             => await Task.Run(() => _userAccountRepository.GetDbSet().FirstOrDefaultAsync(row => row.Id == accountId));
 
+        public async Task<UserAccount> GetUserAccountInviterAsync(string invideCode)
+            => await Task.Run(() => _userAccountRepository.GetDbSet().FirstOrDefaultAsync(row => row.InviteCode == invideCode));
+
         public async Task<UserAccount> GetUserAccountByPhoneNumberAsync(string phoneNumber)
             => await Task.Run(() => _userAccountRepository.GetDbSet()
             .Include(current => current.UserProfiles)
@@ -311,7 +314,9 @@ namespace ApplicationLayer.BusinessLogic.Services
                     TelegramId = model.Id,
                     TelegramUserName = model.Username,
                     ConfirmEmail = false,
-                    ConfirmPhoneNumber = false
+                    ConfirmPhoneNumber = false,
+                    ReferredByUserId = model.ReferredByUserId,
+                    InviteCode = Guid.NewGuid().ToString("N")[..15]
                 };
 
                 await _userAccountRepository.AddAsync(userAccount);

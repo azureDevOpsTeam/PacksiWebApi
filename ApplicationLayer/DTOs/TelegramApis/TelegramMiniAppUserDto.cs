@@ -20,6 +20,8 @@ namespace ApplicationLayer.DTOs.TelegramApis
         public bool AllowsWriteToPm { get; set; }
 
         public string PhotoUrl { get; set; }
+
+        public int? ReferredByUserId { get; set; }
     }
 
     /// <summary>
@@ -38,6 +40,8 @@ namespace ApplicationLayer.DTOs.TelegramApis
         public DateTime AuthDate { get; set; }
 
         public string Hash { get; set; }
+
+        public string StartParam { get; set; }
     }
 
     /// <summary>

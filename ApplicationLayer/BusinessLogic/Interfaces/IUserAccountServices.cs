@@ -49,6 +49,7 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
 
         Task UpdateUserProfileAsync(UserProfile model);
         Task<bool> ExistUserAsync(SignUpDto model);
+        Task<UserAccount> GetUserAccountInviterAsync(string invideCode);
 
         #endregion Mini App
     }
