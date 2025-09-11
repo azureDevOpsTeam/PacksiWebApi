@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InfrastructureLayer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250907174215_InitialFirstDb")]
+    [Migration("20250911083950_InitialFirstDb")]
     partial class InitialFirstDb
     {
         /// <inheritdoc />
@@ -1449,6 +1449,9 @@ namespace InfrastructureLayer.Migrations
 
                     b.Property<string>("PhonePrefix")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ReferredByUserId")
+                        .HasColumnType("int");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()

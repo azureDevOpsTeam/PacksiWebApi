@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using System;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Web;
 
 namespace ApplicationLayer.BusinessLogic.Services;
@@ -235,57 +236,65 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 .Select(p => p.CountryOfResidenceId)
                 .FirstOrDefaultAsync();
 
-            var preferredCountryIds = await _userPreferredLocation.Query()
-                .Where(p => p.UserAccountId == user.Id && p.CountryId != null)
-                .Select(p => p.CountryId.Value)
-                .ToListAsync();
-
-            var requests = await _requestRepository.Query()
-                .Where(current => (current.UserAccount != user)
-                || current.Suggestions.Any(s => s.UserAccount != user))
-                .Include(r => r.UserAccount)
-                    .ThenInclude(u => u.UserProfiles)
-                .Include(r => r.Suggestions)
-                    .ThenInclude(rs => rs.RequestStatusHistories)
-                .Include(r => r.Suggestions)
-                    .ThenInclude(r => r.Request)
-                        .ThenInclude(u => u.UserAccount)
+            var requestsRaw = await _requestRepository.Query()
+                .Where(current => (current.UserAccountId != user.Id)
+                || (current.UserAccountId == user.Id && current.Suggestions.Any(s => s.UserAccountId != user.Id)))
+                .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
+                .Include(r => r.Suggestions).ThenInclude(rs => rs.RequestStatusHistories)
                 .Include(r => r.RequestItemTypes)
                 .Include(r => r.OriginCity).ThenInclude(c => c.Country)
                 .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
-                .Select(r => new TripsDto
+                .Select(r => new
                 {
-                    RequestId = r.Id,
-                    UserAccountId = r.UserAccountId,
-                    FullName = r.UserAccount.UserProfiles.FirstOrDefault().DisplayName
-                        ?? r.UserAccount.UserProfiles.FirstOrDefault().FirstName,
-                    ArrivalDate = r.ArrivalDate,
-                    DepartureDate = r.DepartureDate,
-                    ArrivalDatePersian = DateTimeHelper.GetPersianDate(r.ArrivalDate),
-                    DepartureDatePersian = DateTimeHelper.GetPersianDate(r.DepartureDate),
-                    Description = r.Description,
-                    DestinationCity = r.DestinationCity.Name,
-                    DestinationCityFa = r.DestinationCity.PersianName,
-                    OriginCity = r.OriginCity.Name,
-                    OriginCityFa = r.OriginCity.PersianName,
-                    ItemTypes = r.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).Name).ToArray(),
-                    ItemTypesFa = r.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).PersianName).ToArray(),
-                    MaxHeightCm = r.MaxHeightCm,
-                    MaxLengthCm = r.MaxLengthCm,
-                    MaxWeightKg = r.MaxWeightKg,
-                    MaxWidthCm = r.MaxWidthCm,
-                    LastStatus = r.Suggestions.Where(sel => sel.UserAccountId == user.Id)
-                        .SelectMany(sel => sel.RequestStatusHistories
-                        .OrderByDescending(h => h.Id)
-                        .Select(h => (int?)h.Status))
-                        .FirstOrDefault() ?? (int?)r.Status,
-                    TripType = r.OriginCity.CountryId == userCountryId ? "outbound"
-                        : r.DestinationCity.CountryId == userCountryId ? "inbound" : "",
-                    SelectStatus = r.Suggestions.Any(sel => sel.UserAccountId == user.Id)
+                    Request = r,
+                    LastStatusValue = r.Suggestions.Any(sel => sel.UserAccountId == user.Id)
+                    ? r.Suggestions.Where(sel => sel.UserAccountId == user.Id)
+                    .SelectMany(sel => sel.RequestStatusHistories
+                    .OrderByDescending(h => h.Id)
+                    .Select(h => h.Status))
+                    .FirstOrDefault() : (int?)null
+                }).ToListAsync();
+
+            var requests = requestsRaw.Select(r => new
+            {
+                r.Request,
+                LastStatus = r.LastStatusValue.HasValue
+                    ? RequestProcessStatus.FromValue(r.LastStatusValue.Value)
+                    : RequestProcessStatus.Published
+            }).ToList();
+
+
+            var result = requests.Select(r =>
+            {
+                var dto = new TripsDto
+                {
+                    RequestId = r.Request.Id,
+                    UserAccountId = r.Request.UserAccountId,
+                    FullName = r.Request.UserAccount.UserProfiles.FirstOrDefault().DisplayName
+                               ?? r.Request.UserAccount.UserProfiles.FirstOrDefault().FirstName,
+                    ArrivalDate = r.Request.ArrivalDate,
+                    DepartureDate = r.Request.DepartureDate,
+                    ArrivalDatePersian = DateTimeHelper.GetPersianDate(r.Request.ArrivalDate),
+                    DepartureDatePersian = DateTimeHelper.GetPersianDate(r.Request.DepartureDate),
+                    Description = r.Request.Description,
+                    DestinationCity = r.Request.DestinationCity.Name,
+                    OriginCity = r.Request.OriginCity.Name,
+                    ItemTypes = r.Request.RequestItemTypes
+                        .Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).Name).ToArray(),
+                    ItemTypesFa = r.Request.RequestItemTypes
+                        .Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).PersianName).ToArray(),
+                    MaxHeightCm = r.Request.MaxHeightCm,
+                    MaxLengthCm = r.Request.MaxLengthCm,
+                    MaxWeightKg = r.Request.MaxWeightKg,
+                    MaxWidthCm = r.Request.MaxWidthCm,
+                    LastStatus = r.LastStatus,
+                    TripType = r.Request.OriginCity.CountryId == userCountryId ? "outbound"
+                        : r.Request.DestinationCity.CountryId == userCountryId ? "inbound" : "",
+                    SelectStatus = r.Request.Suggestions.Any(sel => sel.UserAccountId == user.Id)
                         ? "ipicked"
-                            : (r.UserAccountId == user.Id && r.Suggestions.Any(sel => sel.UserAccountId != user.Id))
-                        ? "pickedme" : "",
-                    Suggestions = r.Suggestions.Select(s => new SuggestionDto
+                        : (r.Request.UserAccountId == user.Id && r.Request.Suggestions.Any(sel => sel.UserAccountId != user.Id))
+                            ? "pickedme" : "",
+                    Suggestions = [.. r.Request.Suggestions.Select(s => new SuggestionDto
                     {
                         SuggestionId = s.Id,
                         UserAccountId = s.UserAccountId,
@@ -294,14 +303,25 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         Description = s.Description,
                         FullName = s.UserAccount.UserProfiles.FirstOrDefault().DisplayName
                                    ?? s.UserAccount.UserProfiles.FirstOrDefault().FirstName,
-                        LastStatus = s.RequestStatusHistories
+                        SuggestionStatus = s.RequestStatusHistories
                             .OrderByDescending(h => h.Id)
                             .Select(h => (int?)h.Status)
                             .FirstOrDefault()
-                    }).ToList()
-                }).ToListAsync();
+                    })]
+                };
 
-            return Result<List<TripsDto>>.Success(requests);
+                // نقش کاربر فعلی
+                var role = dto.UserAccountId == user.Id ? "Sender"
+                          : dto.Suggestions.Any(s => s.UserAccountId == user.Id) ? "Passenger" : "";
+
+                dto.AvailableActions = dto.LastStatus != null
+                    ? GetAvailableActions(role, (RequestProcessStatus)dto.LastStatus)
+                    : new List<string>();
+
+                return dto;
+            }).ToList();
+
+            return Result<List<TripsDto>>.Success(result);
         }
         catch (Exception exception)
         {
@@ -309,6 +329,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت درخواست‌ها");
         }
     }
+
 
     public async Task<Result<List<TripsDto>>> GetMyRequestsAsync(UserAccount user)
     {
@@ -1030,6 +1051,76 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         using var hmac = new HMACSHA256(key);
         return hmac.ComputeHash(data);
     }
+
+    private List<string> GetAvailableActions(string role, RequestProcessStatus lastStatus)
+    {
+        var actions = new List<string>();
+
+        switch (lastStatus.Name)
+        {
+            case nameof(RequestProcessStatus.Selected):
+                if (role == "Sender")
+                {
+                    actions.Add("ConfirmSelection");
+                    actions.Add("RejectSelection");
+                }
+                break;
+
+            case nameof(RequestProcessStatus.ConfirmedBySender):
+                if (role == "Passenger")
+                {
+                    actions.Add("ReadyToPickup");
+                }
+                break;
+
+            case nameof(RequestProcessStatus.ReadyToPickup):
+                if (role == "Passenger")
+                {
+                    actions.Add("Pickup");
+                }
+                break;
+
+            case nameof(RequestProcessStatus.PickedUp):
+                if (role == "Passenger")
+                {
+                    actions.Add("MarkInTransit");
+                }
+                break;
+
+            case nameof(RequestProcessStatus.InTransit):
+                if (role == "Passenger")
+                {
+                    actions.Add("ReadyToDeliver");
+                }
+                break;
+
+            case nameof(RequestProcessStatus.ReadyToDeliver):
+                if (role == "Passenger")
+                {
+                    actions.Add("DeliverSuccess");
+                    actions.Add("DeliverFailed");
+                }
+                break;
+
+            case nameof(RequestProcessStatus.Delivered):
+                if (role == "Sender")
+                {
+                    actions.Add("ConfirmDelivery");
+                }
+                break;
+
+            case nameof(RequestProcessStatus.NotDelivered):
+                if (role == "Sender")
+                {
+                    actions.Add("ReportIssue");
+                }
+                break;
+        }
+
+        return actions;
+    }
+
+
 
     #endregion Private Methods
 }

@@ -99,6 +99,7 @@ namespace InfrastructureLayer.Migrations
                     TelegramId = table.Column<long>(type: "bigint", nullable: true),
                     TelegramUserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ReferredByUserId = table.Column<int>(type: "int", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     Password = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),

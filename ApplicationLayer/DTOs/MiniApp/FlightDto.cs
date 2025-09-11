@@ -71,6 +71,8 @@ public class TripsDto
     public string SelectStatus { get; set; }
 
     public List<SuggestionDto> Suggestions { get; set; }
+
+    public List<string> AvailableActions { get; set; } = new();
 }
 
 public class SuggestionDto
@@ -87,15 +89,15 @@ public class SuggestionDto
 
     public string Description { get; set; }
 
-    public int? LastStatus { get; set; }
+    public int? SuggestionStatus { get; set; }
 
     public string LastStatusEn
     {
         get
         {
-            if (LastStatus.HasValue)
-                if (LastStatus > 100)
-                    return RequestProcessStatus.FromValue(LastStatus.Value).EnglishName;
+            if (SuggestionStatus.HasValue)
+                if (SuggestionStatus > 100)
+                    return RequestProcessStatus.FromValue(SuggestionStatus.Value).EnglishName;
             return string.Empty;
         }
     }
@@ -104,9 +106,9 @@ public class SuggestionDto
     {
         get
         {
-            if (LastStatus.HasValue)
-                if (LastStatus > 100)
-                    return RequestProcessStatus.FromValue(LastStatus.Value).PersianName;
+            if (SuggestionStatus.HasValue)
+                if (SuggestionStatus > 100)
+                    return RequestProcessStatus.FromValue(SuggestionStatus.Value).PersianName;
             return string.Empty;
         }
     }

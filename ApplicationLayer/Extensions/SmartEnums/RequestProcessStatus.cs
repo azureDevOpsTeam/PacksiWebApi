@@ -4,6 +4,7 @@ namespace ApplicationLayer.Extensions.SmartEnums;
 
 public class RequestProcessStatus : SmartEnum<RequestProcessStatus>
 {
+    public static readonly RequestProcessStatus Published = new(100, "منتشر شده", nameof(Published));
     public static readonly RequestProcessStatus Selected = new(101, "انتخاب شده", nameof(Selected));
     public static readonly RequestProcessStatus RejectedBySender = new(102, "رد شده توسط ارسال‌کننده", nameof(RejectedBySender));
     public static readonly RequestProcessStatus ConfirmedBySender = new(103, "تایید شده توسط ارسال‌کننده", nameof(ConfirmedBySender));
