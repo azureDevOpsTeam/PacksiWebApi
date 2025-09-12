@@ -873,7 +873,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-    public async Task<Result<Suggestion>> CreateSuggestionAsync(CreateSuggestionDto model, UserAccount user)
+    public async Task<Result<Suggestion>> CreateSuggestionAsync(MiniApp_CreateSuggestionCommand model, UserAccount user)
     {
         try
         {

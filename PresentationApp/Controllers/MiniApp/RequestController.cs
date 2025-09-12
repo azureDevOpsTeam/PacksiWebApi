@@ -50,7 +50,7 @@ namespace PresentationApp.Controllers.MiniApp
             => await ResultHelper.GetResultAsync(_mediator, model);
 
         [HttpPost("SelectRequest")]
-        public async Task<IActionResult> SelectRequestAsync(MiniApp_CreateSuggestionCommand model)
+        public async Task<IActionResult> SelectRequestAsync([FromForm] MiniApp_CreateSuggestionCommand model)
             => await ResultHelper.GetResultAsync(_mediator, model);
 
         //Changes....

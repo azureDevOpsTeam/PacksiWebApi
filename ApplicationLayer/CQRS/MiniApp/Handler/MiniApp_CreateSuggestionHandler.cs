@@ -23,7 +23,7 @@ public class MiniApp_CreateSuggestionHandler(IUnitOfWork unitOfWork, IMiniAppSer
             return userAccount.ToHandlerResult();
 
         await _unitOfWork.BeginTransactionAsync();
-        var suggestion = await _miniAppServices.CreateSuggestionAsync(requestDto.Model, userAccount.Value);
+        var suggestion = await _miniAppServices.CreateSuggestionAsync(requestDto, userAccount.Value);
         if (suggestion.IsFailure)
         {
             await _unitOfWork.RollbackAsync();
@@ -32,7 +32,7 @@ public class MiniApp_CreateSuggestionHandler(IUnitOfWork unitOfWork, IMiniAppSer
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        var suggestionAttachment = await _miniAppServices.CreateSuggestionAttachmentAsync(requestDto.Model.Files, suggestion.Value.Id);
+        var suggestionAttachment = await _miniAppServices.CreateSuggestionAttachmentAsync(requestDto.Files, suggestion.Value.Id);
         if (suggestionAttachment.IsFailure)
         {
             await _unitOfWork.RollbackAsync();
