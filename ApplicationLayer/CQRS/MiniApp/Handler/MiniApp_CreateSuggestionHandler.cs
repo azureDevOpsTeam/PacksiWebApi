@@ -22,17 +22,33 @@ public class MiniApp_CreateSuggestionHandler(IUnitOfWork unitOfWork, IMiniAppSer
         if (userAccount.IsFailure)
             return userAccount.ToHandlerResult();
 
+        await _unitOfWork.BeginTransactionAsync();
         var suggestion = await _miniAppServices.CreateSuggestionAsync(requestDto.Model, userAccount.Value);
         if (suggestion.IsFailure)
+        {
+            await _unitOfWork.RollbackAsync();
             return suggestion.ToHandlerResult();
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var suggestionAttachment = await _miniAppServices.CreateSuggestionAttachmentAsync(requestDto.Model.Files, suggestion.Value.Id);
+        if (suggestionAttachment.IsFailure)
+        {
+            await _unitOfWork.RollbackAsync();
+            return suggestionAttachment.ToHandlerResult();
+        }
 
         var result = await _miniAppServices.AddHistoryStatusAsync(suggestion.Value, RequestProcessStatus.Selected, userAccount.Value);
         if (result.IsFailure)
+        {
+            await _unitOfWork.RollbackAsync();
             return result.ToHandlerResult();
+        }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        await _unitOfWork.CommitAsync();
+
         return suggestion.ToHandlerResult();
     }
 }

@@ -12,6 +12,8 @@ public class Suggestion : BaseEntityModel, IAuditableEntity
 
     public int Currency { get; set; }
 
+    public int ItemType { get; set; }
+
     public string Description { get; set; }
 
     public int Status { get; set; }
@@ -21,4 +23,6 @@ public class Suggestion : BaseEntityModel, IAuditableEntity
     public Request Request { get; set; }
 
     public ICollection<RequestStatusHistory> RequestStatusHistories { get; set; } = [];
+
+    public ICollection<SuggestionAttachment> SuggestionAttachments { get; set; } = [];
 }

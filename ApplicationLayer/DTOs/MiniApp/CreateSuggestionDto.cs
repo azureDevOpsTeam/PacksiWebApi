@@ -1,4 +1,6 @@
-﻿namespace ApplicationLayer.DTOs.MiniApp;
+﻿using Microsoft.AspNetCore.Http;
+
+namespace ApplicationLayer.DTOs.MiniApp;
 
 public class CreateSuggestionDto
 {
@@ -9,4 +11,8 @@ public class CreateSuggestionDto
     public int Currency { get; set; }
 
     public string Description { get; set; }
+
+    public int ItemTypeId { get; set; }
+
+    public List<IFormFile> Files { get; set; } = new();
 }

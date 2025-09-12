@@ -14,10 +14,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 using System.Web;
 
 namespace ApplicationLayer.BusinessLogic.Services;
@@ -25,7 +23,7 @@ namespace ApplicationLayer.BusinessLogic.Services;
 [InjectAsScoped]
 public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository,
     IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation, IRepository<Suggestion> suggestionRepository,
-    IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo,
+    IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo, IRepository<SuggestionAttachment> suggestionAttachmentRepository,
     IRepository<RequestStatusHistory> requestStatusHistoryRepository, IRepository<Conversation> conversationRepository,
     IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger, IMapper mapper) : IMiniAppServices
 {
@@ -39,6 +37,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     private readonly IRepository<RequestStatusHistory> _requestStatusHistoryRepository = requestStatusHistoryRepository;
     private readonly IRepository<Conversation> _conversationRepository = conversationRepository;
     private readonly IRepository<Suggestion> _suggestionRepository = suggestionRepository;
+    private readonly IRepository<SuggestionAttachment> _suggestionAttachmentRepository = suggestionAttachmentRepository;
     private readonly IConfiguration _configuration = configuration;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
@@ -56,7 +55,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             //TODO For TEST
             if (string.IsNullOrEmpty(initData))
                 initData = "query_id=AAEfymc9AAAAAB_KZz0pgVLW&user=%7B%22id%22%3A1030212127%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22Shahram0weisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FEVbiVIJZP-ipzuxmiuKkh1k1-dJF0U16tjKJdfQM7M4.svg%22%7D&auth_date=1757184054&signature=H18OcG--zgmjs_SXGpAr9OCWEPYdxgThVu1r1_KOyz747kB6zGxUhQEI_WSYN08FWwanwH0cVL-TMObOxGsXAg&hash=5df74314eb234cba4b00d560bbeac4957ffceade7c9d5c163ea6a201a112cc5e";
-            
+
             if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
                 _logger.LogWarning("InitData is missing or empty");
@@ -264,7 +263,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     : RequestProcessStatus.Published
             }).ToList();
 
-
             var result = requests.Select(r =>
             {
                 var dto = new TripsDto
@@ -330,7 +328,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت درخواست‌ها");
         }
     }
-
 
     public async Task<Result<List<TripsDto>>> GetMyRequestsAsync(UserAccount user)
     {
@@ -887,7 +884,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 Status = RequestProcessStatus.Selected,
                 Currency = model.Currency,
                 Description = model.Description,
-                RequestId = model.RequestId
+                RequestId = model.RequestId,
+                ItemType = model.ItemTypeId,
             };
             await _suggestionRepository.AddAsync(suggestion);
             return Result<Suggestion>.Success(suggestion);
@@ -898,6 +896,50 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             return Result<Suggestion>.GeneralFailure("خطا در ثبت پیشنهاد قیمت");
         }
     }
+
+    public async Task<Result<List<SuggestionAttachment>>> CreateSuggestionAttachmentAsync(List<IFormFile> files, int suggestionId)
+    {
+        try
+        {
+            if (files == null || !files.Any())
+                return Result<List<SuggestionAttachment>>.Success();
+
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            var attachments = new List<SuggestionAttachment>();
+
+            foreach (var file in files)
+            {
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                var filePath = Path.Combine(folderPath, fileName);
+
+                // ذخیره روی دیسک
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var suggestionAttachment = new SuggestionAttachment
+                {
+                    SuggestionId = suggestionId,
+                    FilePath = $"/uploads/{fileName}" 
+                };
+
+                await _suggestionAttachmentRepository.AddAsync(suggestionAttachment);
+                attachments.Add(suggestionAttachment);
+            }
+
+            return Result<List<SuggestionAttachment>>.Success(attachments);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, $"خطا در آپلود فایل برای پیشنهاد {suggestionId}");
+            return Result<List<SuggestionAttachment>>.GeneralFailure("خطا در آپلود فایل");
+        }
+    }
+
 
     #endregion Change Status
 
@@ -1120,8 +1162,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
         return actions;
     }
-
-
 
     #endregion Private Methods
 }

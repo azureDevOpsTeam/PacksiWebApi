@@ -5,6 +5,7 @@ using ApplicationLayer.DTOs.Requests;
 using ApplicationLayer.DTOs.TelegramApis;
 using ApplicationLayer.Extensions.SmartEnums;
 using DomainLayer.Entities;
+using Microsoft.AspNetCore.Http;
 
 namespace ApplicationLayer.BusinessLogic.Interfaces;
 
@@ -61,4 +62,6 @@ public interface IMiniAppServices
     Task<Result<Suggestion>> CreateSuggestionAsync(CreateSuggestionDto model, UserAccount user);
 
     Task<Result<RequestSuggestionDto>> GetSuggestionAsync(RequestSuggestionKeyDto model);
+
+    Task<Result<List<SuggestionAttachment>>> CreateSuggestionAttachmentAsync(List<IFormFile> files, int suggestionId);
 }
