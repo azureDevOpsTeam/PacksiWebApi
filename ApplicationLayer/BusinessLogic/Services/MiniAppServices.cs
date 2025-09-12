@@ -55,8 +55,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
             //TODO For TEST
             if (string.IsNullOrEmpty(initData))
-                initData = "query_id=AAEfymc9AAAAAB_KZz0pgVLW&user=%7B%22id%22%3A1030212127%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22Shahram0weisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FEVbiVIJZP-ipzuxmiuKkh1k1-dJF0U16tjKJdfQM7M4.svg%22%7D&auth_date=1757184054&signature=H18OcG--zgmjs_SXGpAr9OCWEPYdxgThVu1r1_KOyz747kB6zGxUhQEI_WSYN08FWwanwH0cVL-TMObOxGsXAg&hash=5df74314eb234cba4b00d560bbeac4957ffceade7c9d5c163ea6a201a112cc5e";
-
+                //initData = "query_id=AAEfymc9AAAAAB_KZz0pgVLW&user=%7B%22id%22%3A1030212127%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22Shahram0weisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FEVbiVIJZP-ipzuxmiuKkh1k1-dJF0U16tjKJdfQM7M4.svg%22%7D&auth_date=1757184054&signature=H18OcG--zgmjs_SXGpAr9OCWEPYdxgThVu1r1_KOyz747kB6zGxUhQEI_WSYN08FWwanwH0cVL-TMObOxGsXAg&hash=5df74314eb234cba4b00d560bbeac4957ffceade7c9d5c163ea6a201a112cc5e";
+                initData = "query_id=AAEUWrBhAgAAABRasGHc65oP&user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&auth_date=1757681928&signature=rHfXSl0myV1xPbiRZB4SrLJ-kF155GHjNlDosm1dMWNuqKqJjqXk8sfsGdDe1qYumo5wLJ05sDabdu_Q63qbBg&hash=c8b13570a48942789899f5efe6964f1e3568a1ca216398e60afbe1b9e0b4b7a9";
             if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
                 _logger.LogWarning("InitData is missing or empty");
@@ -240,7 +240,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 .Where(current => (current.UserAccountId != user.Id)
                 || (current.UserAccountId == user.Id && current.Suggestions.Any(s => s.UserAccountId != user.Id)))
                 .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
-                .Include(r => r.Suggestions).ThenInclude(rs => rs.RequestStatusHistories)
+                .Include(r => r.Suggestions).ThenInclude(s => s.RequestStatusHistories)
+                .Include(r => r.Suggestions).ThenInclude(s => s.UserAccount).ThenInclude(ua => ua.UserProfiles)
                 .Include(r => r.RequestItemTypes)
                 .Include(r => r.OriginCity).ThenInclude(c => c.Country)
                 .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
