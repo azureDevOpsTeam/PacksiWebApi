@@ -924,7 +924,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 var suggestionAttachment = new SuggestionAttachment
                 {
                     SuggestionId = suggestionId,
-                    FilePath = $"/uploads/{fileName}" 
+                    FilePath = $"/uploads/{fileName}"
                 };
 
                 await _suggestionAttachmentRepository.AddAsync(suggestionAttachment);
@@ -939,7 +939,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             return Result<List<SuggestionAttachment>>.GeneralFailure("خطا در آپلود فایل");
         }
     }
-
 
     #endregion Change Status
 
