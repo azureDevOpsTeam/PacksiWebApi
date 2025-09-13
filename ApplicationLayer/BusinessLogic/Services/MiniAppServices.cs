@@ -236,8 +236,9 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 .FirstOrDefaultAsync();
 
             var requestsRaw = await _requestRepository.Query()
-                .Where(current => (current.UserAccountId != user.Id)
+                .Where(current => (current.UserAccountId != user.Id
                 || (current.UserAccountId == user.Id && current.Suggestions.Any(s => s.UserAccountId != user.Id)))
+                && (current.OriginCity.CountryId == userCountryId || current.DestinationCity.CountryId == userCountryId))
                 .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
                 .Include(r => r.Suggestions).ThenInclude(s => s.RequestStatusHistories)
                 .Include(r => r.Suggestions).ThenInclude(s => s.UserAccount).ThenInclude(ua => ua.UserProfiles)
@@ -247,12 +248,11 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 .Select(r => new
                 {
                     Request = r,
-                    LastStatusValue = r.Suggestions.Any(sel => sel.UserAccountId == user.Id)
-                    ? r.Suggestions.Where(sel => sel.UserAccountId == user.Id)
-                    .SelectMany(sel => sel.RequestStatusHistories
+                    LastStatusValue = r.Suggestions.Where(sel => sel.UserAccountId == user.Id)
+                    .SelectMany(sel => sel.RequestStatusHistories)
                     .OrderByDescending(h => h.Id)
-                    .Select(h => h.Status))
-                    .FirstOrDefault() : (int?)null
+                    .Select(h => (int?)h.Status)
+                    .FirstOrDefault()
                 }).ToListAsync();
 
             var requests = requestsRaw.Select(r => new
@@ -278,10 +278,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     Description = r.Request.Description,
                     DestinationCity = r.Request.DestinationCity.Name,
                     OriginCity = r.Request.OriginCity.Name,
-                    ItemTypes = r.Request.RequestItemTypes
-                        .Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).Name).ToArray(),
-                    ItemTypesFa = r.Request.RequestItemTypes
-                        .Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).PersianName).ToArray(),
+                    ItemTypes = [.. r.Request.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).Name)],
+                    ItemTypesFa = [.. r.Request.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).PersianName)],
                     MaxHeightCm = r.Request.MaxHeightCm,
                     MaxLengthCm = r.Request.MaxLengthCm,
                     MaxWeightKg = r.Request.MaxWeightKg,
@@ -306,7 +304,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     })]
                 };
 
-                // نقش کاربر فعلی
                 var role = dto.UserAccountId == user.Id ? "Sender"
                           : dto.Suggestions.Any(s => s.UserAccountId == user.Id) ? "Passenger" : "";
 
