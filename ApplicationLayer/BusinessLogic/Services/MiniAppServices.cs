@@ -302,10 +302,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         Description = s.Description,
                         FullName = s.UserAccount.UserProfiles.FirstOrDefault().DisplayName
                                    ?? s.UserAccount.UserProfiles.FirstOrDefault().FirstName,
-                        SuggestionStatus = s.RequestStatusHistories
-                            .OrderByDescending(h => h.Id)
-                            .Select(h => (int?)h.Status)
-                            .FirstOrDefault()
+                        SuggestionStatus = s.Status
                     })]
                 };
 
@@ -924,7 +921,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 var suggestionAttachment = new SuggestionAttachment
                 {
                     SuggestionId = suggestionId,
-                    FilePath = $"/uploads/{fileName}" 
+                    FilePath = $"/uploads/{fileName}"
                 };
 
                 await _suggestionAttachmentRepository.AddAsync(suggestionAttachment);
