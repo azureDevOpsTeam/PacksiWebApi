@@ -937,7 +937,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-
     #endregion Change Status
 
     public Task<Result<bool>> SendMessageAsync(long chatId)

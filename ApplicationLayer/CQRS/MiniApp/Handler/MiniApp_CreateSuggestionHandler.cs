@@ -49,6 +49,6 @@ public class MiniApp_CreateSuggestionHandler(IUnitOfWork unitOfWork, IMiniAppSer
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         await _unitOfWork.CommitAsync();
 
-        return suggestion.ToHandlerResult();
+        return result.ToHandlerResult();
     }
 }
