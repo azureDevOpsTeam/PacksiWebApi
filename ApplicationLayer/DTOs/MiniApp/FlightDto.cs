@@ -93,7 +93,8 @@ public class TripsDto
         {
             if (SelectStatus == "ipicked")
             {
-                return LastStatus == RequestProcessStatus.ConfirmedBySender.Value ? "lblReadyToPickeUp" //With Chat
+                return LastStatus == RequestProcessStatus.Selected.Value ? "lblWaitForAcceptSuggetion"
+                    : LastStatus == RequestProcessStatus.ConfirmedBySender.Value ? "lblReadyToPickeUp" //With Chat
                     : LastStatus == RequestProcessStatus.PickedUp.Value ? "lblReadyToDelivery" //With Chat
                     : LastStatus == RequestProcessStatus.PassengerConfirmedDelivery.Value ? "btnConfirmDelivery"//With NotDelivered
                     : "btnDisable";
