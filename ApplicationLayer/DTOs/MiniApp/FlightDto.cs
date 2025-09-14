@@ -78,7 +78,7 @@ public class TripsDto
                 return LastStatus == RequestProcessStatus.Selected.Value ? "btnSuggtion"
                     : LastStatus == RequestProcessStatus.ConfirmedBySender.Value ? "btnPickedUp" //With Chat
                     : LastStatus == RequestProcessStatus.PickedUp.Value ? "btnPassengerConfirmedDelivery" //With NotDelivered
-                    : LastStatus == RequestProcessStatus.PassengerConfirmedDelivery.Value ? "lblWaitToConfirmedDelivery"
+                    : LastStatus == RequestProcessStatus.PassengerConfirmedDelivery.Value ? "lblWaitToConfirmDelivery"
                     : "btnDisable";
             else
             {
@@ -94,8 +94,8 @@ public class TripsDto
             if (SelectStatus == "ipicked")
             {
                 return LastStatus == RequestProcessStatus.ConfirmedBySender.Value ? "lblReadyToPickeUp" //With Chat
-                    : LastStatus == RequestProcessStatus.PickedUp.Value ? "lblReadyToDelivery" //With NotDelivered
-                    : LastStatus == RequestProcessStatus.PassengerConfirmedDelivery.Value ? "btnConfirmDelivery"
+                    : LastStatus == RequestProcessStatus.PickedUp.Value ? "lblReadyToDelivery" //With Chat
+                    : LastStatus == RequestProcessStatus.PassengerConfirmedDelivery.Value ? "btnConfirmDelivery"//With NotDelivered
                     : "btnDisable";
             }
             else
