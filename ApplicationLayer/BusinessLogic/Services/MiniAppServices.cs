@@ -291,7 +291,9 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         ? "ipicked"
                         : (r.Request.UserAccountId == user.Id && r.Request.Suggestions.Any(sel => sel.UserAccountId != user.Id))
                             ? "pickedme" : "",
-                    Suggestions = [.. r.Request.Suggestions.Select(s => new SuggestionDto
+                    Suggestions = [.. r.Request.Suggestions
+                    .Where(su => su.Status != RequestProcessStatus.RejectedBySender)
+                    .Select(s => new SuggestionDto
                     {
                         SuggestionId = s.Id,
                         UserAccountId = s.UserAccountId,

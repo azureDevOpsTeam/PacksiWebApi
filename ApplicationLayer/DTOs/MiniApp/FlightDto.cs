@@ -70,6 +70,41 @@ public class TripsDto
 
     public string SelectStatus { get; set; }
 
+    public string Pickedme_OperationButton
+    {
+        get
+        {
+            if (SelectStatus == "pickedme")
+                return LastStatus == RequestProcessStatus.Selected.Value ? "btnSuggtion"
+                    : LastStatus == RequestProcessStatus.ConfirmedBySender.Value ? "btnPickedUp" //With Chat
+                    : LastStatus == RequestProcessStatus.PickedUp.Value ? "btnPassengerConfirmedDelivery" //With NotDelivered
+                    : LastStatus == RequestProcessStatus.PassengerConfirmedDelivery.Value ? "lblWaitToConfirmedDelivery"
+                    : "btnDisable";
+            else
+            {
+                return "btnDisable";
+            }
+        }
+    }
+
+    public string Ipicked_OperationButton
+    {
+        get
+        {
+            if (SelectStatus == "ipicked")
+            {
+                return LastStatus == RequestProcessStatus.ConfirmedBySender.Value ? "lblReadyToPickeUp" //With Chat
+                    : LastStatus == RequestProcessStatus.PickedUp.Value ? "lblReadyToDelivery" //With NotDelivered
+                    : LastStatus == RequestProcessStatus.PassengerConfirmedDelivery.Value ? "btnConfirmDelivery"
+                    : "btnDisable";
+            }
+            else
+            {
+                return "btnDisable";
+            }
+        }
+    }
+
     public List<SuggestionDto> Suggestions { get; set; }
 
     public List<string> AvailableActions { get; set; } = new();
