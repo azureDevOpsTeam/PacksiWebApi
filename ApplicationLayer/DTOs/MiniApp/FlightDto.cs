@@ -82,7 +82,7 @@ public class TripsDto
                     : "btnDisable";
             else
             {
-                return "btnDisable";
+                return "btnNotFound";
             }
         }
     }
@@ -100,7 +100,7 @@ public class TripsDto
             }
             else
             {
-                return "btnDisable";
+                return "btnNotFound";
             }
         }
     }
