@@ -86,8 +86,12 @@ namespace PresentationApp.Controllers.MiniApp
         public async Task<IActionResult> ReadyToDeliverAsync(MiniApp_ReadyToDeliverCommand model)
          => await ResultHelper.GetResultAsync(_mediator, model);
 
-        [HttpPost("Delivered")]
-        public async Task<IActionResult> DeliveredAsync(MiniApp_DeliveredCommand model)
+        [HttpPost("PassengerConfirmedDelivery")]
+        public async Task<IActionResult> PassengerConfirmedDeliveryAsync(MiniApp_PassengerConfirmedDeliveryCommand model)
+         => await ResultHelper.GetResultAsync(_mediator, model);
+
+        [HttpPost("SenderConfirmedDelivery")]
+        public async Task<IActionResult> SenderConfirmedDeliveryAsync(MiniApp_SenderConfirmedDeliveryCommand model)
          => await ResultHelper.GetResultAsync(_mediator, model);
 
         [HttpPost("NotDelivered")]

@@ -743,8 +743,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
             if (request == null)
                 return Result.NotFound();
-
-            request.Status = RequestProcessStatus.ReadyToPickup;
+            //todo remove ReadyToPickup
+            request.Status = RequestProcessStatus.PickedUp;
             await _suggestionRepository.UpdateAsync(request);
 
             return Result.Success();
@@ -788,7 +788,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             if (request == null)
                 return Result.NotFound();
 
-            request.Status = RequestProcessStatus.InTransit;
+            //todo remove InTransit
+            request.Status = RequestProcessStatus.PickedUp;
             await _suggestionRepository.UpdateAsync(request);
 
             return Result.Success();
@@ -810,7 +811,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             if (request == null)
                 return Result.NotFound();
 
-            request.Status = RequestProcessStatus.ReadyToDeliver;
+            //todo remove ReadyToDeliver
+            request.Status = RequestProcessStatus.PickedUp;
             await _suggestionRepository.UpdateAsync(request);
 
             return Result.Success();
@@ -822,7 +824,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-    public async Task<Result> DeliveredAsync(RequestKeyDto model, UserAccount user)
+    public async Task<Result> PassengerConfirmedDeliveryAsync(RequestKeyDto model, UserAccount user)
     {
         try
         {
@@ -835,7 +837,32 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             var requestRecord = await _suggestionRepository.Query()
                 .FirstOrDefaultAsync(current => current.UserAccountId == user.Id && current.RequestId == request.Id);
 
-            requestRecord.Status = RequestProcessStatus.Delivered;
+            requestRecord.Status = RequestProcessStatus.PassengerConfirmedDelivery;
+            await _suggestionRepository.UpdateAsync(requestRecord);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در ثبت وضعیت تحویل شده  {RequestId}", model.RequestId);
+            return Result.GeneralFailure("خطا در ثبت وضعیت تحویل شده");
+        }
+    }
+
+    public async Task<Result> SenderConfirmedDeliveryAsync(RequestKeyDto model, UserAccount user)
+    {
+        try
+        {
+            var request = await _requestRepository.Query()
+                .Where(r => r.Id == model.RequestId).FirstOrDefaultAsync();
+
+            if (request == null)
+                return Result.NotFound();
+
+            var requestRecord = await _suggestionRepository.Query()
+                .FirstOrDefaultAsync(current => current.UserAccountId == user.Id && current.RequestId == request.Id);
+
+            requestRecord.Status = RequestProcessStatus.SenderConfirmedDelivery;
             await _suggestionRepository.UpdateAsync(requestRecord);
 
             return Result.Success();
@@ -1110,13 +1137,13 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     actions.Add("ReadyToPickup");
                 }
                 break;
-
-            case nameof(RequestProcessStatus.ReadyToPickup):
-                if (role == "Passenger")
-                {
-                    actions.Add("Pickup");
-                }
-                break;
+            //TODO
+            //case nameof(RequestProcessStatus.ReadyToPickup):
+            //    if (role == "Passenger")
+            //    {
+            //        actions.Add("Pickup");
+            //    }
+            //    break;
 
             case nameof(RequestProcessStatus.PickedUp):
                 if (role == "Passenger")
@@ -1125,25 +1152,32 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 }
                 break;
 
-            case nameof(RequestProcessStatus.InTransit):
+            //case nameof(RequestProcessStatus.InTransit):
+            //    if (role == "Passenger")
+            //    {
+            //        actions.Add("ReadyToDeliver");
+            //    }
+            //    break;
+
+            //case nameof(RequestProcessStatus.ReadyToDeliver):
+            //    if (role == "Passenger")
+            //    {
+            //        actions.Add("DeliverSuccess");
+            //        actions.Add("DeliverFailed");
+            //    }
+            //    break;
+
+            case nameof(RequestProcessStatus.PassengerConfirmedDelivery):
                 if (role == "Passenger")
                 {
-                    actions.Add("ReadyToDeliver");
+                    actions.Add("PassengerConfirmedDelivery");
                 }
                 break;
 
-            case nameof(RequestProcessStatus.ReadyToDeliver):
-                if (role == "Passenger")
-                {
-                    actions.Add("DeliverSuccess");
-                    actions.Add("DeliverFailed");
-                }
-                break;
-
-            case nameof(RequestProcessStatus.Delivered):
+            case nameof(RequestProcessStatus.SenderConfirmedDelivery):
                 if (role == "Sender")
                 {
-                    actions.Add("ConfirmDelivery");
+                    actions.Add("SenderConfirmedDelivery");
                 }
                 break;
 

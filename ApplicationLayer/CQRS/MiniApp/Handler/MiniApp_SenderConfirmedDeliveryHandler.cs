@@ -5,12 +5,12 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class MiniApp_DeliveredHandler(IMiniAppServices miniAppServices, IUserAccountServices userAccountServices) : IRequestHandler<MiniApp_DeliveredCommand, HandlerResult>
+public class MiniApp_SenderConfirmedDeliveryHandler(IMiniAppServices miniAppServices, IUserAccountServices userAccountServices) : IRequestHandler<MiniApp_SenderConfirmedDeliveryCommand, HandlerResult>
 {
     private readonly IMiniAppServices _miniAppServices = miniAppServices;
     private readonly IUserAccountServices _userAccountServices = userAccountServices;
 
-    public async Task<HandlerResult> Handle(MiniApp_DeliveredCommand requestDto, CancellationToken cancellationToken)
+    public async Task<HandlerResult> Handle(MiniApp_SenderConfirmedDeliveryCommand requestDto, CancellationToken cancellationToken)
     {
         var resultValidation = await _miniAppServices.ValidateTelegramMiniAppUserAsync();
         if (resultValidation.IsFailure)
@@ -20,7 +20,7 @@ public class MiniApp_DeliveredHandler(IMiniAppServices miniAppServices, IUserAcc
         if (userAccount.IsFailure)
             return userAccount.ToHandlerResult();
 
-        var result = await _miniAppServices.DeliveredAsync(requestDto.Model, userAccount.Value);
+        var result = await _miniAppServices.SenderConfirmedDeliveryAsync(requestDto.Model, userAccount.Value);
         return result.ToHandlerResult();
     }
 }
