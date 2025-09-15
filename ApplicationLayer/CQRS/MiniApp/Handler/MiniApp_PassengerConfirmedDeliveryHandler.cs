@@ -5,8 +5,9 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class MiniApp_PassengerConfirmedDeliveryHandler(IMiniAppServices miniAppServices, IUserAccountServices userAccountServices) : IRequestHandler<MiniApp_PassengerConfirmedDeliveryCommand, HandlerResult>
+public class MiniApp_PassengerConfirmedDeliveryHandler(IUnitOfWork unitOfWork, IMiniAppServices miniAppServices, IUserAccountServices userAccountServices) : IRequestHandler<MiniApp_PassengerConfirmedDeliveryCommand, HandlerResult>
 {
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMiniAppServices _miniAppServices = miniAppServices;
     private readonly IUserAccountServices _userAccountServices = userAccountServices;
 
@@ -21,6 +22,9 @@ public class MiniApp_PassengerConfirmedDeliveryHandler(IMiniAppServices miniAppS
             return userAccount.ToHandlerResult();
 
         var result = await _miniAppServices.PassengerConfirmedDeliveryAsync(requestDto.Model, userAccount.Value);
+        if (result.IsSuccess)
+            await _unitOfWork.SaveChangesAsync();
+
         return result.ToHandlerResult();
     }
 }

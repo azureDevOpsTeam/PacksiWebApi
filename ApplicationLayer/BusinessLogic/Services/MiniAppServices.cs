@@ -331,7 +331,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         try
         {
             var myReciveOffers = await _requestRepository.Query()
-                .Where(r => r.UserAccountId == user.Id && r.Suggestions.Any())
+                .Where(r => r.UserAccountId == user.Id && r.Suggestions.Any() && r.Status == RequestLifecycleStatus.Published)
                 .Select(r => new RequestInfoDto
                 {
                     Id = r.Id,
@@ -340,7 +340,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     DestinationCityName = r.DestinationCity != null ? r.DestinationCity.Name : null,
                     DestinationCityPersianName = r.DestinationCity != null ? r.DestinationCity.PersianName : null,
                     Suggestions = r.Suggestions
-                    .Where(s => s.UserAccountId != user.Id)
+                    .Where(s => s.UserAccountId != user.Id && s.Status != RequestProcessStatus.RejectedBySender)
                     .Select(s => new ActiveSuggestionDto
                     {
                         Id = s.Id,
