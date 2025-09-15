@@ -65,20 +65,23 @@ public class ActiveSuggestionDto
 
     public string OperationButton => GetOperationButton(Context, Status);
 
-    private string GetOperationButton(OfferContext context, int status) => (context, status) switch
+    private string GetOperationButton(OfferContext context, int status)
     {
-        (OfferContext.Received, var s) when s == RequestProcessStatus.Selected.Value => "btnSuggtion",
-        (OfferContext.Received, var s) when s == RequestProcessStatus.ConfirmedBySender.Value => "btnPickedUp",
-        (OfferContext.Received, var s) when s == RequestProcessStatus.PickedUp.Value => "btnPassengerConfirmedDelivery",
-        (OfferContext.Received, var s) when s == RequestProcessStatus.PassengerConfirmedDelivery.Value => "lblWaitToConfirmDelivery",
+        return (context, status) switch
+        {
+            (OfferContext.Received, var s) when s == RequestProcessStatus.Selected.Value => "btnSuggtion",
+            (OfferContext.Received, var s) when s == RequestProcessStatus.ConfirmedBySender.Value => "btnPickedUp",
+            (OfferContext.Received, var s) when s == RequestProcessStatus.PickedUp.Value => "btnPassengerConfirmedDelivery",
+            (OfferContext.Received, var s) when s == RequestProcessStatus.PassengerConfirmedDelivery.Value => "lblWaitToConfirmDelivery",
 
-        (OfferContext.Sent, var s) when s == RequestProcessStatus.Selected.Value => "lblWaitForAcceptSuggetion",
-        (OfferContext.Sent, var s) when s == RequestProcessStatus.ConfirmedBySender.Value => "lblReadyToPickeUp",
-        (OfferContext.Sent, var s) when s == RequestProcessStatus.PickedUp.Value => "lblReadyToDelivery",
-        (OfferContext.Sent, var s) when s == RequestProcessStatus.PassengerConfirmedDelivery.Value => "btnConfirmDelivery",
+            (OfferContext.Sent, var s) when s == RequestProcessStatus.Selected.Value => "lblWaitForAcceptSuggetion",
+            (OfferContext.Sent, var s) when s == RequestProcessStatus.ConfirmedBySender.Value => "lblReadyToPickeUp",
+            (OfferContext.Sent, var s) when s == RequestProcessStatus.PickedUp.Value => "lblReadyToDelivery",
+            (OfferContext.Sent, var s) when s == RequestProcessStatus.PassengerConfirmedDelivery.Value => "btnConfirmDelivery",
 
-        _ => "btnDisable"
-    };
+            _ => "btnDisable"
+        };
+    }
 
     public DateTime CreatedOn { get; set; }
 

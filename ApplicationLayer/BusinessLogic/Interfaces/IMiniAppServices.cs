@@ -49,7 +49,7 @@ public interface IMiniAppServices
 
     Task<Result> ReadyToDeliverAsync(RequestSuggestionKeyDto model);
 
-    Task<Result> SenderConfirmedDeliveryAsync(RequestKeyDto model, UserAccount user);
+    Task<Result> SenderConfirmedDeliveryAsync(RequestSuggestionKeyDto model, UserAccount user);
 
     Task<Result> NotDeliveredAsync(RequestSuggestionKeyDto model);
 
@@ -65,7 +65,7 @@ public interface IMiniAppServices
 
     Task<Result<List<SuggestionAttachment>>> CreateSuggestionAttachmentAsync(List<IFormFile> files, int suggestionId);
 
-    Task<Result> PassengerConfirmedDeliveryAsync(RequestKeyDto model, UserAccount user);
+    Task<Result> PassengerConfirmedDeliveryAsync(RequestSuggestionKeyDto model, UserAccount user);
 
     Task<Result<RequestInprogressDto>> GetInProgressRequestAsync(UserAccount user);
 }

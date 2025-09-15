@@ -900,12 +900,12 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-    public async Task<Result> PassengerConfirmedDeliveryAsync(RequestKeyDto model, UserAccount user)
+    public async Task<Result> PassengerConfirmedDeliveryAsync(RequestSuggestionKeyDto model, UserAccount user)
     {
         try
         {
-            var request = await _requestRepository.Query()
-                .Where(r => r.Id == model.RequestId).FirstOrDefaultAsync();
+            var request = await _suggestionRepository.Query()
+                .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
@@ -920,17 +920,17 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در ثبت وضعیت تحویل شده  {RequestId}", model.RequestId);
+            _logger.LogError(exception, "خطا در ثبت وضعیت تحویل شده  {RequestSuggestionId}", model.RequestSuggestionId);
             return Result.GeneralFailure("خطا در ثبت وضعیت تحویل شده");
         }
     }
 
-    public async Task<Result> SenderConfirmedDeliveryAsync(RequestKeyDto model, UserAccount user)
+    public async Task<Result> SenderConfirmedDeliveryAsync(RequestSuggestionKeyDto model, UserAccount user)
     {
         try
         {
-            var request = await _requestRepository.Query()
-                .Where(r => r.Id == model.RequestId).FirstOrDefaultAsync();
+            var request = await _suggestionRepository.Query()
+                .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
             if (request == null)
                 return Result.NotFound();
@@ -945,7 +945,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "خطا در ثبت وضعیت تحویل شده  {RequestId}", model.RequestId);
+            _logger.LogError(exception, "خطا در ثبت وضعیت تحویل شده  {RequestSuggestionId}", model.RequestSuggestionId);
             return Result.GeneralFailure("خطا در ثبت وضعیت تحویل شده");
         }
     }
