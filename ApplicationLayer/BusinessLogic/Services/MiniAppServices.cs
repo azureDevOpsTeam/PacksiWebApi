@@ -325,6 +325,79 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
+    public async Task<Result<RequestInprogressDto>> GetInProgressRequestAsync(UserAccount user)
+    {
+        try
+        {
+            var myReciveOffers = await _requestRepository.Query()
+                .Where(r => r.UserAccountId == user.Id && r.Suggestions.Any())
+                .Select(r => new RequestInfoDto
+                {
+                    Id = r.Id,
+                    OriginCityName = r.OriginCity != null ? r.OriginCity.Name : null,
+                    OriginCityPersianName = r.OriginCity != null ? r.OriginCity.PersianName : null,
+                    DestinationCityName = r.DestinationCity != null ? r.DestinationCity.Name : null,
+                    DestinationCityPersianName = r.DestinationCity != null ? r.DestinationCity.PersianName : null,
+                    Status = r.Status,
+
+                    Suggestions = r.Suggestions.Select(s => new ActiveSuggestionDto
+                    {
+                        Id = s.Id,
+                        DisplayName = s.UserAccount.UserProfiles
+                            .Select(up => up.DisplayName)
+                            .FirstOrDefault() ?? s.UserAccount.UserName,
+                        SuggestionPrice = s.SuggestionPrice,
+                        Currency = s.Currency,
+                        ItemType = s.ItemType,
+                        Attachments = s.SuggestionAttachments
+                            .Select(a => a.FilePath)
+                            .ToList()
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            var mySentOffers = await _requestRepository.Query()
+                .Where(r => r.Suggestions.Any(s => s.UserAccountId == user.Id))
+                .Select(r => new RequestInfoDto
+                {
+                    Id = r.Id,
+                    OriginCityName = r.OriginCity != null ? r.OriginCity.Name : null,
+                    OriginCityPersianName = r.OriginCity != null ? r.OriginCity.PersianName : null,
+                    DestinationCityName = r.DestinationCity != null ? r.DestinationCity.Name : null,
+                    DestinationCityPersianName = r.DestinationCity != null ? r.DestinationCity.PersianName : null,
+                    Status = r.Status,
+
+                    Suggestions = r.Suggestions.Select(s => new ActiveSuggestionDto
+                    {
+                        Id = s.Id,
+                        DisplayName = s.UserAccount.UserProfiles
+                            .Select(up => up.DisplayName)
+                            .FirstOrDefault() ?? s.UserAccount.UserName,
+                        SuggestionPrice = s.SuggestionPrice,
+                        Currency = s.Currency,
+                        ItemType = s.ItemType,
+                        Attachments = s.SuggestionAttachments
+                            .Select(a => a.FilePath)
+                            .ToList()
+                    }).ToList()
+                })
+                .ToListAsync();
+
+            var result = new RequestInprogressDto
+            {
+                MyReciveOffers = myReciveOffers,
+                MySentOffers = mySentOffers
+            };
+
+            return Result<RequestInprogressDto>.Success(result);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در دریافت درخواست‌ها {UserId}", user.Id);
+            return Result<RequestInprogressDto>.GeneralFailure("خطا در دریافت درخواست‌ها");
+        }
+    }
+
     public async Task<Result<List<TripsDto>>> GetMyRequestsAsync(UserAccount user)
     {
         try

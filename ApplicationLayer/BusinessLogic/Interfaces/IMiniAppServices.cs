@@ -64,5 +64,8 @@ public interface IMiniAppServices
     Task<Result<RequestSuggestionDto>> GetSuggestionAsync(RequestSuggestionKeyDto model);
 
     Task<Result<List<SuggestionAttachment>>> CreateSuggestionAttachmentAsync(List<IFormFile> files, int suggestionId);
+
     Task<Result> PassengerConfirmedDeliveryAsync(RequestKeyDto model, UserAccount user);
+
+    Task<Result<RequestInprogressDto>> GetInProgressRequestAsync(UserAccount user);
 }
