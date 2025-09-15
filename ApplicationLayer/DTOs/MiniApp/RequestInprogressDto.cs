@@ -39,7 +39,24 @@ public class ActiveSuggestionDto
 
     public string Descriptions { get; set; }
 
+    [JsonIgnore]
     public int ItemType { get; set; }
+
+    public string ItemTypeEn
+    {
+        get
+        {
+            return TransportableItemTypeEnum.FromValue(ItemType).Name;
+        }
+    }
+
+    public string ItemTypeFa
+    {
+        get
+        {
+            return TransportableItemTypeEnum.FromValue(ItemType).PersianName;
+        }
+    }
 
     public int Status { get; set; }
 
