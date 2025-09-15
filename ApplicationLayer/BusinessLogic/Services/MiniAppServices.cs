@@ -350,7 +350,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         Attachments = s.SuggestionAttachments
                             .Select(a => a.FilePath)
                             .ToList(),
-                        Context = OfferContext.Received
+                        Context = OfferContext.Received,
+                        Descriptions = s.Description
                     }).ToList()
                 })
                 .ToListAsync();
@@ -379,7 +380,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         Attachments = s.SuggestionAttachments
                             .Select(a => a.FilePath)
                             .ToList(),
-                        Context = OfferContext.Sent
+                        Context = OfferContext.Sent,
+                        Descriptions = s.Description
                     }).ToList()
                 })
                 .ToListAsync();

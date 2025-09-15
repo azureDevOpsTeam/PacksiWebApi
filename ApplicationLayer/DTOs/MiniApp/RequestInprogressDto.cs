@@ -1,4 +1,5 @@
 ﻿using ApplicationLayer.Extensions.SmartEnums;
+using System.Text.Json.Serialization;
 
 namespace ApplicationLayer.DTOs.MiniApp;
 
@@ -36,10 +37,13 @@ public class ActiveSuggestionDto
 
     public int Currency { get; set; }
 
+    public string Descriptions { get; set; }
+
     public int ItemType { get; set; }
 
     public int Status { get; set; }
 
+    [JsonIgnore]
     public OfferContext Context { get; set; }  // پر میشه در کوئری
 
     public string OperationButton => GetOperationButton(Context, Status);
