@@ -1,4 +1,6 @@
-﻿namespace ApplicationLayer.DTOs.MiniApp;
+﻿using ApplicationLayer.Extensions.SmartEnums;
+
+namespace ApplicationLayer.DTOs.MiniApp;
 
 public class RequestInprogressDto
 {
@@ -35,6 +37,27 @@ public class ActiveSuggestionDto
     public int Currency { get; set; }
 
     public int ItemType { get; set; }
+
+    public int Status { get; set; }
+
+    public OfferContext Context { get; set; }  // پر میشه در کوئری
+
+    public string OperationButton => GetOperationButton(Context, Status);
+
+    private string GetOperationButton(OfferContext context, int status) => (context, status) switch
+    {
+        (OfferContext.Received, var s) when s == RequestProcessStatus.Selected.Value => "btnSuggtion",
+        (OfferContext.Received, var s) when s == RequestProcessStatus.ConfirmedBySender.Value => "btnPickedUp",
+        (OfferContext.Received, var s) when s == RequestProcessStatus.PickedUp.Value => "btnPassengerConfirmedDelivery",
+        (OfferContext.Received, var s) when s == RequestProcessStatus.PassengerConfirmedDelivery.Value => "lblWaitToConfirmDelivery",
+
+        (OfferContext.Sent, var s) when s == RequestProcessStatus.Selected.Value => "lblWaitForAcceptSuggetion",
+        (OfferContext.Sent, var s) when s == RequestProcessStatus.ConfirmedBySender.Value => "lblReadyToPickeUp",
+        (OfferContext.Sent, var s) when s == RequestProcessStatus.PickedUp.Value => "lblReadyToDelivery",
+        (OfferContext.Sent, var s) when s == RequestProcessStatus.PassengerConfirmedDelivery.Value => "btnConfirmDelivery",
+
+        _ => "btnDisable"
+    };
 
     public DateTime CreatedOn { get; set; }
 

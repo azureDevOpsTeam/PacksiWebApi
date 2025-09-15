@@ -338,8 +338,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     OriginCityPersianName = r.OriginCity != null ? r.OriginCity.PersianName : null,
                     DestinationCityName = r.DestinationCity != null ? r.DestinationCity.Name : null,
                     DestinationCityPersianName = r.DestinationCity != null ? r.DestinationCity.PersianName : null,
-                    Status = r.Status,
-
                     Suggestions = r.Suggestions.Select(s => new ActiveSuggestionDto
                     {
                         Id = s.Id,
@@ -351,7 +349,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         ItemType = s.ItemType,
                         Attachments = s.SuggestionAttachments
                             .Select(a => a.FilePath)
-                            .ToList()
+                            .ToList(),
+                        Context = OfferContext.Received
                     }).ToList()
                 })
                 .ToListAsync();
@@ -376,9 +375,11 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         SuggestionPrice = s.SuggestionPrice,
                         Currency = s.Currency,
                         ItemType = s.ItemType,
+                        Status = s.Status,
                         Attachments = s.SuggestionAttachments
                             .Select(a => a.FilePath)
-                            .ToList()
+                            .ToList(),
+                        Context = OfferContext.Sent
                     }).ToList()
                 })
                 .ToListAsync();
