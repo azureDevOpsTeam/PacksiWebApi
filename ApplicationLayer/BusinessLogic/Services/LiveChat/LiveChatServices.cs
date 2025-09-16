@@ -2,7 +2,6 @@ using ApplicationLayer.BusinessLogic.Interfaces.LiveChat;
 using ApplicationLayer.DTOs;
 using ApplicationLayer.DTOs.LiveChat;
 using ApplicationLayer.Extensions;
-using ApplicationLayer.Extensions.SmartEnums;
 using AutoMapper;
 using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
@@ -28,7 +27,7 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
         try
         {
             var conversations = await _conversationRepository.Query()
-                .Where(c => c.User1Id == currentUser.Id || c.User2Id == currentUser.Id)
+                .Where(c => (c.User1Id == currentUser.Id || c.User2Id == currentUser.Id))
                 .Include(c => c.User1)
                     .ThenInclude(u => u.UserProfiles)
                 .Include(c => c.User2)

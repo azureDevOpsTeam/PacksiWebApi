@@ -237,6 +237,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
+            var today = DateTime.Now.Date;
             var userCountryId = await _userProfileRepository.Query()
                 .Where(p => p.UserAccountId == user.Id)
                 .Select(p => p.CountryOfResidenceId)
@@ -244,7 +245,9 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
             var requestsRaw = await _requestRepository.Query()
                 .Where(current => current.UserAccountId != user.Id
-                && (current.OriginCity.CountryId == userCountryId || current.DestinationCity.CountryId == userCountryId))
+                && (current.OriginCity.CountryId == userCountryId || current.DestinationCity.CountryId == userCountryId)
+                && current.ArrivalDate.Date < today
+                && current.Status == RequestLifecycleStatus.Published)
                 .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
                 .Include(r => r.Suggestions).ThenInclude(s => s.RequestStatusHistories)
                 .Include(r => r.Suggestions).ThenInclude(s => s.UserAccount).ThenInclude(ua => ua.UserProfiles)
@@ -465,6 +468,12 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
+            var exist = await _requestRepository.AnyAsync(current => current.UserAccount == userAccount
+            && current.OriginCityId == model.OriginCityId
+            && current.DestinationCityId == model.DestinationCityId);
+            if (exist)
+                return Result<Request>.DuplicateFailure();
+
             var request = _mapper.Map<Request>(model);
             request.UserAccountId = userAccount.Id;
 
@@ -956,17 +965,20 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
-            var request = await _suggestionRepository.Query()
-                .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
+            var suggestion = await _suggestionRepository.Query()
+                .Where(current => current.Id == model.RequestSuggestionId && current.UserAccountId == user.Id).FirstOrDefaultAsync();
 
+            if (suggestion == null)
+                return Result.NotFound();
+
+            var request = await _requestRepository.Query()
+                .Where(current => current.Id == suggestion.RequestId).FirstOrDefaultAsync();
             if (request == null)
                 return Result.NotFound();
 
-            var requestRecord = await _suggestionRepository.Query()
-                .FirstOrDefaultAsync(current => current.UserAccountId == user.Id && current.RequestId == request.Id);
-
-            requestRecord.Status = RequestProcessStatus.SenderConfirmedDelivery;
-            await _suggestionRepository.UpdateAsync(requestRecord);
+            request.Status = RequestLifecycleStatus.FinalizateDelivery;
+            suggestion.Status = RequestProcessStatus.SenderConfirmedDelivery;
+            await _suggestionRepository.UpdateAsync(suggestion);
 
             return Result.Success();
         }
