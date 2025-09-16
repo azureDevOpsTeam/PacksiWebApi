@@ -33,7 +33,7 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                     .ThenInclude(u => u.UserProfiles)
                 .Include(c => c.User2)
                     .ThenInclude(u => u.UserProfiles)
-                .Include(c => c.Messages.OrderByDescending(m => m.SentAt).Take(1)) // فقط آخرین پیام
+                .Include(c => c.Messages.OrderByDescending(m => m.SentAt).Take(1))
                 .ToListAsync();
 
             var chatList = conversations.Select(c =>
@@ -46,9 +46,9 @@ public class LiveChatServices(IRepository<UserAccount> userAccountRepository, IR
                     ConversationId = c.Id,
                     SenderId = currentUser.Id,
                     ReciverId = otherUser.Id,
-                    RequestCreatorDisplayName = currentUser.Id != c.User1Id ? currentUser.UserProfiles.FirstOrDefault()?.DisplayName : otherUser.UserProfiles.FirstOrDefault()?.DisplayName,
+                    RequestCreatorDisplayName = otherUser.UserProfiles.FirstOrDefault()?.DisplayName,
                     Avatar = otherUser.Avatar,
-                    IsOnline = true, // اینو باید از Presence یا SignalR دربیاری
+                    IsOnline = false, // اینو باید از Presence یا SignalR دربیاری
                     LastMessage = lastMessage?.Content ?? "No messages yet",
                     LastSeenEn = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).En,
                     LastSeenFa = DateTimeHelper.GetTimeAgo(DateTime.Now.AddMinutes(-28)).Fa,
