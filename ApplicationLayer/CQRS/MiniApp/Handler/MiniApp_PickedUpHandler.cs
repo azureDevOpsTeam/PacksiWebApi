@@ -5,8 +5,9 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class MiniApp_PickedUpHandler(IMiniAppServices miniAppServices) : IRequestHandler<MiniApp_PickedUpCommand, HandlerResult>
+public class MiniApp_PickedUpHandler(IUnitOfWork unitOfWork, IMiniAppServices miniAppServices) : IRequestHandler<MiniApp_PickedUpCommand, HandlerResult>
 {
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMiniAppServices _miniAppServices = miniAppServices;
 
     public async Task<HandlerResult> Handle(MiniApp_PickedUpCommand requestDto, CancellationToken cancellationToken)
@@ -16,6 +17,7 @@ public class MiniApp_PickedUpHandler(IMiniAppServices miniAppServices) : IReques
             return resultValidation.ToHandlerResult();
 
         var result = await _miniAppServices.PickedUpAsync(requestDto.Model);
+        await _unitOfWork.SaveChangesAsync();
         return result.ToHandlerResult();
     }
 }
