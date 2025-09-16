@@ -534,7 +534,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
                         attachments.Add(new RequestAttachment
                         {
-                            Id = requestId,
+                            RequestId = requestId,
                             FilePath = $"/uploads/request/{fileName}",
                             FileType = formFile.ContentType,
                             AttachmentType = requestType == RequestTypeEnum.Passenger ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
