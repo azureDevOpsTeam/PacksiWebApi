@@ -106,9 +106,9 @@ public class TripsDto
     //    }
     //}
 
-    public List<SuggestionDto> Suggestions { get; set; }
+    //public List<SuggestionDto> Suggestions { get; set; }
 
-    public List<string> AvailableActions { get; set; } = new();
+    //public List<string> AvailableActions { get; set; } = new();
 }
 
 public class SuggestionDto
