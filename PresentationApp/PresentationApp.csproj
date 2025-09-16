@@ -32,4 +32,8 @@
 	  <ProjectReference Include="..\InfrastructureLayer\InfrastructureLayer.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="wwwroot\uploads\" />
+	</ItemGroup>
+
 </Project>
