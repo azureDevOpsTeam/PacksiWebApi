@@ -68,4 +68,6 @@ public interface IMiniAppServices
     Task<Result> PassengerConfirmedDeliveryAsync(RequestSuggestionKeyDto model, UserAccount user);
 
     Task<Result<RequestInprogressDto>> GetInProgressRequestAsync(UserAccount user);
+
+    Task<Result<List<RequestAttachment>>> CreateRequestAttachmentAsync(List<IFormFile> files, RequestTypeEnum requestType);
 }

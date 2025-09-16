@@ -11,6 +11,7 @@ using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -24,7 +25,7 @@ namespace ApplicationLayer.BusinessLogic.Services;
 public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository,
     IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation, IRepository<Suggestion> suggestionRepository,
     IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo, IRepository<SuggestionAttachment> suggestionAttachmentRepository,
-    IRepository<RequestStatusHistory> requestStatusHistoryRepository, IRepository<Conversation> conversationRepository,
+    IRepository<RequestStatusHistory> requestStatusHistoryRepository, IRepository<Conversation> conversationRepository, IRepository<RequestAttachment> requestAttachment,
     IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger, IMapper mapper) : IMiniAppServices
 {
     private readonly HttpClient _httpClient = httpClient;
@@ -34,6 +35,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     private readonly IRepository<UserPreferredLocation> _userPreferredLocation = userPreferredLocation;
     private readonly IRepository<Request> _requestRepository = requestRepository;
     private readonly IRepository<RequestItemType> _itemTypeRepo = itemTypeRepo;
+    private readonly IRepository<RequestAttachment> _requestAttachment = requestAttachment;
     private readonly IRepository<RequestStatusHistory> _requestStatusHistoryRepository = requestStatusHistoryRepository;
     private readonly IRepository<Conversation> _conversationRepository = conversationRepository;
     private readonly IRepository<Suggestion> _suggestionRepository = suggestionRepository;
@@ -148,7 +150,11 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             var fileBytes = await _httpClient.GetByteArrayAsync(fileUrl);
 
             await File.WriteAllBytesAsync(savePath, fileBytes);
-            return savePath;
+            var relativePath = string.Empty;
+
+            if (userId != 0 && !string.IsNullOrEmpty(extension))
+                relativePath = $"/uploads/{userId}/{userId}{extension}";
+            return relativePath;
         }
         catch (Exception exception)
         {
@@ -463,35 +469,10 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             request.UserAccountId = userAccount.Id;
 
             request.Status = model.IsDraft
-                ? RequestLifecycleStatus.Created
-                : RequestLifecycleStatus.Draft;
-
-            var attachments = new List<CreateRequestAttachmentDto>();
-            var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "request");
-            if (!Directory.Exists(uploadsRoot))
-                Directory.CreateDirectory(uploadsRoot);
-
-            if (model.Files != null)
-                foreach (var formFile in model.Files)
-                {
-                    if (formFile.Length > 0)
-                    {
-                        var fileName = Guid.NewGuid() + Path.GetExtension(formFile.FileName);
-                        var filePath = Path.Combine(uploadsRoot, fileName);
-
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await formFile.CopyToAsync(stream);
-                        }
-
-                        attachments.Add(new CreateRequestAttachmentDto
-                        {
-                            FilePath = $"/uploads/request/{fileName}",
-                            FileType = formFile.ContentType,
-                            AttachmentType = model.RequestType == RequestTypeEnum.Passenger ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
-                        });
-                    }
-                }
+                ? RequestLifecycleStatus.Draft
+                : RequestLifecycleStatus.Published;
+            //Todo : Post Review For Admin
+            //: RequestLifecycleStatus.Created;
 
             await _requestRepository.AddAsync(request);
             return Result<Request>.Success(request);
@@ -523,6 +504,50 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         {
             _logger.LogError(exception, "خطا در ثبت اقلام  {RequestId}", requestId);
             return Result.GeneralFailure("خطا در ثبت اقلام");
+        }
+    }
+
+    public async Task<Result<List<RequestAttachment>>> CreateRequestAttachmentAsync(List<IFormFile> files, RequestTypeEnum requestType)
+    {
+        try
+        {
+            if (files == null || files.Count == 0)
+                return Result<List<RequestAttachment>>.Success();
+
+            var attachments = new List<RequestAttachment>();
+            var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "request");
+            if (!Directory.Exists(uploadsRoot))
+                Directory.CreateDirectory(uploadsRoot);
+
+            if (files != null)
+                foreach (var formFile in files)
+                {
+                    if (formFile.Length > 0)
+                    {
+                        var fileName = Guid.NewGuid() + Path.GetExtension(formFile.FileName);
+                        var filePath = Path.Combine(uploadsRoot, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await formFile.CopyToAsync(stream);
+                        }
+
+                        attachments.Add(new RequestAttachment
+                        {
+                            FilePath = $"/uploads/request/{fileName}",
+                            FileType = formFile.ContentType,
+                            AttachmentType = requestType == RequestTypeEnum.Passenger ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
+                        });
+                    }
+                }
+
+            await _requestAttachment.AddRangeAsync(attachments);
+            return Result<List<RequestAttachment>>.Success(attachments);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, $"خطا در آپلود فایل برای درخواست {requestType}");
+            return Result<List<RequestAttachment>>.GeneralFailure("خطا در آپلود فایل");
         }
     }
 

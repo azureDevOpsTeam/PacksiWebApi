@@ -42,7 +42,15 @@ public class MiniApp_CreateRequestHandler(IUnitOfWork unitOfWork, IUserAccountSe
                 return resultItemtype.ToHandlerResult();
             }
 
+            var resultAttachment = await _miniAppServices.CreateRequestAttachmentAsync(request.Files, RequestTypeEnum.FromValue(request.RequestType));
+            if (resultAttachment.IsFailure)
+            {
+                await _unitOfWork.RollbackAsync();
+                return resultAttachment.ToHandlerResult();
+            }
+
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
             await _unitOfWork.CommitAsync();
 
             return resultItemtype.ToHandlerResult();
