@@ -288,23 +288,23 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     LastStatus = r.LastStatus,
                     TripType = r.Request.OriginCity.CountryId == userCountryId ? "outbound"
                         : r.Request.DestinationCity.CountryId == userCountryId ? "inbound" : "",
-                    SelectStatus = r.Request.Suggestions.Any(sel => sel.UserAccountId == user.Id)
-                        ? "ipicked"
-                        : (r.Request.UserAccountId == user.Id && r.Request.Suggestions.Any(sel => sel.UserAccountId != user.Id))
-                            ? "pickedme" : "",
-                    Suggestions = [.. r.Request.Suggestions
-                    .Where(su => su.Status != RequestProcessStatus.RejectedBySender)
-                    .Select(s => new SuggestionDto
-                    {
-                        SuggestionId = s.Id,
-                        UserAccountId = s.UserAccountId,
-                        Currency = s.Currency,
-                        Price = s.SuggestionPrice,
-                        Description = s.Description,
-                        FullName = s.UserAccount.UserProfiles.FirstOrDefault().DisplayName
-                                   ?? s.UserAccount.UserProfiles.FirstOrDefault().FirstName,
-                        SuggestionStatus = s.Status
-                    })]
+                    //SelectStatus = r.Request.Suggestions.Any(sel => sel.UserAccountId == user.Id)
+                    //    ? "ipicked"
+                    //    : (r.Request.UserAccountId == user.Id && r.Request.Suggestions.Any(sel => sel.UserAccountId != user.Id))
+                    //        ? "pickedme" : "",
+                    //Suggestions = [.. r.Request.Suggestions
+                    //.Where(su => su.Status != RequestProcessStatus.RejectedBySender)
+                    //.Select(s => new SuggestionDto
+                    //{
+                    //    SuggestionId = s.Id,
+                    //    UserAccountId = s.UserAccountId,
+                    //    Currency = s.Currency,
+                    //    Price = s.SuggestionPrice,
+                    //    Description = s.Description,
+                    //    FullName = s.UserAccount.UserProfiles.FirstOrDefault().DisplayName
+                    //               ?? s.UserAccount.UserProfiles.FirstOrDefault().FirstName,
+                    //    SuggestionStatus = s.Status
+                    //})]
                 };
 
                 var role = dto.UserAccountId == user.Id ? "Sender"
@@ -389,8 +389,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         Context = OfferContext.Sent,
                         Descriptions = s.Description
                     }).ToList()
-                })
-                .ToListAsync();
+                }).ToListAsync();
 
             var result = new RequestInprogressDto
             {
