@@ -21,7 +21,7 @@ public interface IMiniAppServices
 
     Task<Result<List<RequestItemTypeDto>>> ItemTypeAsync();
 
-    Task<Result<List<TripsDto>>> GetRequestsAsync(UserAccount user);
+    Task<Result<List<TripsDto>>> GetRequestTripsAsync(UserAccount user);
 
     Task<Result<List<UserRequestsDto>>> UserRequestsAsync(UserAccount user);
 

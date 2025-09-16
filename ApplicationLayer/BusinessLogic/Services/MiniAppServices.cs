@@ -227,7 +227,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-    public async Task<Result<List<TripsDto>>> GetRequestsAsync(UserAccount user)
+    public async Task<Result<List<TripsDto>>> GetRequestTripsAsync(UserAccount user)
     {
         try
         {

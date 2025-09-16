@@ -39,7 +39,6 @@ public class ActiveSuggestionDto
 
     public string Descriptions { get; set; }
 
-    [JsonIgnore]
     public int ItemType { get; set; }
 
     public string ItemTypeEn

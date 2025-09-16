@@ -20,7 +20,7 @@ public class MiniApp_RequestTripsHandler(IMiniAppServices miniAppServices, IUser
         if (userAccount.IsFailure)
             return userAccount.ToHandlerResult();
 
-        var getOutbound = await _miniAppServices.GetRequestsAsync(userAccount.Value);
+        var getOutbound = await _miniAppServices.GetRequestTripsAsync(userAccount.Value);
         return getOutbound.ToHandlerResult();
     }
 }
