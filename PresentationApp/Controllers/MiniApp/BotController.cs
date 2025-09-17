@@ -14,21 +14,20 @@ namespace PresentationApp.Controllers.MiniApp
         private readonly IMediator _mediator = mediator;
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Telegram.Bot.Types.Update update)
+        [Route("Referral")]
+        public async Task<IActionResult> ReferralPost([FromBody] Telegram.Bot.Types.Update update)
         {
-            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(update));
+            if (update.Message?.Text != null && update.Message.Text.StartsWith("/start"))
+            {
+                var parts = update.Message.Text.Split(' ', 2);
+                var referralCode = parts.Length > 1 ? parts[1] : null;
+                var tgId = update.Message.From?.Id ?? 0;
 
-            //if (update.Message?.Text != null && update.Message.Text.StartsWith("/start"))
-            //{
-            //    var parts = update.Message.Text.Split(' ', 2);
-            //    var referralCode = parts.Length > 1 ? parts[1] : null;
-            //    var tgId = update.Message.From?.Id ?? 0;
-            //
-            //    if (!string.IsNullOrEmpty(referralCode) && tgId != 0)
-            //    {
-            //        await _mediator.Send(new MiniApp_RegisterReferralCommand(tgId, referralCode));
-            //    }
-            //}
+                if (!string.IsNullOrEmpty(referralCode) && tgId != 0)
+                {
+                    await _mediator.Send(new MiniApp_RegisterReferralCommand(tgId, referralCode));
+                }
+            }
             return Ok();
         }
     }

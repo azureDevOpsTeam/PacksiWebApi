@@ -23,7 +23,7 @@ builder.Services.AddOpenApi();
 
 var botToken = builder.Configuration["8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A"];
 var botClient = new TelegramBotClient(botToken);
-await botClient.SetWebhook("https://api.packsi.net/api/miniapp/bot");
+await botClient.SetWebhook("https://api.packsi.net/api/miniapp/bot/Referral");
 
 builder.WebHost.ConfigureKestrel((context, options) =>
 {
