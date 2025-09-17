@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.CQRS.Managers.Command;
+﻿using ApplicationLayer.CQRS.MiniApp.Query;
 using ApplicationLayer.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -8,14 +8,14 @@ namespace PresentationApp.Controllers.MiniApp
 {
     [Route("api/miniapp/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Manager")]
-    [ApiExplorerSettings(GroupName = "Managers")]
+    [AllowAnonymous]
+    [ApiExplorerSettings(GroupName = "MiniApp")]
     public class ManagementController(IMediator mediator) : ControllerBase
     {
         private readonly IMediator _mediator = mediator;
 
-        [HttpPost("InviteUser")]
-        public async Task<IActionResult> InviteUserAsync(InviteUserCommand command)
-        => await ResultHelper.GetResultAsync(_mediator, command);
+        [HttpPost("GetInviteCode")]
+        public async Task<IActionResult> GetInviteCodeAsync()
+        => await ResultHelper.GetResultAsync(_mediator, new MiniApp_GetInvitCodeQuery());
     }
 }
