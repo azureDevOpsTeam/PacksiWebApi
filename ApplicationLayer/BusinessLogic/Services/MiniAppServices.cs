@@ -395,7 +395,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                             .Select(a => a.FilePath)
                             .ToList(),
                         Context = OfferContext.Sent,
-                        Descriptions = s.Description
+                        Descriptions = s.Description,
+                        DeliveryCode = s.DeliveryCode
                     }).ToList()
                 }).ToListAsync();
 
@@ -949,6 +950,9 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             if (suggestion == null)
                 return Result.NotFound();
 
+            if (suggestion.DeliveryCode != model.DeliveryCode)
+                return Result.Failure("کد تحویل اشتباه است");
+
             suggestion.Status = RequestProcessStatus.PassengerConfirmedDelivery;
             await _suggestionRepository.UpdateAsync(suggestion);
 
@@ -1024,6 +1028,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 Description = model.Description,
                 RequestId = model.RequestId,
                 ItemType = model.ItemTypeId,
+                DeliveryCode = new Random().Next(10000, 99999)
             };
             await _suggestionRepository.AddAsync(suggestion);
             return Result<Suggestion>.Success(suggestion);
