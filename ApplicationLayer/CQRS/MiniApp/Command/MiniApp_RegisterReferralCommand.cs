@@ -25,10 +25,10 @@ public class MiniApp_RegisterReferralCommandHandler(IUnitOfWork unitOfWork, IUse
         if (exists != null) return true;
 
         var getInviter = await _userAccountServices.GetUserAccountInviterAsync(request.ReferralCode);
-        if (!getInviter.IsSuccess)
+        if (getInviter.IsSuccess)
         {
             var existInvite = await _userAccountServices.GetExistReferralAsync(request.TelegramUserId);
-            if (existInvite.IsFailure)
+            if (existInvite.IsSuccess)
             {
                 var referral = new Referral
                 {

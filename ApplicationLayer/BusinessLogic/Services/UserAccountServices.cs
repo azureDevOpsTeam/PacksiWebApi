@@ -49,7 +49,7 @@ namespace ApplicationLayer.BusinessLogic.Services
         {
             var userAccount = await _userAccountRepository.GetDbSet().FirstOrDefaultAsync(row => row.InviteCode == invideCode);
             if (userAccount == null)
-                return Result<UserAccount>.NotFound("کاربر دعوت کننده یافت نشد");
+                return Result<UserAccount>.NotFound();
 
             return Result<UserAccount>.Success(userAccount);
         }
@@ -66,10 +66,10 @@ namespace ApplicationLayer.BusinessLogic.Services
         public async Task<Result> GetExistReferralAsync(long telegramId)
         {
             var referral = await _referralRepository.GetDbSet().FirstOrDefaultAsync(row => row.InviteeTelegramUserId == telegramId);
-            if (referral != null)
-                return Result.DuplicateFailure();
+            if (referral == null)
+                return Result.Success();
 
-            return Result.Success();
+            return Result.DuplicateFailure();
         }
 
         public async Task<UserAccount> GetUserAccountByPhoneNumberAsync(string phoneNumber)
