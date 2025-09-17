@@ -2,4 +2,4 @@
 
 namespace ApplicationLayer.CQRS.MiniApp.Query;
 
-public record GetReferralCountQuery : IRequest<HandlerResult>;
+public record MiniApp_GetReferralCountQuery : IRequest<HandlerResult>;

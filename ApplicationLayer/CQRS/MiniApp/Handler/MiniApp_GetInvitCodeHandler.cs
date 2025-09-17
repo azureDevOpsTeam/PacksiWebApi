@@ -10,9 +10,9 @@ namespace ApplicationLayer.CQRS.MiniApp.Handler;
 public class MiniApp_GetInviteCodeHandler(
     IMiniAppServices miniAppServices,
     IUserAccountServices userAccountServices
-) : IRequestHandler<MiniApp_GetReferralCountQuery, HandlerResult>
+) : IRequestHandler<MiniApp_GetInvitCodeQuery, HandlerResult>
 {
-    public async Task<HandlerResult> Handle(MiniApp_GetReferralCountQuery request, CancellationToken cancellationToken)
+    public async Task<HandlerResult> Handle(MiniApp_GetInvitCodeQuery request, CancellationToken cancellationToken)
     {
         var resultValidation = await miniAppServices.ValidateTelegramMiniAppUserAsync();
         if (resultValidation.IsFailure)
