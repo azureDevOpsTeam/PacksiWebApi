@@ -42,17 +42,27 @@ public class UserValicationHandler(IUnitOfWork unitOfWork, IMiniAppServices mini
                     validationResult.Value.User.ReferredByUserId = inviter.Value.TelegramId;
                 }
 
-                var userAccont = await _userAccountServices.MiniApp_AddUserAccountAsync(validationResult.Value.User);
-                if (userAccont.RequestStatus != RequestStatus.Successful)
+                var resultAddUser = await _userAccountServices.MiniApp_AddUserAccountAsync(validationResult.Value.User);
+                if (resultAddUser.RequestStatus != RequestStatus.Successful)
                 {
                     await _unitOfWork.RollbackAsync();
-                    return new HandlerResult { RequestStatus = userAccont.RequestStatus, Message = userAccont.Message };
+                    return new HandlerResult { RequestStatus = resultAddUser.RequestStatus, Message = resultAddUser.Message };
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+
+                var userAccount = (UserAccount)resultAddUser.Data;
+
+                var roleResult = await _userAccountServices.AssignRoleToUserAsync(userAccount.Id, "User", cancellationToken);
+                if (roleResult.RequestStatus != RequestStatus.Successful)
+                {
+                    await _unitOfWork.RollbackAsync();
+                    return new HandlerResult { RequestStatus = roleResult.RequestStatus, Message = roleResult.Message };
                 }
 
                 await _unitOfWork.SaveChangesAsync();
 
                 var userProfile = _mapper.Map<UserProfile>(validationResult.Value.User);
-                var userAccount = (UserAccount)userAccont.Data;
                 userProfile.UserAccountId = userAccount.Id;
                 var resultUserProfile = await _userAccountServices.MiniApp_AddProfileAsync(userProfile);
                 if (resultUserProfile.RequestStatus != RequestStatus.Successful)
