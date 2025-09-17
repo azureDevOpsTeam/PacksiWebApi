@@ -16,17 +16,19 @@ namespace PresentationApp.Controllers.MiniApp
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Telegram.Bot.Types.Update update)
         {
-            if (update.Message?.Text != null && update.Message.Text.StartsWith("/start"))
-            {
-                var parts = update.Message.Text.Split(' ', 2);
-                var referralCode = parts.Length > 1 ? parts[1] : null;
-                var tgId = update.Message.From?.Id ?? 0;
+            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(update));
 
-                if (!string.IsNullOrEmpty(referralCode) && tgId != 0)
-                {
-                    await _mediator.Send(new MiniApp_RegisterReferralCommand(tgId, referralCode));
-                }
-            }
+            //if (update.Message?.Text != null && update.Message.Text.StartsWith("/start"))
+            //{
+            //    var parts = update.Message.Text.Split(' ', 2);
+            //    var referralCode = parts.Length > 1 ? parts[1] : null;
+            //    var tgId = update.Message.From?.Id ?? 0;
+            //
+            //    if (!string.IsNullOrEmpty(referralCode) && tgId != 0)
+            //    {
+            //        await _mediator.Send(new MiniApp_RegisterReferralCommand(tgId, referralCode));
+            //    }
+            //}
             return Ok();
         }
     }
