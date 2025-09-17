@@ -126,6 +126,14 @@ namespace ApplicationLayer.BusinessLogic.Services
             return Result<UserAccount>.Success(userAccount);
         }
 
+        public async Task<Result<int>> GetReferralCountAsync(long telegramId)
+        {
+            var referralCount = await _userAccountRepository.GetDbSet()
+                .CountAsync(row => row.ReferredByUserId == telegramId);
+
+            return Result<int>.Success(referralCount);
+        }
+
         public async Task<UserAccount> GetUserByIdAsync(int accountId)
             => await Task.Run(() => _userAccountRepository.GetDbSet()
             .Include(curent => curent.UserProfiles)

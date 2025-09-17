@@ -7,7 +7,7 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class MiniApp_GetInviteCodeHandler(
+public class MiniApp_GetReferralCountHandler(
     IMiniAppServices miniAppServices,
     IUserAccountServices userAccountServices
 ) : IRequestHandler<MiniApp_GetReferralCountQuery, HandlerResult>
@@ -18,14 +18,14 @@ public class MiniApp_GetInviteCodeHandler(
         if (resultValidation.IsFailure)
             return resultValidation.ToHandlerResult();
 
-        var userAccount = await userAccountServices.GetUserAccountByTelegramIdAsync(resultValidation.Value.User.Id);
-        if (userAccount.IsFailure)
-            return userAccount.ToHandlerResult();
+        var resultCount = await userAccountServices.GetReferralCountAsync(resultValidation.Value.User.Id);
+        if (resultCount.IsFailure)
+            return resultCount.ToHandlerResult();
 
         return new HandlerResult
         {
             RequestStatus = RequestStatus.Successful,
-            ObjectResult = userAccount.Value.InviteCode,
+            ObjectResult = resultCount.Value,
             Message = CommonMessages.Successful
         };
     }

@@ -16,6 +16,10 @@ namespace PresentationApp.Controllers.MiniApp
 
         [HttpGet("GetInviteCode")]
         public async Task<IActionResult> GetInviteCodeAsync()
-        => await ResultHelper.GetResultAsync(_mediator, new MiniApp_GetInvitCodeQuery());
+        => await ResultHelper.GetResultAsync(_mediator, new MiniApp_GetReferralCountQuery());
+
+        [HttpGet("GetReferralCount")]
+        public async Task<IActionResult> GetReferralCountAsync()
+        => await ResultHelper.GetResultAsync(_mediator, new MiniApp_GetReferralCountQuery());
     }
 }

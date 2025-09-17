@@ -58,6 +58,7 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
         Task<Result> GetExistReferralAsync(long telegramId);
 
         Task<Result> AddReferralUserAsync(long InviterTelegramId, RegisterReferralDto model);
+        Task<Result<int>> GetReferralCountAsync(long telegramId);
 
         #endregion Mini App
     }
