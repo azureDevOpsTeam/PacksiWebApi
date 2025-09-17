@@ -8,12 +8,12 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class MiniApp_GetReferralCountHandler(
+public class MiniApp_GetDashboardDataHandler(
     IMiniAppServices miniAppServices,
     IUserAccountServices userAccountServices
-) : IRequestHandler<MiniApp_GetReferralCountQuery, HandlerResult>
+) : IRequestHandler<MiniApp_GetDashboardDataQuery, HandlerResult>
 {
-    public async Task<HandlerResult> Handle(MiniApp_GetReferralCountQuery request, CancellationToken cancellationToken)
+    public async Task<HandlerResult> Handle(MiniApp_GetDashboardDataQuery request, CancellationToken cancellationToken)
     {
         var resultValidation = await miniAppServices.ValidateTelegramMiniAppUserAsync();
         if (resultValidation.IsFailure)
