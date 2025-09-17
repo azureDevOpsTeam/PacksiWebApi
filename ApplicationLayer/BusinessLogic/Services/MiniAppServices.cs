@@ -245,9 +245,9 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
             var requestsRaw = await _requestRepository.Query()
                 .Where(current => current.UserAccountId != user.Id
-                && (current.OriginCity.CountryId == userCountryId || current.DestinationCity.CountryId == userCountryId)
-                && current.ArrivalDate.Date < today
-                && current.Status == RequestLifecycleStatus.Published)
+                && (current.OriginCity.CountryId == userCountryId || current.DestinationCity.CountryId == userCountryId))
+                //&& current.ArrivalDate.Date < today
+                //&& current.Status == RequestLifecycleStatus.Published)
                 .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
                 .Include(r => r.Suggestions).ThenInclude(s => s.RequestStatusHistories)
                 .Include(r => r.Suggestions).ThenInclude(s => s.UserAccount).ThenInclude(ua => ua.UserProfiles)
