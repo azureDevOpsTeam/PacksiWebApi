@@ -35,9 +35,12 @@ public class UserValicationHandler(IUnitOfWork unitOfWork, IMiniAppServices mini
 
             if (!validationResult.Value.ExistUser)
             {
-                var inviter = await _userAccountServices.GetReferralAsync(validationResult.Value.User.Id);
-                if (inviter.IsSuccess)
-                    validationResult.Value.User.ReferredByUserId = inviter.Value.InviterUserId;
+                var userReferred = await _userAccountServices.GetReferralAsync(validationResult.Value.User.Id);
+                if (userReferred.IsSuccess)
+                {
+                    var inviter = await _userAccountServices.GetUserAccountInviterAsync(userReferred.Value.ReferralCode);
+                    validationResult.Value.User.ReferredByUserId = inviter.Value.TelegramId;
+                }
 
                 var userAccont = await _userAccountServices.MiniApp_AddUserAccountAsync(validationResult.Value.User);
                 if (userAccont.RequestStatus != RequestStatus.Successful)
