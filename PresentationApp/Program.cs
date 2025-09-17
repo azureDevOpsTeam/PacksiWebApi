@@ -1,8 +1,9 @@
-using ApplicationLayer;
+﻿using ApplicationLayer;
 using AspNetCoreRateLimit;
 using InfrastructureLayer;
 using InfrastructureLayer.Seed;
 using PresentationApp.Hubs;
+using Telegram.Bot;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,10 @@ builder.Services.AddSignalR();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+var botToken = builder.Configuration["8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A"];
+var botClient = new TelegramBotClient(botToken);
+await botClient.SetWebhook("https://api.packsi.net/api/miniapp/bot");
 
 builder.WebHost.ConfigureKestrel((context, options) =>
 {
