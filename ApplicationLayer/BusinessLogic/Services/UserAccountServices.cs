@@ -72,6 +72,27 @@ namespace ApplicationLayer.BusinessLogic.Services
             return Result.DuplicateFailure();
         }
 
+        public async Task<Result> AddReferralUserAsync(long InviterTelegramId, RegisterReferralDto model)
+        {
+            try
+            {
+                var referral = new Referral
+                {
+                    InviterUserId = InviterTelegramId,
+                    InviteeTelegramUserId = model.TelegramUserId,
+                    ReferralCode = model.ReferralCode,
+                    Status = ReferralStatusEnum.Pending,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _referralRepository.AddAsync(referral);
+                return Result.Success();
+            }
+            catch (Exception exception)
+            {
+                return Result.GeneralFailure("خطا در ثبت اطلاعات دعوت کننده");
+            }
+        }
+
         public async Task<UserAccount> GetUserAccountByPhoneNumberAsync(string phoneNumber)
             => await Task.Run(() => _userAccountRepository.GetDbSet()
             .Include(current => current.UserProfiles)
@@ -334,6 +355,10 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (existUser)
                     return new ServiceResult { RequestStatus = RequestStatus.Exists, Data = model, Message = CommonMessages.Exist };
 
+                var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                var rnd = new Random();
+                string invite = new([.. Enumerable.Range(0, 6).Select(_ => chars[rnd.Next(chars.Length)])]);
+
                 UserAccount userAccount = new()
                 {
                     Avatar = model.PhotoUrl,
@@ -342,7 +367,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     ConfirmEmail = false,
                     ConfirmPhoneNumber = false,
                     ReferredByUserId = model.ReferredByUserId,
-                    InviteCode = Guid.NewGuid().ToString("N")[..15]
+                    InviteCode = invite
                 };
 
                 await _userAccountRepository.AddAsync(userAccount);
