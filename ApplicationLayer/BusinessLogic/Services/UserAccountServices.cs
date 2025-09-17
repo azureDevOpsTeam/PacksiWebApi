@@ -20,7 +20,8 @@ namespace ApplicationLayer.BusinessLogic.Services
     [InjectAsScoped]
     public class UserAccountServices(IRepository<UserAccount> userAccountRepository, IRepository<UserProfile> userProfileRepository, IMiniAppServices miniAppServices,
         IRepository<Role> roleRepository, IRepository<UserRole> userRoleRepository, IUserContextService userContextService, IRepository<City> cityRepository,
-        IRepository<Invitation> invitationRepository, IRepository<UserPreferredLocation> locationRepo, ILogger<UserAccountServices> logger, IMapper mapper) : IUserAccountServices
+        IRepository<Invitation> invitationRepository, IRepository<UserPreferredLocation> locationRepo, IRepository<Referral> referralRepository,
+        ILogger<UserAccountServices> logger, IMapper mapper) : IUserAccountServices
     {
         private readonly IRepository<UserAccount> _userAccountRepository = userAccountRepository;
         private readonly IRepository<UserProfile> _userProfileRepository = userProfileRepository;
@@ -29,6 +30,7 @@ namespace ApplicationLayer.BusinessLogic.Services
         private readonly IRepository<UserRole> _userRoleRepository = userRoleRepository;
         private readonly IRepository<Invitation> _invitationRepository = invitationRepository;
         private readonly IRepository<City> _cityRepository = cityRepository;
+        private readonly IRepository<Referral> _referralRepository = referralRepository;
         private readonly IUserContextService _userContextService = userContextService;
         private readonly IMiniAppServices _miniAppServices = miniAppServices;
         private readonly ILogger<UserAccountServices> _logger = logger;
@@ -43,8 +45,32 @@ namespace ApplicationLayer.BusinessLogic.Services
         public async Task<UserAccount> GetUserAccountByIdAsync(int accountId)
             => await Task.Run(() => _userAccountRepository.GetDbSet().FirstOrDefaultAsync(row => row.Id == accountId));
 
-        public async Task<UserAccount> GetUserAccountInviterAsync(string invideCode)
-            => await Task.Run(() => _userAccountRepository.GetDbSet().FirstOrDefaultAsync(row => row.InviteCode == invideCode));
+        public async Task<Result<UserAccount>> GetUserAccountInviterAsync(string invideCode)
+        {
+            var userAccount = await _userAccountRepository.GetDbSet().FirstOrDefaultAsync(row => row.InviteCode == invideCode);
+            if (userAccount == null)
+                return Result<UserAccount>.NotFound("کاربر دعوت کننده یافت نشد");
+
+            return Result<UserAccount>.Success(userAccount);
+        }
+
+        public async Task<Result<Referral>> GetReferralAsync(long telegramId)
+        {
+            var referral = await _referralRepository.GetDbSet().FirstOrDefaultAsync(row => row.InviteeTelegramUserId == telegramId);
+            if (referral == null)
+                return Result<Referral>.NotFound();
+
+            return Result<Referral>.Success(referral);
+        }
+
+        public async Task<Result> GetExistReferralAsync(long telegramId)
+        {
+            var referral = await _referralRepository.GetDbSet().FirstOrDefaultAsync(row => row.InviteeTelegramUserId == telegramId);
+            if (referral != null)
+                return Result.DuplicateFailure();
+
+            return Result.Success();
+        }
 
         public async Task<UserAccount> GetUserAccountByPhoneNumberAsync(string phoneNumber)
             => await Task.Run(() => _userAccountRepository.GetDbSet()

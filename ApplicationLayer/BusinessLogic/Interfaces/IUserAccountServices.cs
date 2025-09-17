@@ -51,7 +51,9 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
 
         Task<bool> ExistUserAsync(SignUpDto model);
 
-        Task<UserAccount> GetUserAccountInviterAsync(string invideCode);
+        Task<Result<UserAccount>> GetUserAccountInviterAsync(string invideCode);
+        Task<Result<Referral>> GetReferralAsync(long telegramId);
+        Task<Result<Referral>> GetExistReferralAsync(long telegramId);
 
         #endregion Mini App
     }

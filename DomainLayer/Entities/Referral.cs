@@ -8,7 +8,7 @@ public class Referral : BaseEntityModel, IAuditableEntity
 
     public string ReferralCode { get; set; } = default!;
 
-    public int? InviterUserId { get; set; }
+    public long? InviterUserId { get; set; }
 
     public int Status { get; set; }
 

@@ -35,13 +35,9 @@ public class UserValicationHandler(IUnitOfWork unitOfWork, IMiniAppServices mini
 
             if (!validationResult.Value.ExistUser)
             {
-                if (!string.IsNullOrEmpty(validationResult.Value.StartParam))
-                {
-                    var inviter = await _userAccountServices.GetUserAccountInviterAsync(validationResult.Value.StartParam);
-
-                    if (inviter != null)
-                        validationResult.Value.User.ReferredByUserId = inviter.Id;
-                }
+                var inviter = await _userAccountServices.GetReferralAsync(validationResult.Value.User.Id);
+                if (inviter.IsSuccess)
+                    validationResult.Value.User.ReferredByUserId = inviter.Value.InviterUserId;
 
                 var userAccont = await _userAccountServices.MiniApp_AddUserAccountAsync(validationResult.Value.User);
                 if (userAccont.RequestStatus != RequestStatus.Successful)

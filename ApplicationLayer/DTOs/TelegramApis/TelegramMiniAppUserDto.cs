@@ -21,7 +21,7 @@ namespace ApplicationLayer.DTOs.TelegramApis
 
         public string PhotoUrl { get; set; }
 
-        public int? ReferredByUserId { get; set; }
+        public long? ReferredByUserId { get; set; }
     }
 
     /// <summary>
