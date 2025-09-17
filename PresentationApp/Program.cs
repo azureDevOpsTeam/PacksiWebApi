@@ -21,7 +21,7 @@ builder.Services.AddSignalR();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-var botToken = builder.Configuration["8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A"];
+var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
 var botClient = new TelegramBotClient(botToken);
 await botClient.SetWebhook("https://api.packsi.net/api/miniapp/bot/Referral");
 
