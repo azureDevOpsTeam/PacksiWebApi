@@ -1,4 +1,5 @@
 ﻿using ApplicationLayer.CQRS.MiniApp.Command;
+using ApplicationLayer.DTOs.MiniApp;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +26,8 @@ namespace PresentationApp.Controllers.MiniApp
 
                 if (!string.IsNullOrEmpty(referralCode) && tgId != 0)
                 {
-                    await _mediator.Send(new MiniApp_RegisterReferralCommand(tgId, referralCode));
+                    RegisterReferralDto model = new() { TelegramUserId = tgId, ReferralCode = referralCode };
+                    await _mediator.Send(new MiniApp_RegisterReferralCommand(model));
                 }
             }
             return Ok();
