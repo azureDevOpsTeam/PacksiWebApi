@@ -14,7 +14,7 @@ namespace PresentationApp.Controllers.MiniApp
     {
         private readonly IMediator _mediator = mediator;
 
-        [HttpPost("GetInviteCode")]
+        [HttpGet("GetInviteCode")]
         public async Task<IActionResult> GetInviteCodeAsync()
         => await ResultHelper.GetResultAsync(_mediator, new MiniApp_GetInvitCodeQuery());
     }
