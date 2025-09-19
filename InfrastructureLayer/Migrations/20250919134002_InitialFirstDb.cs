@@ -67,6 +67,34 @@ namespace InfrastructureLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Referral",
+                schema: "dbo",
+                columns: table => new
+                {
+                    ReferralId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    InviteeTelegramUserId = table.Column<long>(type: "bigint", nullable: false),
+                    ReferralCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    InviterUserId = table.Column<long>(type: "bigint", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    CreatedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    ModifiedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    ModifiedByUserId = table.Column<int>(type: "int", nullable: true),
+                    ModifiedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Referral", x => x.ReferralId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Role",
                 schema: "dbo",
                 columns: table => new
@@ -99,7 +127,7 @@ namespace InfrastructureLayer.Migrations
                     TelegramId = table.Column<long>(type: "bigint", nullable: true),
                     TelegramUserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Avatar = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ReferredByUserId = table.Column<int>(type: "int", nullable: true),
+                    ReferredByUserId = table.Column<long>(type: "bigint", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     Password = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
@@ -885,8 +913,10 @@ namespace InfrastructureLayer.Migrations
                     UserAccountId = table.Column<int>(type: "int", nullable: false),
                     SuggestionPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Currency = table.Column<int>(type: "int", nullable: false),
+                    ItemType = table.Column<int>(type: "int", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Status = table.Column<int>(type: "int", nullable: false),
+                    DeliveryCode = table.Column<int>(type: "int", nullable: false),
                     CreatedByIp = table.Column<string>(type: "char(15)", nullable: true),
                     CreatedByUserId = table.Column<int>(type: "int", nullable: true),
                     CreatedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
@@ -954,6 +984,37 @@ namespace InfrastructureLayer.Migrations
                         principalSchema: "dbo",
                         principalTable: "UserAccount",
                         principalColumn: "UserAccountId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SuggestionAttachment",
+                schema: "dbo",
+                columns: table => new
+                {
+                    SuggestionAttachmentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SuggestionId = table.Column<int>(type: "int", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    CreatedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    ModifiedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    ModifiedByUserId = table.Column<int>(type: "int", nullable: true),
+                    ModifiedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SuggestionAttachment", x => x.SuggestionAttachmentId);
+                    table.ForeignKey(
+                        name: "FK_SuggestionAttachment_Suggestion_SuggestionId",
+                        column: x => x.SuggestionId,
+                        principalSchema: "dbo",
+                        principalTable: "Suggestion",
+                        principalColumn: "SuggestionId",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -1122,6 +1183,12 @@ namespace InfrastructureLayer.Migrations
                 column: "UserAccountId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SuggestionAttachment_SuggestionId",
+                schema: "dbo",
+                table: "SuggestionAttachment",
+                column: "SuggestionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TelegramPostLog_AdvertisementId",
                 schema: "dbo",
                 table: "TelegramPostLog",
@@ -1210,6 +1277,10 @@ namespace InfrastructureLayer.Migrations
                 schema: "dbo");
 
             migrationBuilder.DropTable(
+                name: "Referral",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
                 name: "RefreshToken",
                 schema: "dbo");
 
@@ -1231,6 +1302,10 @@ namespace InfrastructureLayer.Migrations
 
             migrationBuilder.DropTable(
                 name: "RequestStatusHistory",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
+                name: "SuggestionAttachment",
                 schema: "dbo");
 
             migrationBuilder.DropTable(

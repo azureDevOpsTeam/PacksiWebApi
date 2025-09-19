@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InfrastructureLayer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250911083950_InitialFirstDb")]
+    [Migration("20250919134002_InitialFirstDb")]
     partial class InitialFirstDb
     {
         /// <inheritdoc />
@@ -685,6 +685,68 @@ namespace InfrastructureLayer.Migrations
                     b.ToTable("PostPricing", "dbo");
                 });
 
+            modelBuilder.Entity("DomainLayer.Entities.Referral", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("ReferralId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByIp")
+                        .HasColumnType("char(15)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedDateTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("InviteeTelegramUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("InviterUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModifiedByIp")
+                        .HasColumnType("char(15)");
+
+                    b.Property<int?>("ModifiedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("ModifiedDateTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ReferralCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Referral", "dbo");
+                });
+
             modelBuilder.Entity("DomainLayer.Entities.RefreshToken", b =>
                 {
                     b.Property<int>("Id")
@@ -1207,6 +1269,9 @@ namespace InfrastructureLayer.Migrations
                     b.Property<int>("Currency")
                         .HasColumnType("int");
 
+                    b.Property<int>("DeliveryCode")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -1215,6 +1280,9 @@ namespace InfrastructureLayer.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<int>("ItemType")
+                        .HasColumnType("int");
 
                     b.Property<string>("ModifiedByIp")
                         .HasColumnType("char(15)");
@@ -1250,6 +1318,58 @@ namespace InfrastructureLayer.Migrations
                     b.HasIndex("UserAccountId");
 
                     b.ToTable("Suggestion", "dbo");
+                });
+
+            modelBuilder.Entity("DomainLayer.Entities.SuggestionAttachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("SuggestionAttachmentId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedByIp")
+                        .HasColumnType("char(15)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedDateTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("FilePath")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModifiedByIp")
+                        .HasColumnType("char(15)");
+
+                    b.Property<int?>("ModifiedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("ModifiedDateTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("SuggestionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SuggestionId");
+
+                    b.ToTable("SuggestionAttachment", "dbo");
                 });
 
             modelBuilder.Entity("DomainLayer.Entities.TelegramPostLog", b =>
@@ -1450,8 +1570,8 @@ namespace InfrastructureLayer.Migrations
                     b.Property<string>("PhonePrefix")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ReferredByUserId")
-                        .HasColumnType("int");
+                    b.Property<long?>("ReferredByUserId")
+                        .HasColumnType("bigint");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -1930,6 +2050,17 @@ namespace InfrastructureLayer.Migrations
                     b.Navigation("UserAccount");
                 });
 
+            modelBuilder.Entity("DomainLayer.Entities.SuggestionAttachment", b =>
+                {
+                    b.HasOne("DomainLayer.Entities.Suggestion", "Suggestion")
+                        .WithMany("SuggestionAttachments")
+                        .HasForeignKey("SuggestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Suggestion");
+                });
+
             modelBuilder.Entity("DomainLayer.Entities.TelegramPostLog", b =>
                 {
                     b.HasOne("DomainLayer.Entities.Advertisement", "Advertisement")
@@ -2068,6 +2199,8 @@ namespace InfrastructureLayer.Migrations
             modelBuilder.Entity("DomainLayer.Entities.Suggestion", b =>
                 {
                     b.Navigation("RequestStatusHistories");
+
+                    b.Navigation("SuggestionAttachments");
                 });
 
             modelBuilder.Entity("DomainLayer.Entities.UserAccount", b =>
