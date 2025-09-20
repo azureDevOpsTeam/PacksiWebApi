@@ -1266,6 +1266,9 @@ namespace InfrastructureLayer.Migrations
                     b.Property<int>("Currency")
                         .HasColumnType("int");
 
+                    b.Property<int>("DeliveryCode")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 

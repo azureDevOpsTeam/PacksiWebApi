@@ -12,7 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InfrastructureLayer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
+<<<<<<<< HEAD:InfrastructureLayer/Migrations/20250920115431_InitialFirstDb.Designer.cs
     [Migration("20250920115431_InitialFirstDb")]
+========
+    [Migration("20250919134002_InitialFirstDb")]
+>>>>>>>> 6772c7154639e7af39d0fc20e81667fdcfc43d25:InfrastructureLayer/Migrations/20250919134002_InitialFirstDb.Designer.cs
     partial class InitialFirstDb
     {
         /// <inheritdoc />
@@ -1267,6 +1271,9 @@ namespace InfrastructureLayer.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<int>("Currency")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DeliveryCode")
                         .HasColumnType("int");
 
                     b.Property<string>("Description")

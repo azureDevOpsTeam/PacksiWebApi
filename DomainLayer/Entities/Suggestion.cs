@@ -18,6 +18,8 @@ public class Suggestion : BaseEntityModel, IAuditableEntity
 
     public int Status { get; set; }
 
+    public int DeliveryCode { get; set; }
+
     public UserAccount UserAccount { get; set; }
 
     public Request Request { get; set; }
