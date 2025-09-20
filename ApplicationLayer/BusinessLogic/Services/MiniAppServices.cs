@@ -24,7 +24,7 @@ namespace ApplicationLayer.BusinessLogic.Services;
 [InjectAsScoped]
 public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository,
     IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation, IRepository<Suggestion> suggestionRepository,
-    IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo, IRepository<SuggestionAttachment> suggestionAttachmentRepository,
+    IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo, IRepository<SuggestionAttachment> suggestionAttachmentRepository, IRepository<UserRating> userRating,
     IRepository<RequestStatusHistory> requestStatusHistoryRepository, IRepository<Conversation> conversationRepository, IRepository<RequestAttachment> requestAttachment,
     IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger, IMapper mapper) : IMiniAppServices
 {
@@ -40,6 +40,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     private readonly IRepository<Conversation> _conversationRepository = conversationRepository;
     private readonly IRepository<Suggestion> _suggestionRepository = suggestionRepository;
     private readonly IRepository<SuggestionAttachment> _suggestionAttachmentRepository = suggestionAttachmentRepository;
+    private readonly IRepository<UserRating> _userRating = userRating;
     private readonly IConfiguration _configuration = configuration;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
@@ -975,6 +976,19 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 .Where(current => current.Id == suggestion.RequestId).FirstOrDefaultAsync();
             if (request == null)
                 return Result.NotFound();
+
+            if (model.Rate > 0)
+                if (!await _userRating.AnyAsync(current => current.RaterUserAccount == user && current.RateeUserAccountId == request.UserAccountId && current.Request == request))
+                {
+                    UserRating userRating = new()
+                    {
+                        RateeUserAccountId = request.UserAccountId,
+                        RaterUserAccount = user,
+                        Rating = model.Rate
+                    };
+
+                    await _userRating.AddAsync(userRating);
+                }
 
             request.Status = RequestLifecycleStatus.FinalizateDelivery;
             suggestion.Status = RequestProcessStatus.SenderConfirmedDelivery;

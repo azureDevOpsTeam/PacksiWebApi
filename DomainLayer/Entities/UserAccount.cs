@@ -1,4 +1,5 @@
 using DomainLayer.Common.BaseEntities;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DomainLayer.Entities
 {
@@ -73,5 +74,12 @@ namespace DomainLayer.Entities
         public ICollection<Message> SentMessages { get; set; } = [];
 
         public ICollection<Suggestion> Suggestions { get; set; } = [];
+
+        public ICollection<UserRating> RateeUserAccounts { get; set; }
+
+        public ICollection<UserRating> RaterUserAccounts { get; set; }
+
+        [NotMapped]
+        public double AverageRating => RateeUserAccounts?.Any() == true ? RateeUserAccounts.Average(r => r.Rating) : 0;
     }
 }

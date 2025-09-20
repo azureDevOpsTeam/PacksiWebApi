@@ -45,5 +45,7 @@ namespace DomainLayer.Entities
         public ICollection<RequestAvailableDestination> AvailableDestinations { get; set; } = [];
 
         public ICollection<Suggestion> Suggestions { get; set; } = [];
+
+        public ICollection<UserRating> UserRatings { get; set; } = [];
     }
 }

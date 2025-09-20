@@ -1739,6 +1739,68 @@ namespace InfrastructureLayer.Migrations
                     b.ToTable("UserProfile", "dbo");
                 });
 
+            modelBuilder.Entity("DomainLayer.Entities.UserRating", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("UserRatingId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CreatedByIp")
+                        .HasColumnType("char(15)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedDateTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModifiedByIp")
+                        .HasColumnType("char(15)");
+
+                    b.Property<int?>("ModifiedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("ModifiedDateTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("RateeUserAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RaterUserAccountId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RateeUserAccountId");
+
+                    b.HasIndex("RaterUserAccountId");
+
+                    b.HasIndex("RequestId");
+
+                    b.ToTable("UserRating", "dbo");
+                });
+
             modelBuilder.Entity("DomainLayer.Entities.UserRole", b =>
                 {
                     b.Property<int>("Id")
@@ -2129,6 +2191,33 @@ namespace InfrastructureLayer.Migrations
                     b.Navigation("UserAccount");
                 });
 
+            modelBuilder.Entity("DomainLayer.Entities.UserRating", b =>
+                {
+                    b.HasOne("DomainLayer.Entities.UserAccount", "RateeUserAccount")
+                        .WithMany("RateeUserAccounts")
+                        .HasForeignKey("RateeUserAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DomainLayer.Entities.UserAccount", "RaterUserAccount")
+                        .WithMany("RaterUserAccounts")
+                        .HasForeignKey("RaterUserAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DomainLayer.Entities.Request", "Request")
+                        .WithMany("UserRatings")
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RateeUserAccount");
+
+                    b.Navigation("RaterUserAccount");
+
+                    b.Navigation("Request");
+                });
+
             modelBuilder.Entity("DomainLayer.Entities.UserRole", b =>
                 {
                     b.HasOne("DomainLayer.Entities.Role", "Role")
@@ -2183,6 +2272,8 @@ namespace InfrastructureLayer.Migrations
                     b.Navigation("RequestItemTypes");
 
                     b.Navigation("Suggestions");
+
+                    b.Navigation("UserRatings");
                 });
 
             modelBuilder.Entity("DomainLayer.Entities.Role", b =>
@@ -2210,6 +2301,10 @@ namespace InfrastructureLayer.Migrations
                     b.Navigation("Invitations");
 
                     b.Navigation("InvitedUsers");
+
+                    b.Navigation("RateeUserAccounts");
+
+                    b.Navigation("RaterUserAccounts");
 
                     b.Navigation("RefreshTokens");
 
