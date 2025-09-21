@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace InfrastructureLayer.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialFirstDatabase : Migration
+    public partial class InitialFirsDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -501,6 +501,39 @@ namespace InfrastructureLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Wallet",
+                schema: "dbo",
+                columns: table => new
+                {
+                    WalletId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserAccountId = table.Column<int>(type: "int", nullable: false),
+                    Currency = table.Column<int>(type: "int", maxLength: 3, nullable: false),
+                    Balance = table.Column<decimal>(type: "decimal(28,2)", nullable: false),
+                    Reserved = table.Column<decimal>(type: "decimal(28,2)", nullable: false),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    CreatedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    CreatedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    ModifiedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    ModifiedByUserId = table.Column<int>(type: "int", nullable: true),
+                    ModifiedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Wallet", x => x.WalletId);
+                    table.ForeignKey(
+                        name: "FK_Wallet_UserAccount_UserAccountId",
+                        column: x => x.UserAccountId,
+                        principalSchema: "dbo",
+                        principalTable: "UserAccount",
+                        principalColumn: "UserAccountId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Request",
                 schema: "dbo",
                 columns: table => new
@@ -711,6 +744,40 @@ namespace InfrastructureLayer.Migrations
                         principalTable: "UserAccount",
                         principalColumn: "UserAccountId",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WalletTransaction",
+                schema: "dbo",
+                columns: table => new
+                {
+                    WalletTransactionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    WalletId = table.Column<int>(type: "int", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(28,2)", nullable: false),
+                    TransactionType = table.Column<int>(type: "int", nullable: false),
+                    RelatedEntity = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BalanceAfter = table.Column<decimal>(type: "decimal(28,2)", nullable: false),
+                    CreatedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    CreatedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    ModifiedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    ModifiedByUserId = table.Column<int>(type: "int", nullable: true),
+                    ModifiedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WalletTransaction", x => x.WalletTransactionId);
+                    table.ForeignKey(
+                        name: "FK_WalletTransaction_Wallet_WalletId",
+                        column: x => x.WalletId,
+                        principalSchema: "dbo",
+                        principalTable: "Wallet",
+                        principalColumn: "WalletId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1312,6 +1379,19 @@ namespace InfrastructureLayer.Migrations
                 schema: "dbo",
                 table: "UserRole",
                 column: "UserAccountId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Wallet_UserAccountId_Currency",
+                schema: "dbo",
+                table: "Wallet",
+                columns: new[] { "UserAccountId", "Currency" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WalletTransaction_WalletId",
+                schema: "dbo",
+                table: "WalletTransaction",
+                column: "WalletId");
         }
 
         /// <inheritdoc />
@@ -1398,6 +1478,10 @@ namespace InfrastructureLayer.Migrations
                 schema: "dbo");
 
             migrationBuilder.DropTable(
+                name: "WalletTransaction",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
                 name: "Conversation",
                 schema: "dbo");
 
@@ -1411,6 +1495,10 @@ namespace InfrastructureLayer.Migrations
 
             migrationBuilder.DropTable(
                 name: "Role",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
+                name: "Wallet",
                 schema: "dbo");
 
             migrationBuilder.DropTable(

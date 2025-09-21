@@ -78,5 +78,7 @@ namespace DomainLayer.Entities
         public ICollection<UserRating> RateeUserAccounts { get; set; }
 
         public ICollection<UserRating> RaterUserAccounts { get; set; }
+
+        public ICollection<Wallet> Wallets { get; set; }
     }
 }

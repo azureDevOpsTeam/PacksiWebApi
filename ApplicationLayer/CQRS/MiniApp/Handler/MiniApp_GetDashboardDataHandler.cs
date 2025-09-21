@@ -10,7 +10,8 @@ namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
 public class MiniApp_GetDashboardDataHandler(
     IMiniAppServices miniAppServices,
-    IUserAccountServices userAccountServices
+    IUserAccountServices userAccountServices,
+    IWalletService walletService
 ) : IRequestHandler<MiniApp_GetDashboardDataQuery, HandlerResult>
 {
     public async Task<HandlerResult> Handle(MiniApp_GetDashboardDataQuery request, CancellationToken cancellationToken)
@@ -23,11 +24,19 @@ public class MiniApp_GetDashboardDataHandler(
         if (resultCount.IsFailure)
             return resultCount.ToHandlerResult();
 
+        var userAccount = await userAccountServices.GetUserAccountByTelegramIdAsync(resultValidation.Value.User.Id);
+        if (userAccount.IsFailure)
+            return userAccount.ToHandlerResult();
+
+        var wallet = await walletService.GetBalanceAsync(userAccount.Value.Id);
+        if (wallet.IsFailure)
+            return wallet.ToHandlerResult();
+
         DashboardReportDto dashboardReportDto = new()
         {
             ReferralCount = resultCount.Value,
-            IRRBalance = 0,
-            USDTBalance = 0,
+            IRRBalance = wallet.Value.IRR,
+            USDTBalance = wallet.Value.USDT,
             TotalPackage = 0
         };
 

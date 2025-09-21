@@ -2,20 +2,16 @@
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.DTOs;
 using ApplicationLayer.Extensions;
+using ApplicationLayer.Extensions.SmartEnums;
 using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class MiniApp_RegisterReferralCommandHandler : IRequestHandler<MiniApp_RegisterReferralCommand, HandlerResult>
+public class MiniApp_RegisterReferralCommandHandler(IUnitOfWork unitOfWork, IUserAccountServices userAccountServices, IWalletService walletService) : IRequestHandler<MiniApp_RegisterReferralCommand, HandlerResult>
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IUserAccountServices _userAccountServices;
-
-    public MiniApp_RegisterReferralCommandHandler(IUnitOfWork unitOfWork, IUserAccountServices userAccountServices)
-    {
-        _unitOfWork = unitOfWork;
-        _userAccountServices = userAccountServices;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IUserAccountServices _userAccountServices = userAccountServices;
+    private readonly IWalletService _walletService = walletService;
 
     public async Task<HandlerResult> Handle(MiniApp_RegisterReferralCommand request, CancellationToken cancellationToken)
     {
@@ -38,6 +34,11 @@ public class MiniApp_RegisterReferralCommandHandler : IRequestHandler<MiniApp_Re
         var result = await _userAccountServices.AddReferralUserAsync(inviterTelegramId.Value, request.Model);
         if (result.IsSuccess)
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        decimal bonusAmount = 0.001m;
+        var addTransaction = await _walletService.CreditAsync(getInviter.Value.Id, CurrencyEnum.USDT, bonusAmount, TransactionTypeEnum.Bonus);
+        if (addTransaction.IsFailure)
+            return addTransaction.ToHandlerResult();
 
         return result.ToHandlerResult();
     }
