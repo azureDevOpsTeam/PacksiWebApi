@@ -298,7 +298,11 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     LastStatus = r.LastStatus,
                     TripType = r.Request.OriginCity.CountryId == userCountryId ? "outbound"
                         : r.Request.DestinationCity.CountryId == userCountryId ? "inbound" : "",
-                    UserRate = 3.5,
+                    UserRate = r.Request.UserRatings
+                    .Where(ur => ur.RateeUserAccountId == r.Request.UserAccountId)
+                    .Select(ur => (double?)ur.Rating)
+                    .DefaultIfEmpty(0)
+                    .Average(),
                 };
 
                 return dto;

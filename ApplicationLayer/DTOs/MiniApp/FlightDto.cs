@@ -68,49 +68,8 @@ public class TripsDto
 
     public string TripType { get; set; }
 
-    public double UserRate { get; set; }
+    public double? UserRate { get; set; }
 
-    //public string SelectStatus { get; set; }
-
-    //public string Pickedme_OperationButton
-    //{
-    //    get
-    //    {
-    //        if (SelectStatus == "pickedme")
-    //            return LastStatus == RequestProcessStatus.Selected.Value ? "btnSuggtion"
-    //                : LastStatus == RequestProcessStatus.ConfirmedBySender.Value ? "btnPickedUp" //With Chat
-    //                : LastStatus == RequestProcessStatus.PickedUp.Value ? "btnPassengerConfirmedDelivery" //With NotDelivered
-    //                : LastStatus == RequestProcessStatus.PassengerConfirmedDelivery.Value ? "lblWaitToConfirmDelivery"
-    //                : "btnDisable";
-    //        else
-    //        {
-    //            return "btnNotFound";
-    //        }
-    //    }
-    //}
-
-    //public string Ipicked_OperationButton
-    //{
-    //    get
-    //    {
-    //        if (SelectStatus == "ipicked")
-    //        {
-    //            return LastStatus == RequestProcessStatus.Selected.Value ? "lblWaitForAcceptSuggetion"
-    //                : LastStatus == RequestProcessStatus.ConfirmedBySender.Value ? "lblReadyToPickeUp" //With Chat
-    //                : LastStatus == RequestProcessStatus.PickedUp.Value ? "lblReadyToDelivery" //With Chat
-    //                : LastStatus == RequestProcessStatus.PassengerConfirmedDelivery.Value ? "btnConfirmDelivery"//With NotDelivered
-    //                : "btnDisable";
-    //        }
-    //        else
-    //        {
-    //            return "btnNotFound";
-    //        }
-    //    }
-    //}
-
-    //public List<SuggestionDto> Suggestions { get; set; }
-
-    //public List<string> AvailableActions { get; set; } = new();
 }
 
 public class SuggestionDto

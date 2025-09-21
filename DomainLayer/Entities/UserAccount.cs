@@ -78,8 +78,5 @@ namespace DomainLayer.Entities
         public ICollection<UserRating> RateeUserAccounts { get; set; }
 
         public ICollection<UserRating> RaterUserAccounts { get; set; }
-
-        [NotMapped]
-        public double AverageRating => RateeUserAccounts?.Any() == true ? RateeUserAccounts.Average(r => r.Rating) : 0;
     }
 }
