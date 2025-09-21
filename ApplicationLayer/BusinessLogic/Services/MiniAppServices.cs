@@ -250,6 +250,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 //&& current.ArrivalDate.Date < today
                 //&& current.Status == RequestLifecycleStatus.Published)
                 .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
+                .Include(c => c.UserRatings)
                 .Include(r => r.Suggestions).ThenInclude(s => s.RequestStatusHistories)
                 .Include(r => r.Suggestions).ThenInclude(s => s.UserAccount).ThenInclude(ua => ua.UserProfiles)
                 .Include(r => r.RequestItemTypes)
@@ -297,7 +298,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     LastStatus = r.LastStatus,
                     TripType = r.Request.OriginCity.CountryId == userCountryId ? "outbound"
                         : r.Request.DestinationCity.CountryId == userCountryId ? "inbound" : "",
-                    UserRate = r.Request.UserAccount.AverageRating,
+                    UserRate = 3.5,
                 };
 
                 return dto;
