@@ -93,7 +93,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 var result = await DownloadUserProfilePhotoAsync(validationResult.User.Id);
                 if (!string.IsNullOrEmpty(result))
                 {
-                    validationResult.User.PhotoUrl = result;
+                    validationResult.User.PhotoUrl = "https://api.packsi.net/" + result;
                 }
             }
             return Result<TelegramMiniAppValidationResultDto>.Success(validationResult);
@@ -528,7 +528,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         attachments.Add(new RequestAttachment
                         {
                             RequestId = requestId,
-                            FilePath = $"/uploads/request/{fileName}",
+                            FilePath = $"https://api.packsi.net/uploads/request/{fileName}",
                             FileType = formFile.ContentType,
                             AttachmentType = requestType == RequestTypeEnum.Passenger ? AttachmentTypeEnum.Ticket : AttachmentTypeEnum.ItemImage,
                         });
@@ -1063,7 +1063,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 var suggestionAttachment = new SuggestionAttachment
                 {
                     SuggestionId = suggestionId,
-                    FilePath = $"/uploads/{fileName}"
+                    FilePath = $"https://api.packsi.net/uploads/{fileName}"
                 };
 
                 await _suggestionAttachmentRepository.AddAsync(suggestionAttachment);
