@@ -3,4 +3,4 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Command;
 
-public record MiniApp_SenderConfirmedDeliveryCommand(RequestSuggestionKeyDto Model) : IRequest<HandlerResult>;
+public record MiniApp_SenderConfirmedDeliveryCommand(AddRatingDto Model) : IRequest<HandlerResult>;

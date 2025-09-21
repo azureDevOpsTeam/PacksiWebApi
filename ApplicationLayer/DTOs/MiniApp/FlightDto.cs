@@ -68,6 +68,8 @@ public class TripsDto
 
     public string TripType { get; set; }
 
+    public double UserRate { get; set; }
+
     //public string SelectStatus { get; set; }
 
     //public string Pickedme_OperationButton

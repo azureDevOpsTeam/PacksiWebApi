@@ -90,8 +90,8 @@ namespace PresentationApp.Controllers.MiniApp
         public async Task<IActionResult> PassengerConfirmedDeliveryAsync(MiniApp_PassengerConfirmedDeliveryCommand model)
          => await ResultHelper.GetResultAsync(_mediator, model);
 
-        [HttpPost("SenderConfirmedDelivery")]
-        public async Task<IActionResult> SenderConfirmedDeliveryAsync(MiniApp_SenderConfirmedDeliveryCommand model)
+        [HttpPost("SaveRating")]
+        public async Task<IActionResult> SaveRatingAsync(MiniApp_SenderConfirmedDeliveryCommand model)
          => await ResultHelper.GetResultAsync(_mediator, model);
 
         [HttpPost("NotDelivered")]
