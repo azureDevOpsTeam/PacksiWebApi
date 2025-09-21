@@ -91,7 +91,7 @@ namespace PresentationApp.Controllers.MiniApp
          => await ResultHelper.GetResultAsync(_mediator, model);
 
         [HttpPost("SaveRating")]
-        public async Task<IActionResult> SaveRatingAsync(MiniApp_SenderConfirmedDeliveryCommand model)
+        public async Task<IActionResult> SaveRatingAsync(MiniApp_SaveRatingCommand model)
          => await ResultHelper.GetResultAsync(_mediator, model);
 
         [HttpPost("NotDelivered")]

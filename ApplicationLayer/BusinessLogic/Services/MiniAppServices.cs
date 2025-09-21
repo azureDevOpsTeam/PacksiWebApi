@@ -943,7 +943,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-    public async Task<Result> SenderConfirmedDeliveryAsync(RequestSuggestionKeyDto model, UserAccount user)
+    public async Task<Result> SaveRatingAsync(AddRatingDto model, UserAccount user)
     {
         try
         {

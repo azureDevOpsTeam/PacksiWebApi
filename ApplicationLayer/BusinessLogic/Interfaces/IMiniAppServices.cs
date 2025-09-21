@@ -49,7 +49,7 @@ public interface IMiniAppServices
 
     Task<Result> ReadyToDeliverAsync(RequestSuggestionKeyDto model);
 
-    Task<Result> SenderConfirmedDeliveryAsync(RequestSuggestionKeyDto model, UserAccount user);
+    Task<Result> SaveRatingAsync(AddRatingDto model, UserAccount user);
 
     Task<Result> NotDeliveredAsync(RequestSuggestionKeyDto model);
 
