@@ -42,38 +42,41 @@ public class WalletService(IUnitOfWork unitOfWork, IRepository<Wallet> walletRep
 
     public async Task<Result> CreditAsync(int userAccountId, int currency, decimal amount, TransactionTypeEnum transactionType, string related = null, int? operatorUserId = null)
     {
+        if (amount <= 0) return Result.GeneralFailure("amount must be > 0");
+
         try
         {
-            if (amount <= 0) throw new ArgumentException("amount must be > 0");
             await _unitOfWork.BeginTransactionAsync();
+
             var wallet = await _walletRepository.Query()
                 .FirstOrDefaultAsync(w => w.UserAccountId == userAccountId && w.Currency == currency);
 
             if (wallet == null)
             {
-                Wallet newWallet = new()
+                wallet = new Wallet
                 {
                     UserAccountId = userAccountId,
                     Currency = currency,
-                    Balance = amount
+                    Balance = 0
                 };
-                await _walletRepository.AddAsync(newWallet);
-                await _unitOfWork.SaveChangesAsync();
+                await _walletRepository.AddAsync(wallet);
             }
 
-            wallet.Balance = amount;
+            wallet.Balance += amount;
 
-            WalletTransaction walletTransaction = new()
+            var walletTransaction = new WalletTransaction
             {
                 Wallet = wallet,
                 Amount = amount,
                 TransactionType = transactionType,
-                RelatedEntity = related,
+                RelatedEntity = related
             };
 
             await _walletTransactionRepository.AddAsync(walletTransaction);
+
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitAsync();
+
             return Result.Success();
         }
         catch (Exception)
@@ -85,22 +88,22 @@ public class WalletService(IUnitOfWork unitOfWork, IRepository<Wallet> walletRep
 
     public async Task<Result> DebitAsync(int userAccountId, int currency, decimal amount, TransactionTypeEnum transactionType, string related = null, int? operatorUserId = null)
     {
+        if (amount <= 0) return Result.Failure("مبلغ نمیتواند صفر یا منفی باشد");
+
         try
         {
-            if (amount <= 0) throw new ArgumentException("amount must be > 0");
             await _unitOfWork.BeginTransactionAsync();
+
             var wallet = await _walletRepository.Query()
                 .FirstOrDefaultAsync(w => w.UserAccountId == userAccountId && w.Currency == currency);
 
             if (wallet == null) return Result.NotFound();
 
-            if (amount <= 0) return Result.Failure("مبلغ نمیتواند صفر باشد");
-            if (wallet.Balance - amount < 0) return Result.Failure("موجودی شما کافی نیست");
-            wallet.Balance = (wallet.Balance - amount);
+            if (wallet.Balance < amount) return Result.Failure("موجودی شما کافی نیست");
 
-            await _walletRepository.UpdateAsync(wallet);
+            wallet.Balance -= amount;
 
-            WalletTransaction walletTransaction = new()
+            var walletTransaction = new WalletTransaction
             {
                 Wallet = wallet,
                 TransactionType = transactionType,
@@ -112,11 +115,14 @@ public class WalletService(IUnitOfWork unitOfWork, IRepository<Wallet> walletRep
             await _walletTransactionRepository.AddAsync(walletTransaction);
             await _unitOfWork.SaveChangesAsync();
             await _unitOfWork.CommitAsync();
+
             return Result.Success();
         }
         catch (Exception)
         {
+            await _unitOfWork.RollbackAsync();
             return Result.GeneralFailure("خطا در برداشت موجودی");
         }
     }
+
 }

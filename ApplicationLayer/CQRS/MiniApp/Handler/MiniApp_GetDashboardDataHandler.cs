@@ -29,8 +29,6 @@ public class MiniApp_GetDashboardDataHandler(
             return userAccount.ToHandlerResult();
 
         var wallet = await walletService.GetBalanceAsync(userAccount.Value.Id);
-        if (wallet.IsFailure)
-            return wallet.ToHandlerResult();
 
         DashboardReportDto dashboardReportDto = new()
         {
