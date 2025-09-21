@@ -15,7 +15,7 @@ internal class WalletTransactionConfiguration : BaseEntityConfiguration<WalletTr
                .HasForeignKey(x => x.WalletId)
                .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Property(t => t.Amount).HasColumnType("decimal(28,2)");
-        builder.Property(t => t.BalanceAfter).HasColumnType("decimal(28,2)");
+        builder.Property(t => t.Amount).HasColumnType("decimal(28,6)");
+        builder.Property(t => t.BalanceAfter).HasColumnType("decimal(28,6)");
     }
 }

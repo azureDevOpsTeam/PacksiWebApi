@@ -16,8 +16,8 @@ public class WalletConfiguration : BaseEntityConfiguration<Wallet>
                .OnDelete(DeleteBehavior.Cascade);
 
         builder.Property(w => w.Currency).HasMaxLength(3).IsRequired();
-        builder.Property(w => w.Balance).HasColumnType("decimal(28,2)");
-        builder.Property(w => w.Reserved).HasColumnType("decimal(28,2)");
+        builder.Property(w => w.Balance).HasColumnType("decimal(28,6)");
+        builder.Property(w => w.Reserved).HasColumnType("decimal(28,6)");
         builder.Property(w => w.RowVersion).IsRowVersion();
 
         builder.HasIndex(w => new { w.UserAccountId, w.Currency }).IsUnique();
