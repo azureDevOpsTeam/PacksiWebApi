@@ -93,7 +93,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 var result = await DownloadUserProfilePhotoAsync(validationResult.User.Id);
                 if (!string.IsNullOrEmpty(result))
                 {
-                    validationResult.User.PhotoUrl = "https://api.packsi.net/" + result;
+                    validationResult.User.PhotoUrl = "https://api.packsi.net" + result;
                 }
             }
             return Result<TelegramMiniAppValidationResultDto>.Success(validationResult);
