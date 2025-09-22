@@ -321,10 +321,19 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
+            // Received Offers
             var myReciveOffers = await _requestRepository.Query()
-                .Where(r =>
-                r.UserAccountId == user.Id &&
-                r.Suggestions.Any(s => s.UserAccountId != user.Id))
+                .Include(r => r.UserAccount)
+                    .ThenInclude(u => u.ConversationsAsUser2)
+                .Include(r => r.OriginCity)
+                .Include(r => r.DestinationCity)
+                .Include(r => r.Suggestions)
+                    .ThenInclude(s => s.SuggestionAttachments)
+                .Include(r => r.Suggestions)
+                    .ThenInclude(s => s.UserAccount)
+                        .ThenInclude(u => u.UserProfiles)
+                .Where(r => r.UserAccountId == user.Id &&
+                            r.Suggestions.Any(s => s.UserAccountId != user.Id))
                 .Select(r => new RequestInfoDto
                 {
                     Id = r.Id,
@@ -333,27 +342,42 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     DestinationCityName = r.DestinationCity != null ? r.DestinationCity.Name : null,
                     DestinationCityPersianName = r.DestinationCity != null ? r.DestinationCity.PersianName : null,
                     Suggestions = r.Suggestions
-                    .Where(s => s.UserAccountId != user.Id && s.Status != RequestProcessStatus.RejectedBySender)
-                    .Select(s => new ActiveSuggestionDto
-                    {
-                        Id = s.Id,
-                        ConvertsationId = s.Request.UserAccount.ConversationsAsUser2.FirstOrDefault(c => c.RequestId == s.Request.Id && c.User2Id == user.Id).Id,
-                        DisplayName = s.UserAccount.UserProfiles
-                    .Select(up => up.DisplayName)
-                    .FirstOrDefault() ?? s.UserAccount.UserName,
-                        SuggestionPrice = s.SuggestionPrice,
-                        Currency = s.Currency,
-                        ItemType = s.ItemType,
-                        Attachments = s.SuggestionAttachments
-                    .Select(a => a.FilePath)
-                    .ToList(),
-                        Status = s.Status,
-                        Context = OfferContext.Received,
-                        Descriptions = s.Description
-                    }).ToList()
+                        .Where(s => s.UserAccountId != user.Id && s.Status != RequestProcessStatus.RejectedBySender)
+                        .Select(s => new ActiveSuggestionDto
+                        {
+                            Id = s.Id,
+                            // امن سازی ConvertsationId با Select + FirstOrDefault
+                            ConvertsationId = s.Request.UserAccount.ConversationsAsUser2
+                                                    .Where(c => c.RequestId == s.Request.Id && c.User2Id == user.Id)
+                                                    .Select(c => (int?)c.Id)
+                                                    .FirstOrDefault(),
+                            DisplayName = s.UserAccount.UserProfiles
+                                                .Select(up => up.DisplayName)
+                                                .FirstOrDefault() ?? s.UserAccount.UserName,
+                            SuggestionPrice = s.SuggestionPrice,
+                            Currency = s.Currency,
+                            ItemType = s.ItemType,
+                            Attachments = s.SuggestionAttachments
+                                                .Select(a => a.FilePath)
+                                                .ToList(),
+                            Status = s.Status,
+                            Context = OfferContext.Received,
+                            Descriptions = s.Description
+                        }).ToList()
                 }).ToListAsync();
 
+
+            // Sent Offers
             var mySentOffers = await _requestRepository.Query()
+                .Include(r => r.UserAccount)
+                    .ThenInclude(u => u.ConversationsAsUser1)
+                .Include(r => r.OriginCity)
+                .Include(r => r.DestinationCity)
+                .Include(r => r.Suggestions)
+                    .ThenInclude(s => s.SuggestionAttachments)
+                .Include(r => r.Suggestions)
+                    .ThenInclude(s => s.UserAccount)
+                        .ThenInclude(u => u.UserProfiles)
                 .Where(r => r.Suggestions.Any(s => s.UserAccountId == user.Id))
                 .Select(r => new RequestInfoDto
                 {
@@ -364,26 +388,30 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     DestinationCityPersianName = r.DestinationCity != null ? r.DestinationCity.PersianName : null,
                     Status = r.Status,
                     Suggestions = r.Suggestions
-                    .Where(s => s.UserAccountId == user.Id)
-                    .Select(s => new ActiveSuggestionDto
-                    {
-                        Id = s.Id,
-                        ConvertsationId = s.Request.UserAccount.ConversationsAsUser1.FirstOrDefault(c => c.RequestId == s.Request.Id && c.User2Id == user.Id).Id,
-                        DisplayName = s.UserAccount.UserProfiles
-                            .Select(up => up.DisplayName)
-                            .FirstOrDefault() ?? s.UserAccount.UserName,
-                        SuggestionPrice = s.SuggestionPrice,
-                        Currency = s.Currency,
-                        ItemType = s.ItemType,
-                        Status = s.Status,
-                        Attachments = s.SuggestionAttachments
-                            .Select(a => a.FilePath)
-                            .ToList(),
-                        Context = OfferContext.Sent,
-                        Descriptions = s.Description,
-                        DeliveryCode = s.DeliveryCode
-                    }).ToList()
+                        .Where(s => s.UserAccountId == user.Id)
+                        .Select(s => new ActiveSuggestionDto
+                        {
+                            Id = s.Id,
+                            ConvertsationId = s.Request.UserAccount.ConversationsAsUser1
+                                                    .Where(c => c.RequestId == s.Request.Id && c.User2Id == user.Id)
+                                                    .Select(c => (int?)c.Id)
+                                                    .FirstOrDefault(),
+                            DisplayName = s.UserAccount.UserProfiles
+                                                .Select(up => up.DisplayName)
+                                                .FirstOrDefault() ?? s.UserAccount.UserName,
+                            SuggestionPrice = s.SuggestionPrice,
+                            Currency = s.Currency,
+                            ItemType = s.ItemType,
+                            Status = s.Status,
+                            Attachments = s.SuggestionAttachments
+                                                .Select(a => a.FilePath)
+                                                .ToList(),
+                            Context = OfferContext.Sent,
+                            Descriptions = s.Description,
+                            DeliveryCode = s.DeliveryCode
+                        }).ToList()
                 }).ToListAsync();
+
 
             var result = new RequestInprogressDto
             {
