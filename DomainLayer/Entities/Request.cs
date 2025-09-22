@@ -47,5 +47,7 @@ namespace DomainLayer.Entities
         public ICollection<Suggestion> Suggestions { get; set; } = [];
 
         public ICollection<UserRating> UserRatings { get; set; } = [];
+
+        public ICollection<Conversation> Conversations { get; set; } = [];
     }
 }

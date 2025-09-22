@@ -118,6 +118,7 @@ namespace ApplicationLayer.BusinessLogic.Services
             {
                 var countries = await _countryRepository.Query()
                     .Include(c => c.Cities)
+                    .OrderBy(c => c.PersianName)
                     .ToListAsync();
 
                 if (!countries.Any())
@@ -128,7 +129,9 @@ namespace ApplicationLayer.BusinessLogic.Services
                     Text = country.PersianName,
                     Label = country.Name,
                     Value = country.Id.ToString(),
-                    Children = country.Cities.Select(city => new DropDownItemTreeDto
+                    Children = country.Cities
+                    .OrderBy(city => city.PersianName)
+                    .Select(city => new DropDownItemTreeDto
                     {
                         Text = city.PersianName,
                         Label = city.Name,

@@ -337,6 +337,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     .Select(s => new ActiveSuggestionDto
                     {
                         Id = s.Id,
+                        ConvertsationId = s.Request.UserAccount.ConversationsAsUser2.FirstOrDefault(c => c.RequestId == s.Request.Id && c.User2Id == user.Id).Id,
                         DisplayName = s.UserAccount.UserProfiles
                     .Select(up => up.DisplayName)
                     .FirstOrDefault() ?? s.UserAccount.UserName,
@@ -367,6 +368,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     .Select(s => new ActiveSuggestionDto
                     {
                         Id = s.Id,
+                        ConvertsationId = s.Request.UserAccount.ConversationsAsUser1.FirstOrDefault(c => c.RequestId == s.Request.Id && c.User2Id == user.Id).Id,
                         DisplayName = s.UserAccount.UserProfiles
                             .Select(up => up.DisplayName)
                             .FirstOrDefault() ?? s.UserAccount.UserName,
@@ -739,20 +741,22 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
-            var request = await _suggestionRepository.Query()
+            var suggestion = await _suggestionRepository.Query()
+                .Include(current => current.Request)
                 .Where(r => r.Id == model.RequestSuggestionId).FirstOrDefaultAsync();
 
-            if (request == null)
+            if (suggestion == null)
                 return Result.NotFound();
 
-            request.Status = RequestProcessStatus.ConfirmedBySender;
-            await _suggestionRepository.UpdateAsync(request);
+            suggestion.Status = RequestProcessStatus.ConfirmedBySender;
+            await _suggestionRepository.UpdateAsync(suggestion);
 
-            if (!await _conversationRepository.AnyAsync(current => current.User1Id == request.UserAccountId && current.User2Id == userAccount.Id))
+            if (!await _conversationRepository.AnyAsync(current => current.User1Id == suggestion.UserAccountId && current.User2Id == userAccount.Id))
             {
                 Conversation conversation = new()
                 {
-                    User1Id = request.UserAccountId,
+                    RequestId = suggestion.RequestId,
+                    User1Id = suggestion.UserAccountId,
                     User2Id = userAccount.Id
                 };
                 await _conversationRepository.AddAsync(conversation);

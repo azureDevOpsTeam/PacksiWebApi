@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace InfrastructureLayer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250921184914_ChangeDecmialType")]
-    partial class ChangeDecmialType
+    [Migration("20250922172750_InitialFirstDatabase")]
+    partial class InitialFirstDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -393,6 +393,9 @@ namespace InfrastructureLayer.Migrations
                     b.Property<DateTimeOffset?>("ModifiedDateTime")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<int>("RequestId")
+                        .HasColumnType("int");
+
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .IsRequired()
@@ -406,6 +409,8 @@ namespace InfrastructureLayer.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("RequestId");
 
                     b.HasIndex("User2Id");
 
@@ -2055,6 +2060,12 @@ namespace InfrastructureLayer.Migrations
 
             modelBuilder.Entity("DomainLayer.Entities.Conversation", b =>
                 {
+                    b.HasOne("DomainLayer.Entities.Request", "Request")
+                        .WithMany("Conversations")
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("DomainLayer.Entities.UserAccount", "User1")
                         .WithMany("ConversationsAsUser1")
                         .HasForeignKey("User1Id")
@@ -2066,6 +2077,8 @@ namespace InfrastructureLayer.Migrations
                         .HasForeignKey("User2Id")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Request");
 
                     b.Navigation("User1");
 
@@ -2417,6 +2430,8 @@ namespace InfrastructureLayer.Migrations
                     b.Navigation("AvailableDestinations");
 
                     b.Navigation("AvailableOrigins");
+
+                    b.Navigation("Conversations");
 
                     b.Navigation("RequestItemTypes");
 

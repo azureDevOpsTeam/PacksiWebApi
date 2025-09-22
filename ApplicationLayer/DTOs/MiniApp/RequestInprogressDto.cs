@@ -31,6 +31,8 @@ public class ActiveSuggestionDto
 {
     public int Id { get; set; }
 
+    public int ConvertsationId { get; set; }
+
     public string DisplayName { get; set; }
 
     public decimal SuggestionPrice { get; set; }
