@@ -54,11 +54,12 @@ namespace PresentationApp.Controllers.MiniApp
         [Route("Referral")]
         public async Task<IActionResult> ReferralPost([FromBody] Telegram.Bot.Types.Update update)
         {
+            var tgId = update.Message?.From?.Id ?? update.CallbackQuery?.From?.Id ?? 0;
             if (update.Message?.Text != null && update.Message.Text.StartsWith("/start"))
-            {            var tgId = update.Message.From?.Id ?? 0;
-
+            {
                 var parts = update.Message.Text.Split(' ', 2);
                 var referralCode = parts.Length > 1 ? parts[1] : null;
+                tgId = update.Message.From?.Id ?? 0;
 
                 if (!string.IsNullOrEmpty(referralCode) && tgId != 0)
                 {
@@ -68,7 +69,6 @@ namespace PresentationApp.Controllers.MiniApp
             }
             else if (update.Message?.Text != null && _userStates.TryGetValue(tgId, out var state))
             {
-                var tgId = update.Message.From?.Id ?? 0;
                 if (state == ConversationState.WaitingForName)
                 {
                     _userForms[tgId].Name = update.Message.Text;
@@ -89,7 +89,6 @@ namespace PresentationApp.Controllers.MiniApp
             // انتخاب مبدا یا مقصد
             else if (update.CallbackQuery != null)
             {
-                var tgId = update.Message.From?.Id ?? 0;
                 var data = update.CallbackQuery.Data;
 
                 if (data.StartsWith("origin:"))
