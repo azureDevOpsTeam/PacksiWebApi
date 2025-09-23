@@ -26,7 +26,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation, IRepository<Suggestion> suggestionRepository,
     IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo, IRepository<SuggestionAttachment> suggestionAttachmentRepository, IRepository<UserRating> userRating,
     IRepository<RequestStatusHistory> requestStatusHistoryRepository, IRepository<Conversation> conversationRepository, IRepository<RequestAttachment> requestAttachment,
-    IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger, IMapper mapper) : IMiniAppServices
+    IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger,
+    IUserAccountServices userAccountServices, IMapper mapper) : IMiniAppServices
 {
     private readonly HttpClient _httpClient = httpClient;
     private readonly IRepository<TelegramUserInformation> _telegramUserRepository = telegramUserRepository;
@@ -45,6 +46,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
     private readonly IMapper _mapper = mapper;
+    private readonly IUserAccountServices _userAccountServices = userAccountServices;
     //private readonly TelegramBotClient _botClient = new(configuration["TelegramBot:Token"] ?? throw new InvalidOperationException("TelegramBot:Token configuration is missing"));
 
     public async Task<Result<TelegramMiniAppValidationResultDto>> ValidateTelegramMiniAppUserAsync()
@@ -321,7 +323,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
-            // Received Offers
             var myReciveOffers = await _requestRepository.Query()
                 .Include(r => r.UserAccount)
                     .ThenInclude(u => u.ConversationsAsUser2)
@@ -346,7 +347,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         .Select(s => new ActiveSuggestionDto
                         {
                             Id = s.Id,
-                            // امن سازی ConvertsationId با Select + FirstOrDefault
                             ConvertsationId = s.Request.UserAccount.ConversationsAsUser2
                                                     .Where(c => c.RequestId == s.Request.Id && c.User2Id == user.Id)
                                                     .Select(c => (int?)c.Id)
@@ -366,8 +366,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                         }).ToList()
                 }).ToListAsync();
 
-
-            // Sent Offers
             var mySentOffers = await _requestRepository.Query()
                 .Include(r => r.UserAccount)
                     .ThenInclude(u => u.ConversationsAsUser1)
@@ -411,7 +409,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                             DeliveryCode = s.DeliveryCode
                         }).ToList()
                 }).ToListAsync();
-
 
             var result = new RequestInprogressDto
             {
@@ -1010,7 +1007,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 }
 
             request.Status = RequestLifecycleStatus.FinalizateDelivery;
-            suggestion.Status = RequestProcessStatus.SenderConfirmedDelivery;
+            suggestion.Status = RequestProcessStatus.Finalize;
             await _suggestionRepository.UpdateAsync(suggestion);
 
             return Result.Success();
@@ -1323,7 +1320,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 }
                 break;
 
-            case nameof(RequestProcessStatus.SenderConfirmedDelivery):
+            case nameof(RequestProcessStatus.Finalize):
                 if (role == "Sender")
                 {
                     actions.Add("SenderConfirmedDelivery");
@@ -1342,4 +1339,11 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     }
 
     #endregion Private Methods
+
+    #region
+
+    public async Task<Result<List<UserAccountDto>>> GetMyInvitedUsersAsync(long telegramId)
+    => await _userAccountServices.GetMyInvitedUsersAsync(telegramId);
+
+    #endregion
 }

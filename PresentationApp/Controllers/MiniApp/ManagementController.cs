@@ -1,4 +1,5 @@
 ﻿using ApplicationLayer.CQRS.MiniApp.Query;
+using ApplicationLayer.CQRS.MiniAppDashboard.Query;
 using ApplicationLayer.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -21,5 +22,9 @@ namespace PresentationApp.Controllers.MiniApp
         [HttpGet("GetDashboardData")]
         public async Task<IActionResult> GetReferralCountAsync()
             => await ResultHelper.GetResultAsync(_mediator, new MiniApp_GetDashboardDataQuery());
+
+        [HttpGet("GetMyInvitedUsers")]
+        public async Task<IActionResult> GetMyInvitedUsersAsync()
+            => await ResultHelper.GetResultAsync(_mediator, new GetMyInvitedUsersQuery());
     }
 }

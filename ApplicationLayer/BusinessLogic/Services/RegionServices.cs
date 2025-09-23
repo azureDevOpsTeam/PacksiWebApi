@@ -118,10 +118,10 @@ namespace ApplicationLayer.BusinessLogic.Services
             {
                 var countries = await _countryRepository.Query()
                     .Include(c => c.Cities)
-                    .OrderBy(c => c.PersianName)
+                    .OrderBy(c => c.Name)
                     .ToListAsync();
 
-                if (!countries.Any())
+                if (countries.Count == 0)
                     return Result<DropDownTreeDto>.NotFoundFailure("اطلاعات شهرها یافت نشد");
 
                 var dropdownItems = countries.Select(country => new DropDownItemTreeDto
@@ -130,7 +130,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     Label = country.Name,
                     Value = country.Id.ToString(),
                     Children = country.Cities
-                    .OrderBy(city => city.PersianName)
+                    .OrderBy(city => city.Name)
                     .Select(city => new DropDownItemTreeDto
                     {
                         Text = city.PersianName,
