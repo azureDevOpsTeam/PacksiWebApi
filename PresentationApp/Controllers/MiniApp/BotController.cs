@@ -31,10 +31,7 @@ namespace PresentationApp.Controllers.MiniApp
                     RegisterReferralDto model = new() { TelegramUserId = tgId, ReferralCode = referralCode };
                     await _mediator.Send(new MiniApp_RegisterReferralCommand(model));
                 }
-                await _botClient.SendMessage(
-    chatId: update.Message.From.Id,
-    text: "بات کار می‌کنه ✅"
-);
+                await _botClient.SendMessage(chatId: update.Message.From.Id, text: "بات کار می‌کنه ✅");
             }
             return Ok();
         }
