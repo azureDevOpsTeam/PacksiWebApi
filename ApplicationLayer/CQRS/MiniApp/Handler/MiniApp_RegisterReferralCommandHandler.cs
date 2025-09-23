@@ -35,7 +35,7 @@ public class MiniApp_RegisterReferralCommandHandler(IUnitOfWork unitOfWork, IUse
         if (result.IsSuccess)
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        decimal bonusAmount = 0.001m;
+        decimal bonusAmount = 0.01m;
         var addTransaction = await _walletService.CreditAsync(getInviter.Value.Id, CurrencyEnum.USDT, bonusAmount, TransactionTypeEnum.Bonus);
         if (addTransaction.IsFailure)
             return addTransaction.ToHandlerResult();
