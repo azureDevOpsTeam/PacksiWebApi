@@ -23,17 +23,15 @@ namespace ApplicationLayer.BusinessLogic.Services;
 
 [InjectAsScoped]
 public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInformation> telegramUserRepository, IRepository<UserAccount> userAccountRepository,
-    IRepository<UserProfile> userProfileRepository, IRepository<UserPreferredLocation> userPreferredLocation, IRepository<Suggestion> suggestionRepository,
+    IRepository<UserProfile> userProfileRepository, IRepository<Suggestion> suggestionRepository,
     IRepository<Request> requestRepository, IRepository<RequestItemType> itemTypeRepo, IRepository<SuggestionAttachment> suggestionAttachmentRepository, IRepository<UserRating> userRating,
     IRepository<RequestStatusHistory> requestStatusHistoryRepository, IRepository<Conversation> conversationRepository, IRepository<RequestAttachment> requestAttachment,
-    IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger,
-    IUserAccountServices userAccountServices, IMapper mapper) : IMiniAppServices
+    IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<MiniAppServices> logger, IMapper mapper) : IMiniAppServices
 {
     private readonly HttpClient _httpClient = httpClient;
     private readonly IRepository<TelegramUserInformation> _telegramUserRepository = telegramUserRepository;
     private readonly IRepository<UserAccount> _userAccountRepository = userAccountRepository;
     private readonly IRepository<UserProfile> _userProfileRepository = userProfileRepository;
-    private readonly IRepository<UserPreferredLocation> _userPreferredLocation = userPreferredLocation;
     private readonly IRepository<Request> _requestRepository = requestRepository;
     private readonly IRepository<RequestItemType> _itemTypeRepo = itemTypeRepo;
     private readonly IRepository<RequestAttachment> _requestAttachment = requestAttachment;
@@ -46,7 +44,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
     private readonly IMapper _mapper = mapper;
-    private readonly IUserAccountServices _userAccountServices = userAccountServices;
     //private readonly TelegramBotClient _botClient = new(configuration["TelegramBot:Token"] ?? throw new InvalidOperationException("TelegramBot:Token configuration is missing"));
 
     public async Task<Result<TelegramMiniAppValidationResultDto>> ValidateTelegramMiniAppUserAsync()
@@ -1339,11 +1336,4 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     }
 
     #endregion Private Methods
-
-    #region
-
-    public async Task<Result<List<UserAccountDto>>> GetMyInvitedUsersAsync(long telegramId)
-    => await _userAccountServices.GetMyInvitedUsersAsync(telegramId);
-
-    #endregion
 }

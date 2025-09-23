@@ -70,5 +70,4 @@ public interface IMiniAppServices
     Task<Result<RequestInprogressDto>> GetInProgressRequestAsync(UserAccount user);
 
     Task<Result<List<RequestAttachment>>> AddRequestAttachmentAsync(int requestId, List<IFormFile> files, RequestTypeEnum requestType);
-    Task<Result<List<UserAccountDto>>> GetMyInvitedUsersAsync(long telegramId);
 }
