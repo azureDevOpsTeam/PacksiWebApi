@@ -12,7 +12,7 @@ namespace DomainLayer.Entities
 
         public DateTime DepartureDate { get; set; }
 
-        public DateTime ArrivalDate { get; set; }
+        public DateTime? ArrivalDate { get; set; }
 
         public int RequestType { get; set; }
 

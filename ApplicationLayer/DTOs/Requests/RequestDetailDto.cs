@@ -21,7 +21,7 @@ public class RequestDetailDto
 
     public DateTime DepartureDate { get; set; }
 
-    public DateTime ArrivalDate { get; set; }
+    public DateTime? ArrivalDate { get; set; }
 
     public string DeparturePersianDate
     {

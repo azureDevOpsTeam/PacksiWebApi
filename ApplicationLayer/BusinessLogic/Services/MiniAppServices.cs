@@ -283,7 +283,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                                ?? r.Request.UserAccount.UserProfiles.FirstOrDefault().FirstName,
                     ArrivalDate = r.Request.ArrivalDate,
                     DepartureDate = r.Request.DepartureDate,
-                    ArrivalDatePersian = DateTimeHelper.GetPersianDate(r.Request.ArrivalDate),
+                    ArrivalDatePersian = r.Request.ArrivalDate.HasValue ? DateTimeHelper.GetPersianDate(r.Request.ArrivalDate): "",
                     DepartureDatePersian = DateTimeHelper.GetPersianDate(r.Request.DepartureDate),
                     Description = r.Request.Description,
                     DestinationCity = r.Request.DestinationCity.Name,
@@ -611,7 +611,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             {
                 Id = request.Id,
                 UserAccountId = request.UserAccountId,
-                //CurrentStatus = RequestStatusEnum.FromValue(request.RequestSelections.OrderByDescending(order => order.Id).FirstOrDefault().Status).PersianName,
+                //CurrentStatus = RequestStatusEnum.FromValue(request.RequestSelections.OrderByDescending(order => order.Id).FirstOrDefault().Status).PersianName, 
                 OriginCityName = request.OriginCity?.Name,
                 OriginCountryName = request.OriginCity?.Country?.Name,
                 DestinationCityName = request.DestinationCity?.Name,

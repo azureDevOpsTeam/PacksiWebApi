@@ -22,7 +22,7 @@ public class TripsDto
 
     public string DepartureDatePersian { get; set; }
 
-    public DateTime ArrivalDate { get; set; }
+    public DateTime? ArrivalDate { get; set; }
 
     public string ArrivalDatePersian { get; set; }
 
