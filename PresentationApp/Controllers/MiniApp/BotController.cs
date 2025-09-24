@@ -3,7 +3,6 @@ using ApplicationLayer.DTOs.MiniApp;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Telegram.Bot;
 
 namespace PresentationApp.Controllers.MiniApp
 {
