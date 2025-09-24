@@ -52,5 +52,6 @@ namespace ApplicationLayer
         bool Any(Expression<Func<TEntity, bool>> predicate);
 
         Task UpdateAsync(TEntity entity);
+        Task UpdateRangeAsync(IEnumerable<TEntity> entities);
     }
 }

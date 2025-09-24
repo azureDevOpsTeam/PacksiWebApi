@@ -283,7 +283,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                                ?? r.Request.UserAccount.UserProfiles.FirstOrDefault().FirstName,
                     ArrivalDate = r.Request.ArrivalDate,
                     DepartureDate = r.Request.DepartureDate,
-                    ArrivalDatePersian = r.Request.ArrivalDate.HasValue ? DateTimeHelper.GetPersianDate(r.Request.ArrivalDate): "",
+                    ArrivalDatePersian = r.Request.ArrivalDate.HasValue ? DateTimeHelper.GetPersianDate(r.Request.ArrivalDate) : "",
                     DepartureDatePersian = DateTimeHelper.GetPersianDate(r.Request.DepartureDate),
                     Description = r.Request.Description,
                     DestinationCity = r.Request.DestinationCity.Name,
@@ -501,6 +501,33 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
+    public async Task<Result<Request>> UpdateRequestAsync(MiniApp_UpdateRequestCommand model, UserAccount userAccount, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var request = await _requestRepository.Query().FirstOrDefaultAsync(current => current.UserAccount == userAccount && current.Id == model.RequestId);
+            if (request == null)
+                return Result<Request>.DuplicateFailure();
+
+            request = _mapper.Map<Request>(model);
+            request.UserAccountId = userAccount.Id;
+
+            request.Status = model.IsDraft
+                ? RequestLifecycleStatus.Draft
+                : RequestLifecycleStatus.Published;
+            //Todo : Post Review For Admin
+            //: RequestLifecycleStatus.Created;
+
+            await _requestRepository.UpdateAsync(request);
+            return Result<Request>.Success(request);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در ثبت درخواست  {UserId}", userAccount.Id);
+            return Result<Request>.GeneralFailure("خطا در درخواست");
+        }
+    }
+
     public async Task<Result> AddRequestItemTypeAsync(MiniApp_CreateRequestCommand model, int requestId)
     {
         try
@@ -520,6 +547,45 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         catch (Exception exception)
         {
             _logger.LogError(exception, "خطا در ثبت اقلام  {RequestId}", requestId);
+            return Result.GeneralFailure("خطا در ثبت اقلام");
+        }
+    }
+
+    public async Task<Result> UpdateRequestItemTypeAsync(MiniApp_UpdateRequestCommand model, int requestId)
+    {
+        try
+        {
+            var oldItems = await _itemTypeRepo.Query()
+                .Where(current => current.RequestId == requestId && !current.IsDeleted)
+                .ToListAsync();
+
+            var oldItemIds = oldItems.Select(i => i.ItemType).ToList();
+            var newItemIds = model.ItemTypeIds ?? new List<int>();
+
+            var toDelete = oldItems.Where(i => !newItemIds.Contains(i.ItemType)).ToList();
+            foreach (var item in toDelete)
+                item.IsDeleted = true;
+
+            if (toDelete.Count != 0)
+                await _itemTypeRepo.UpdateRangeAsync(toDelete);
+
+            var toAdd = newItemIds
+                .Where(id => !oldItemIds.Contains(id))
+                .Select(id => new RequestItemType
+                {
+                    RequestId = requestId,
+                    ItemType = id
+                })
+                .ToList();
+
+            if (toAdd.Count != 0)
+                await _itemTypeRepo.AddRangeAsync(toAdd);
+
+            return Result.Success();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در ثبت اقلام {RequestId}", requestId);
             return Result.GeneralFailure("خطا در ثبت اقلام");
         }
     }
@@ -569,6 +635,62 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
+    public async Task<Result<List<RequestAttachment>>> UpdateRequestAttachmentsAsync(int requestId, List<IFormFile> files, RequestTypeEnum requestType)
+    {
+        try
+        {
+            var oldAttachments = await _requestAttachment.Query()
+                .Where(a => a.RequestId == requestId && !a.IsDeleted)
+                .ToListAsync();
+
+            foreach (var att in oldAttachments)
+                att.IsDeleted = true;
+
+            if (oldAttachments.Count != 0)
+                await _requestAttachment.UpdateRangeAsync(oldAttachments);
+
+            if (files != null && files.Any())
+            {
+                var uploadsRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "request");
+                if (!Directory.Exists(uploadsRoot))
+                    Directory.CreateDirectory(uploadsRoot);
+
+                var newAttachments = new List<RequestAttachment>();
+                foreach (var formFile in files)
+                {
+                    if (formFile.Length > 0)
+                    {
+                        var fileName = Guid.NewGuid() + Path.GetExtension(formFile.FileName);
+                        var filePath = Path.Combine(uploadsRoot, fileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                            await formFile.CopyToAsync(stream);
+
+                        newAttachments.Add(new RequestAttachment
+                        {
+                            RequestId = requestId,
+                            FilePath = $"https://api.packsi.net/uploads/request/{fileName}",
+                            FileType = formFile.ContentType,
+                            AttachmentType = requestType == RequestTypeEnum.Passenger
+                                ? AttachmentTypeEnum.Ticket
+                                : AttachmentTypeEnum.ItemImage,
+                        });
+                    }
+                }
+
+                await _requestAttachment.AddRangeAsync(newAttachments);
+                return Result<List<RequestAttachment>>.Success();
+            }
+
+            return Result<List<RequestAttachment>>.Success();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "خطا در آپدیت فایل‌های درخواست {RequestId}", requestId);
+            return Result<List<RequestAttachment>>.GeneralFailure("خطا در آپدیت فایل‌ها");
+        }
+    }
+
     #region User Request Data
 
     public async Task<Result<RequestDetailDto>> GetRequestByIdAsync(RequestKeyDto model)
@@ -611,7 +733,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             {
                 Id = request.Id,
                 UserAccountId = request.UserAccountId,
-                //CurrentStatus = RequestStatusEnum.FromValue(request.RequestSelections.OrderByDescending(order => order.Id).FirstOrDefault().Status).PersianName, 
+                //CurrentStatus = RequestStatusEnum.FromValue(request.RequestSelections.OrderByDescending(order => order.Id).FirstOrDefault().Status).PersianName,
                 OriginCityName = request.OriginCity?.Name,
                 OriginCountryName = request.OriginCity?.Country?.Name,
                 DestinationCityName = request.DestinationCity?.Name,

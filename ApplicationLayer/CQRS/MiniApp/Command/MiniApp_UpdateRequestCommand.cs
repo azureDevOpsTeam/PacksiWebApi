@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Http;
 
 namespace ApplicationLayer.CQRS.MiniApp.Command;
 
-public record MiniApp_CreateRequestCommand(
+public record MiniApp_UpdateRequestCommand(
+    int RequestId,
     int OriginCityId,
     int DestinationCityId,
     DateTime DepartureDate,

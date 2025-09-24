@@ -105,6 +105,12 @@ namespace InfrastructureLayer.Repository
         public void UpdateRange(IEnumerable<TEntity> entities)
            => _entities.UpdateRange(entities);
 
+        public Task UpdateRangeAsync(IEnumerable<TEntity> entities)
+        {
+            _entities.UpdateRange(entities);
+            return Task.CompletedTask;
+        }
+
         public void Remove(TEntity entity)
         {
             _entities.Entry(entity).State = EntityState.Modified;

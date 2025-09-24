@@ -20,6 +20,11 @@ namespace PresentationApp.Controllers.MiniApp
         public async Task<IActionResult> CreateAsync([FromForm] MiniApp_CreateRequestCommand model)
             => await ResultHelper.GetResultAsync(_mediator, model);
 
+        [HttpPost]
+        [Route("Update")]
+        public async Task<IActionResult> UpdateAsync([FromForm] MiniApp_UpdateRequestCommand model)
+            => await ResultHelper.GetResultAsync(_mediator, model);
+
         [HttpGet]
         [Route("ItemType")]
         public async Task<IActionResult> ItemTypeAsync()
