@@ -12,8 +12,6 @@
 
         public bool ConfirmEmail { get; set; }
 
-        public string PhoneNumber { get; set; }
-
         public bool ConfirmPhoneNumber { get; set; }
 
         public bool TwoFactorEnabled { get; set; }

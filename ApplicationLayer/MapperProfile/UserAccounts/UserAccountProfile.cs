@@ -29,6 +29,22 @@ namespace ApplicationLayer.MapperProfile.UserAccounts
             .ForMember(dest => dest.Gender, opt => opt.MapFrom(src => src.Gender));
 
             CreateMap<TelegramUserInformationDto, TelegramUserInformation>();
+            CreateMap<UserAccount, UserInvitedResultDto>()
+                .ForMember(dest => dest.UserAccountId, opt => opt.MapFrom(src => src.Id))
+            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src =>
+                    src.UserProfiles.FirstOrDefault() != null
+                        ? (src.UserProfiles.FirstOrDefault().DisplayName ??
+                           src.UserProfiles.FirstOrDefault().FirstName + " " +
+                           src.UserProfiles.FirstOrDefault().LastName) : string.Empty))
+            .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.UserProfiles.FirstOrDefault().Address))
+            .ForMember(dest => dest.Company, opt => opt.MapFrom(src => src.UserProfiles.FirstOrDefault().Company))
+            .ForMember(dest => dest.PhoneNumber,
+                opt => opt.MapFrom(src =>
+                    !string.IsNullOrEmpty(src.PhoneNumber) && src.PhoneNumber.Length >= 7
+                        ? src.PhoneNumber.Substring(0, 3) + "****" +
+                          src.PhoneNumber.Substring(src.PhoneNumber.Length - 3)
+                        : src.PhoneNumber
+                ));
         }
     }
 }

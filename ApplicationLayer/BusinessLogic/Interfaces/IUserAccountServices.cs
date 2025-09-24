@@ -61,7 +61,7 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
 
         Task<Result<int>> GetReferralCountAsync(long telegramId);
 
-        Task<Result<List<UserAccountDto>>> GetMyInvitedUsersAsync(long telegramId);
+        Task<Result<List<UserInvitedResultDto>>> GetMyInvitedUsersAsync(long telegramId);
 
         #endregion Mini App
     }

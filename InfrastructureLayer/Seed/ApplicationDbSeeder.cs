@@ -286,8 +286,12 @@ namespace InfrastructureLayer.Seed
                         new() { Name = "New York", PersianName = "نیویورک" },
                         new() { Name = "Los Angeles", PersianName = "لس آنجلس" },
                         new() { Name = "Chicago", PersianName = "شیکاگو" },
+                        new() { Name = "Dallas", PersianName = "دالاس" },
                         new() { Name = "Houston", PersianName = "هیوستون" },
-                        new() { Name = "San Francisco", PersianName = "سانفرانسیسکو" }
+                        new() { Name = "San Francisco", PersianName = "سانفرانسیسکو" },
+                        new() { Name = "Miami", PersianName = "میامی" },
+                        new() { Name = "Seattle", PersianName = "سیاتل" },
+                        new() { Name = "Boston", PersianName = "بوستون" }
                     }
                 };
 

@@ -63,19 +63,20 @@ namespace ApplicationLayer.BusinessLogic.Services
             return Result<Referral>.Success(referral);
         }
 
-        public async Task<Result<List<UserAccountDto>>> GetMyInvitedUsersAsync(long telegramId)
+        public async Task<Result<List<UserInvitedResultDto>>> GetMyInvitedUsersAsync(long telegramId)
         {
-            var invitedUsers = await _userAccountRepository.GetDbSet()
+            var invitedUsers = await _userAccountRepository.Query()
                 .Where(row => row.ReferredByUserId == telegramId)
+                .Include(current => current.UserProfiles)
                 .AsNoTracking()
                 .ToListAsync();
 
-            var userAccounts = _mapper.Map<List<UserAccountDto>>(invitedUsers);
+            var userAccounts = _mapper.Map<List<UserInvitedResultDto>>(invitedUsers);
 
             if (invitedUsers == null)
-                return Result<List<UserAccountDto>>.NotFound();
+                return Result<List<UserInvitedResultDto>>.NotFound();
 
-            return Result<List<UserAccountDto>>.Success(userAccounts);
+            return Result<List<UserInvitedResultDto>>.Success(userAccounts);
         }
 
         public async Task<Result> GetExistReferralAsync(long telegramId)
