@@ -13,9 +13,6 @@ namespace InfrastructureLayer.Configuration
             builder.Property(x => x.DepartureDate)
                    .IsRequired();
 
-            builder.Property(x => x.ArrivalDate)
-                   .IsRequired();
-
             builder.Property(x => x.RequestType)
                    .IsRequired()
                    .HasConversion<int>();

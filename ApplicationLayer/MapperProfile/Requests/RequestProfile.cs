@@ -12,7 +12,8 @@ public class RequestProfile : Profile
         CreateMap<CreateRequestDto, Request>()
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.RequestItemTypes, opt => opt.Ignore())
-            .ForMember(dest => dest.Attachments, opt => opt.Ignore());
+            .ForMember(dest => dest.Attachments, opt => opt.Ignore())
+            .ForMember(dest => dest.ArrivalDate, opt => opt.Ignore());
 
         CreateMap<UpdateRequestDto, Request>()
            .ForMember(dest => dest.Id, opt => opt.Ignore())

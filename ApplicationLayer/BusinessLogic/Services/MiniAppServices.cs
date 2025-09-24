@@ -56,8 +56,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
 
             //TODO For TEST
             if (string.IsNullOrEmpty(initData))
-                initData = "query_id=AAEUWrBhAgAAABRasGE7BfSc&user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&auth_date=1758478793&signature=10eA2rLc6hzlOEm7e1seE7MMFrC1PYW_MgsXFSbe8YaWPLi2WMIfWxZD_0X0r1XZPluYQPwKWQ8HAg_4gfSpAg&hash=8b77813ab3c7dd339a2fa3e4b67e75efc2ebe5379769f2228a302cc3d927809f";
-                //initData = "query_id=AAEfymc9AAAAAB_KZz3-1lnV&user=%7B%22id%22%3A1030212127%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22Shahram0weisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FEVbiVIJZP-ipzuxmiuKkh1k1-dJF0U16tjKJdfQM7M4.svg%22%7D&auth_date=1757781398&signature=HOhywJXP-xaV5T3lOI4yIQNiPBgE_jzP5fEgTyi_oH61WoJE_5Qrvq6LXmlJ5R_RBA16BQlJExt9N4r2-dOrCg&hash=75baa2138205e2ac7d484e968ae1fec7f3b51ffe9d407f7fb0f95ea2e25ad426";
+                //initData = "query_id=AAEUWrBhAgAAABRasGE7BfSc&user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&auth_date=1758478793&signature=10eA2rLc6hzlOEm7e1seE7MMFrC1PYW_MgsXFSbe8YaWPLi2WMIfWxZD_0X0r1XZPluYQPwKWQ8HAg_4gfSpAg&hash=8b77813ab3c7dd339a2fa3e4b67e75efc2ebe5379769f2228a302cc3d927809f";
+                initData = "query_id=AAEfymc9AAAAAB_KZz3-1lnV&user=%7B%22id%22%3A1030212127%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22Shahram0weisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FEVbiVIJZP-ipzuxmiuKkh1k1-dJF0U16tjKJdfQM7M4.svg%22%7D&auth_date=1757781398&signature=HOhywJXP-xaV5T3lOI4yIQNiPBgE_jzP5fEgTyi_oH61WoJE_5Qrvq6LXmlJ5R_RBA16BQlJExt9N4r2-dOrCg&hash=75baa2138205e2ac7d484e968ae1fec7f3b51ffe9d407f7fb0f95ea2e25ad426";
 
             if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
@@ -243,6 +243,8 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 .Select(p => p.CountryOfResidenceId)
                 .FirstOrDefaultAsync();
 
+            var requestsRaw2 = await _requestRepository.Query().ToListAsync();
+
             var requestsRaw = await _requestRepository.Query()
                 .Where(current => current.UserAccountId != user.Id
                 && (current.OriginCity.CountryId == userCountryId || current.DestinationCity.CountryId == userCountryId))
@@ -281,9 +283,9 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                     UserAccountId = r.Request.UserAccountId,
                     FullName = r.Request.UserAccount.UserProfiles.FirstOrDefault().DisplayName
                                ?? r.Request.UserAccount.UserProfiles.FirstOrDefault().FirstName,
-                    ArrivalDate = r.Request.ArrivalDate,
+                    //ArrivalDate = r.Request.ArrivalDate,
                     DepartureDate = r.Request.DepartureDate,
-                    ArrivalDatePersian = r.Request.ArrivalDate.HasValue ? DateTimeHelper.GetPersianDate(r.Request.ArrivalDate) : "",
+                    //ArrivalDatePersian = r.Request.ArrivalDate.HasValue ? DateTimeHelper.GetPersianDate(r.Request.ArrivalDate) : "",
                     DepartureDatePersian = DateTimeHelper.GetPersianDate(r.Request.DepartureDate),
                     Description = r.Request.Description,
                     DestinationCity = r.Request.DestinationCity.Name,
