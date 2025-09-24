@@ -11,10 +11,9 @@ namespace PresentationApp.Controllers.MiniApp
     [ApiController]
     [AllowAnonymous]
     [ApiExplorerSettings(GroupName = "MiniApp")]
-    public class BotController(IMediator mediator, ITelegramBotClient botClient) : ControllerBase
+    public class BotController(IMediator mediator) : ControllerBase
     {
         private readonly IMediator _mediator = mediator;
-        private readonly ITelegramBotClient _botClient = botClient;
 
         [HttpPost]
         [Route("Referral")]
@@ -31,7 +30,6 @@ namespace PresentationApp.Controllers.MiniApp
                     RegisterReferralDto model = new() { TelegramUserId = tgId, ReferralCode = referralCode };
                     await _mediator.Send(new MiniApp_RegisterReferralCommand(model));
                 }
-                await _botClient.SendMessage(chatId: update.Message.From.Id, text: "بات کار می‌کنه ✅");
             }
             return Ok();
         }
