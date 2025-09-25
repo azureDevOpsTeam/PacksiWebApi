@@ -110,11 +110,11 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
-            //TODO For TEST
-            var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
-
+            var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4";
             var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", userId.ToString());
-            if (Directory.Exists(directoryPath) == false)
+
+            // ساخت پوشه همیشه
+            if (!Directory.Exists(directoryPath))
                 Directory.CreateDirectory(directoryPath);
 
             // مرحله 1: گرفتن عکس پروفایل
@@ -122,28 +122,43 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 $"https://api.telegram.org/bot{botToken}/getUserProfilePhotos?user_id={userId}&limit=1"
             );
 
-            var photos = System.Text.Json.JsonDocument.Parse(photosResponse);
-            if (!photos.RootElement.GetProperty("result").GetProperty("photos").EnumerateArray().Any())
-                return null;
+            using var photosDoc = System.Text.Json.JsonDocument.Parse(photosResponse);
+            var result = photosDoc.RootElement.GetProperty("result");
 
-            var fileId = photos.RootElement
-                .GetProperty("result")
-                .GetProperty("photos")[0][0]
-                .GetProperty("file_id")
-                .GetString();
+            int totalPhotos = result.GetProperty("total_count").GetInt32();
+            if (totalPhotos == 0)
+            {
+                _logger.LogInformation("کاربر {UserId} عکس پروفایل ندارد.", userId);
+                return null;
+            }
+
+            var photosArray = result.GetProperty("photos").EnumerateArray();
+            var firstPhoto = photosArray.FirstOrDefault()[0]; // گرفتن کوچکترین سایز
+            if (firstPhoto.ValueKind == System.Text.Json.JsonValueKind.Undefined)
+            {
+                _logger.LogWarning("کاربر {UserId} عکس پروفایل تعریف نشده است.", userId);
+                return null;
+            }
+
+            string fileId = firstPhoto.GetProperty("file_id").GetString();
 
             // مرحله 2: گرفتن file_path
             var fileResponse = await _httpClient.GetStringAsync(
                 $"https://api.telegram.org/bot{botToken}/getFile?file_id={fileId}"
             );
 
-            var fileJson = System.Text.Json.JsonDocument.Parse(fileResponse);
-            var filePath = fileJson.RootElement
-                .GetProperty("result")
-                .GetProperty("file_path")
-                .GetString();
+            using var fileDoc = System.Text.Json.JsonDocument.Parse(fileResponse);
+            string filePath = fileDoc.RootElement.GetProperty("result").GetProperty("file_path").GetString();
+
+            if (string.IsNullOrEmpty(filePath))
+            {
+                _logger.LogWarning("کاربر {UserId} file_path ندارد.", userId);
+                return null;
+            }
 
             var extension = Path.GetExtension(filePath);
+            if (string.IsNullOrEmpty(extension))
+                extension = ".jpg"; // fallback
 
             var savePath = Path.Combine(directoryPath, $"{userId}{extension}");
 
@@ -152,15 +167,15 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             var fileBytes = await _httpClient.GetByteArrayAsync(fileUrl);
 
             await File.WriteAllBytesAsync(savePath, fileBytes);
-            var relativePath = string.Empty;
 
-            if (userId != 0 && !string.IsNullOrEmpty(extension))
-                relativePath = $"/uploads/{userId}/{userId}{extension}";
+            string relativePath = $"/uploads/{userId}/{userId}{extension}";
+            _logger.LogInformation("عکس پروفایل کاربر {UserId} با موفقیت ذخیره شد.", userId);
+
             return relativePath;
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            _logger.LogError(exception, "خطا در اعتبارسنجی کاربر");
+            _logger.LogError(ex, "خطا در دانلود عکس پروفایل کاربر {UserId}", userId);
             return null;
         }
     }
@@ -240,78 +255,80 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         try
         {
             var today = DateTime.Now.Date;
+
             var userCountryId = await _userProfileRepository.Query()
                 .Where(p => p.UserAccountId == user.Id)
                 .Select(p => p.CountryOfResidenceId)
                 .FirstOrDefaultAsync();
 
-            var requestsRaw2 = await _requestRepository.Query().ToListAsync();
-
-            var requestsRaw = await _requestRepository.Query()
-                .Where(current => current.UserAccountId != user.Id
-                && (current.OriginCity.CountryId == userCountryId || current.DestinationCity.CountryId == userCountryId))
-                //&& current.ArrivalDate.Date < today
-                //&& current.Status == RequestLifecycleStatus.Published)
+            // کوئری پایه
+            var baseQuery = _requestRepository.Query()
+                .Where(r => r.UserAccountId != user.Id)
+                .OrderByDescending(current => current.Id)
                 .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
-                .Include(c => c.UserRatings)
+                .Include(r => r.UserRatings)
                 .Include(r => r.Suggestions).ThenInclude(s => s.RequestStatusHistories)
                 .Include(r => r.Suggestions).ThenInclude(s => s.UserAccount).ThenInclude(ua => ua.UserProfiles)
                 .Include(r => r.RequestItemTypes)
                 .Include(r => r.OriginCity).ThenInclude(c => c.Country)
                 .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
+                .AsQueryable();
+
+            // شرط فیلتر کشور اگر userCountryId مشخص باشد
+            if (userCountryId.HasValue && userCountryId.Value != 0)
+                baseQuery = baseQuery.Where(r =>
+                    r.OriginCity.CountryId == userCountryId.Value ||
+                    r.DestinationCity.CountryId == userCountryId.Value);
+            else
+                baseQuery = baseQuery.Take(20);
+
+            // اجرای کوئری + مپ مستقیم به TripsDto
+            var result = await baseQuery
                 .Select(r => new
                 {
                     Request = r,
-                    LastStatusValue = r.Suggestions.Where(sel => sel.UserAccountId == user.Id)
-                    .SelectMany(sel => sel.RequestStatusHistories)
-                    .OrderByDescending(h => h.Id)
-                    .Select(h => (int?)h.Status)
-                    .FirstOrDefault()
-                }).ToListAsync();
+                    LastStatusValue = r.Suggestions
+                        .Where(sel => sel.UserAccountId == user.Id)
+                        .SelectMany(sel => sel.RequestStatusHistories)
+                        .OrderByDescending(h => h.Id)
+                        .Select(h => (int?)h.Status)
+                        .FirstOrDefault()
+                })
+                .AsNoTracking()
+                .ToListAsync();
 
-            var requests = requestsRaw.Select(r => new
+            var trips = result.Select(r => new TripsDto
             {
-                r.Request,
+                RequestId = r.Request.Id,
+                UserAccountId = r.Request.UserAccountId,
+                FullName = r.Request.UserAccount.UserProfiles.FirstOrDefault().DisplayName
+                           ?? r.Request.UserAccount.UserProfiles.FirstOrDefault().FirstName,
+                DepartureDate = r.Request.DepartureDate,
+                DepartureDatePersian = DateTimeHelper.GetPersianDate(r.Request.DepartureDate),
+                Description = r.Request.Description,
+                DestinationCity = r.Request.DestinationCity.Name,
+                OriginCity = r.Request.OriginCity.Name,
+                ItemTypes = [.. r.Request.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).Name)],
+                ItemTypesFa = [.. r.Request.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).PersianName)],
+                MaxHeightCm = r.Request.MaxHeightCm,
+                MaxLengthCm = r.Request.MaxLengthCm,
+                MaxWeightKg = r.Request.MaxWeightKg,
+                MaxWidthCm = r.Request.MaxWidthCm,
                 LastStatus = r.LastStatusValue.HasValue
                     ? RequestProcessStatus.FromValue(r.LastStatusValue.Value)
-                    : RequestProcessStatus.Published
-            }).ToList();
-
-            var result = requests.Select(r =>
-            {
-                var dto = new TripsDto
-                {
-                    RequestId = r.Request.Id,
-                    UserAccountId = r.Request.UserAccountId,
-                    FullName = r.Request.UserAccount.UserProfiles.FirstOrDefault().DisplayName
-                               ?? r.Request.UserAccount.UserProfiles.FirstOrDefault().FirstName,
-                    //ArrivalDate = r.Request.ArrivalDate,
-                    DepartureDate = r.Request.DepartureDate,
-                    //ArrivalDatePersian = r.Request.ArrivalDate.HasValue ? DateTimeHelper.GetPersianDate(r.Request.ArrivalDate) : "",
-                    DepartureDatePersian = DateTimeHelper.GetPersianDate(r.Request.DepartureDate),
-                    Description = r.Request.Description,
-                    DestinationCity = r.Request.DestinationCity.Name,
-                    OriginCity = r.Request.OriginCity.Name,
-                    ItemTypes = [.. r.Request.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).Name)],
-                    ItemTypesFa = [.. r.Request.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).PersianName)],
-                    MaxHeightCm = r.Request.MaxHeightCm,
-                    MaxLengthCm = r.Request.MaxLengthCm,
-                    MaxWeightKg = r.Request.MaxWeightKg,
-                    MaxWidthCm = r.Request.MaxWidthCm,
-                    LastStatus = r.LastStatus,
-                    TripType = r.Request.OriginCity.CountryId == userCountryId ? "outbound"
-                        : r.Request.DestinationCity.CountryId == userCountryId ? "inbound" : "",
-                    UserRate = r.Request.UserRatings
+                    : RequestProcessStatus.Published,
+                TripType = userCountryId.HasValue && userCountryId.Value != 0
+                    ? (r.Request.OriginCity.CountryId == userCountryId.Value ? "outbound"
+                        : r.Request.DestinationCity.CountryId == userCountryId.Value ? "inbound" : "")
+                    : "all",
+                UserRate = r.Request.UserRatings
                     .Where(ur => ur.RateeUserAccountId == r.Request.UserAccountId)
                     .Select(ur => (double?)ur.Rating)
                     .DefaultIfEmpty(0)
-                    .Average(),
-                };
-
-                return dto;
+                    .Average()
             }).ToList();
 
-            return Result<List<TripsDto>>.Success(result);
+            return Result<List<TripsDto>>.Success(trips);
         }
         catch (Exception exception)
         {
@@ -319,6 +336,89 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت درخواست‌ها");
         }
     }
+
+    //public async Task<Result<List<TripsDto>>> GetRequestTripsAsync(UserAccount user)
+    //{
+    //    try
+    //    {
+    //        var today = DateTime.Now.Date;
+    //        var userCountryId = await _userProfileRepository.Query()
+    //            .Where(p => p.UserAccountId == user.Id)
+    //            .Select(p => p.CountryOfResidenceId)
+    //            .FirstOrDefaultAsync();
+
+    //        var requestsRaw = await _requestRepository.Query()
+    //            .Where(current => current.UserAccountId != user.Id
+    //            && (current.OriginCity.CountryId == userCountryId || current.DestinationCity.CountryId == userCountryId))
+    //            //&& current.ArrivalDate.Date < today
+    //            //&& current.Status == RequestLifecycleStatus.Published)
+    //            .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
+    //            .Include(c => c.UserRatings)
+    //            .Include(r => r.Suggestions).ThenInclude(s => s.RequestStatusHistories)
+    //            .Include(r => r.Suggestions).ThenInclude(s => s.UserAccount).ThenInclude(ua => ua.UserProfiles)
+    //            .Include(r => r.RequestItemTypes)
+    //            .Include(r => r.OriginCity).ThenInclude(c => c.Country)
+    //            .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
+    //            .Select(r => new
+    //            {
+    //                Request = r,
+    //                LastStatusValue = r.Suggestions.Where(sel => sel.UserAccountId == user.Id)
+    //                .SelectMany(sel => sel.RequestStatusHistories)
+    //                .OrderByDescending(h => h.Id)
+    //                .Select(h => (int?)h.Status)
+    //                .FirstOrDefault()
+    //            }).ToListAsync();
+
+    //        var requests = requestsRaw.Select(r => new
+    //        {
+    //            r.Request,
+    //            LastStatus = r.LastStatusValue.HasValue
+    //                ? RequestProcessStatus.FromValue(r.LastStatusValue.Value)
+    //                : RequestProcessStatus.Published
+    //        }).ToList();
+
+    //        var result = requests.Select(r =>
+    //        {
+    //            var dto = new TripsDto
+    //            {
+    //                RequestId = r.Request.Id,
+    //                UserAccountId = r.Request.UserAccountId,
+    //                FullName = r.Request.UserAccount.UserProfiles.FirstOrDefault().DisplayName
+    //                           ?? r.Request.UserAccount.UserProfiles.FirstOrDefault().FirstName,
+    //                //ArrivalDate = r.Request.ArrivalDate,
+    //                DepartureDate = r.Request.DepartureDate,
+    //                //ArrivalDatePersian = r.Request.ArrivalDate.HasValue ? DateTimeHelper.GetPersianDate(r.Request.ArrivalDate) : "",
+    //                DepartureDatePersian = DateTimeHelper.GetPersianDate(r.Request.DepartureDate),
+    //                Description = r.Request.Description,
+    //                DestinationCity = r.Request.DestinationCity.Name,
+    //                OriginCity = r.Request.OriginCity.Name,
+    //                ItemTypes = [.. r.Request.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).Name)],
+    //                ItemTypesFa = [.. r.Request.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).PersianName)],
+    //                MaxHeightCm = r.Request.MaxHeightCm,
+    //                MaxLengthCm = r.Request.MaxLengthCm,
+    //                MaxWeightKg = r.Request.MaxWeightKg,
+    //                MaxWidthCm = r.Request.MaxWidthCm,
+    //                LastStatus = r.LastStatus,
+    //                TripType = r.Request.OriginCity.CountryId == userCountryId ? "outbound"
+    //                    : r.Request.DestinationCity.CountryId == userCountryId ? "inbound" : "",
+    //                UserRate = r.Request.UserRatings
+    //                .Where(ur => ur.RateeUserAccountId == r.Request.UserAccountId)
+    //                .Select(ur => (double?)ur.Rating)
+    //                .DefaultIfEmpty(0)
+    //                .Average(),
+    //            };
+
+    //            return dto;
+    //        }).ToList();
+
+    //        return Result<List<TripsDto>>.Success(result);
+    //    }
+    //    catch (Exception exception)
+    //    {
+    //        _logger.LogError(exception, "خطا در دریافت درخواست‌ها {UserId}", user.Id);
+    //        return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت درخواست‌ها");
+    //    }
+    //}
 
     public async Task<Result<RequestInprogressDto>> GetInProgressRequestAsync(UserAccount user)
     {
@@ -1480,26 +1580,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 })
                 .ToListAsync();
 
-
-            List<AdsListDto> ads2 = new();
-            ads2.Add(new AdsListDto
-            {
-                Id = 1,
-                Title = "ثبلیغات",
-                Status = 1,
-                PostType = 1
-            });
-
-            ads2.Add(new AdsListDto
-            {
-                Id = 2,
-                Title = "ثبلیغات",
-                Status = 2,
-                PostType = 2
-            });
-
-
-            return Result<List<AdsListDto>>.Success(ads2);
+            return Result<List<AdsListDto>>.Success(ads);
         }
         catch (Exception ex)
         {
