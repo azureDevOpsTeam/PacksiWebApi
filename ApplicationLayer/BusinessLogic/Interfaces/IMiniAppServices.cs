@@ -1,5 +1,6 @@
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.DTOs;
+using ApplicationLayer.DTOs.Advertisements;
 using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.Requests;
 using ApplicationLayer.DTOs.TelegramApis;
@@ -72,6 +73,10 @@ public interface IMiniAppServices
     Task<Result<List<RequestAttachment>>> AddRequestAttachmentAsync(int requestId, List<IFormFile> files, RequestTypeEnum requestType);
 
     Task<Result<Request>> UpdateRequestAsync(MiniApp_UpdateRequestCommand model, UserAccount userAccount, CancellationToken cancellationToken);
+
     Task<Result> UpdateRequestItemTypeAsync(MiniApp_UpdateRequestCommand model, int requestId);
+
     Task<Result<List<RequestAttachment>>> UpdateRequestAttachmentsAsync(int requestId, List<IFormFile> files, RequestTypeEnum requestType);
+
+    Task<Result<List<AdsListDto>>> GetAdsAsync(UserAccount userAccount);
 }
