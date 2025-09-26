@@ -3,7 +3,6 @@ using ApplicationLayer.DTOs.MiniApp;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Telegram.Bot;
 
 namespace PresentationApp.Controllers.MiniApp;
 
@@ -11,17 +10,15 @@ namespace PresentationApp.Controllers.MiniApp;
 [ApiController]
 [AllowAnonymous]
 [ApiExplorerSettings(GroupName = "MiniApp")]
-public class BotController(IMediator mediator, ITelegramBotClient botClient, ILogger logger) : ControllerBase
+public class BotController(IMediator mediator) : ControllerBase
 {
     private readonly IMediator _mediator = mediator;
-    private readonly ITelegramBotClient _botClient = botClient;
-    private readonly ILogger _logger = logger;
 
     [HttpPost]
     [Route("Referral")]
     public async Task<IActionResult> ReferralPost([FromBody] Telegram.Bot.Types.Update update)
     {
-        if (update.Message?.Text is { } text && text.StartsWith("/start"))
+        if (update.Message?.Text != null && update.Message.Text.StartsWith("/start"))
         {
             var parts = update.Message.Text.Split(' ', 2);
             var referralCode = parts.Length > 1 ? parts[1] : null;

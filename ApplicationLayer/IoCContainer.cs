@@ -20,7 +20,6 @@ using Serilog.Sinks.MSSqlServer;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
-using Telegram.Bot;
 
 #endregion
 
