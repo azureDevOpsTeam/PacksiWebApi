@@ -55,7 +55,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         try
         {
             //TODO For TEST
-            var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
+            var botToken = _botClient.Token;
             var initData = _httpContextAccessor.HttpContext?.Request.Headers["X-Telegram-Init-Data"].FirstOrDefault();
 
             //TODO For TEST
