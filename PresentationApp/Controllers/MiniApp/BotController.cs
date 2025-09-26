@@ -14,6 +14,8 @@ namespace PresentationApp.Controllers.MiniApp;
 public class BotController(IMediator mediator, ITelegramBotClient botClient, ILogger logger) : ControllerBase
 {
     private readonly IMediator _mediator = mediator;
+    private readonly ITelegramBotClient _botClient = botClient;
+    private readonly ILogger _logger = logger;
 
     [HttpPost]
     [Route("Referral")]
@@ -30,11 +32,12 @@ public class BotController(IMediator mediator, ITelegramBotClient botClient, ILo
                 RegisterReferralDto model = new() { TelegramUserId = tgId, ReferralCode = referralCode };
                 await _mediator.Send(new MiniApp_RegisterReferralCommand(model));
             }
-            logger.LogInformation("متد استارت با موفقیت فراخوانی شده است");
-            await botClient.SendMessage(
-                chatId: update.Message.Chat.Id,
-                text: "✨ به اولین و بزرگ‌ترین ربات لجستیکی خوش آمدید! ✨\r\nاینجا می‌توانید فقط با تکمیل اطلاعات خود، بدون هیچ محدودیتی از تمام امکانات هوشمند نرم‌افزار استفاده کنید.\r\n💎 همچنین با دعوت از دوستانتان، فرصت ویژه‌ای برای کسب درآمد پایدار و همیشگی خواهید داشت.\r\n🚀 همین حالا شروع کنید و از امکانات حرفه‌ای ما لذت ببرید!"
-            );
+            await _botClient.SendMessage(123456789, "تست مستقیم 🚀");
+
+            await _botClient.SendMessage(
+                chatId: update.Message!.Chat.Id,
+                text: "✨ به اولین و بزرگ‌ترین ربات لجستیکی خوش آمدید! ✨\r\nاینجا می‌توانید فقط با تکمیل اطلاعات خود، بدون هیچ محدودیتی از تمام امکانات هوشمند نرم‌افزار استفاده کنید.\r\n💎 همچنین با دعوت از دوستانتان، فرصت ویژه‌ای برای کسب درآمد پایدار و همیشگی خواهید داشت.\r\n🚀 همین حالا شروع کنید و از امکانات حرفه‌ای ما لذت ببرید!",
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
         }
         return Ok();
     }
