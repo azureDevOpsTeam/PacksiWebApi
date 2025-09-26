@@ -1,4 +1,4 @@
-﻿using ApplicationLayer.BusinessLogic.Interfaces;
+using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.DTOs;
 using ApplicationLayer.Extensions;
@@ -7,11 +7,12 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class MiniApp_RegisterReferralCommandHandler(IUnitOfWork unitOfWork, IUserAccountServices userAccountServices, IWalletService walletService) : IRequestHandler<MiniApp_RegisterReferralCommand, HandlerResult>
+public class MiniApp_RegisterReferralCommandHandler(IUnitOfWork unitOfWork, IUserAccountServices userAccountServices, IWalletService walletService, IMiniAppServices miniAppServices) : IRequestHandler<MiniApp_RegisterReferralCommand, HandlerResult>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IUserAccountServices _userAccountServices = userAccountServices;
     private readonly IWalletService _walletService = walletService;
+    private readonly IMiniAppServices _miniAppServices = miniAppServices;
 
     public async Task<HandlerResult> Handle(MiniApp_RegisterReferralCommand request, CancellationToken cancellationToken)
     {
@@ -33,7 +34,20 @@ public class MiniApp_RegisterReferralCommandHandler(IUnitOfWork unitOfWork, IUse
 
         var result = await _userAccountServices.AddReferralUserAsync(inviterTelegramId.Value, request.Model);
         if (result.IsSuccess)
+        {
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            
+            // ارسال پیغام خوش‌آمدگویی به کاربر جدید
+            try
+            {
+                await _miniAppServices.SendWelcomeMessageAsync(request.Model.TelegramUserId, request.Model.ReferralCode);
+            }
+            catch (Exception)
+            {
+                // در صورت خطا در ارسال پیغام، عملیات ثبت رفرال را متوقف نمی‌کنیم
+                // فقط لاگ می‌کنیم که پیغام ارسال نشده است
+            }
+        }
 
         decimal bonusAmount = 0.01m;
         var addTransaction = await _walletService.CreditAsync(getInviter.Value.Id, CurrencyEnum.USDT, bonusAmount, TransactionTypeEnum.Bonus);

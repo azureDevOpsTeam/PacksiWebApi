@@ -20,6 +20,8 @@ public interface IMiniAppServices
 
     Task<Result<bool>> SendMessageAsync(long chatId);
 
+    Task<Result<bool>> SendWelcomeMessageAsync(long telegramUserId, string? referralCode = null);
+
     Task<Result<List<RequestItemTypeDto>>> ItemTypeAsync();
 
     Task<Result<List<TripsDto>>> GetRequestTripsAsync(UserAccount user);

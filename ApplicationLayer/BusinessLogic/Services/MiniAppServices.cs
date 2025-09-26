@@ -19,6 +19,8 @@ using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+using Telegram.Bot;
+using Telegram.Bot.Types;
 
 namespace ApplicationLayer.BusinessLogic.Services;
 
@@ -46,7 +48,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
     private readonly IMapper _mapper = mapper;
-    //private readonly TelegramBotClient _botClient = new(configuration["TelegramBot:Token"] ?? throw new InvalidOperationException("TelegramBot:Token configuration is missing"));
+    private readonly TelegramBotClient _botClient = new(configuration["TelegramBot:Token"] ?? "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A");
 
     public async Task<Result<TelegramMiniAppValidationResultDto>> ValidateTelegramMiniAppUserAsync()
     {
@@ -1348,6 +1350,39 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         {
             _logger.LogError(exception, "خطا در ارسال پیام به چت {ChatId}", chatId);
             return Task.FromResult(Result<bool>.Success(false));
+        }
+    }
+
+    public async Task<Result<bool>> SendWelcomeMessageAsync(long telegramUserId, string? referralCode = null)
+    {
+        try
+        {
+            var welcomeMessage = "🎉 خوش آمدید به پکسی!\n\n" +
+                               "ما خوشحالیم که شما به خانواده پکسی پیوستید. " +
+                               "با استفاده از ربات ما می‌توانید:\n\n" +
+                               "✅ درخواست حمل و نقل ثبت کنید\n" +
+                               "✅ پیشنهادات مسافران را مشاهده کنید\n" +
+                               "✅ از امکانات ویژه استفاده کنید\n\n";
+
+            if (!string.IsNullOrEmpty(referralCode))
+            {
+                welcomeMessage += $"🎁 شما با کد معرف {referralCode} وارد شده‌اید و از مزایای ویژه بهره‌مند خواهید شد!\n\n";
+            }
+
+            welcomeMessage += "برای شروع، روی دکمه زیر کلیک کنید 👇";
+
+            await _botClient.SendMessage(
+                chatId: telegramUserId,
+                text: welcomeMessage
+            );
+
+            _logger.LogInformation("پیغام خوش‌آمدگویی با موفقیت به کاربر {TelegramUserId} ارسال شد", telegramUserId);
+            return Result<bool>.Success(true);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "خطا در ارسال پیغام خوش‌آمدگویی به کاربر {TelegramUserId}", telegramUserId);
+            return Result<bool>.GeneralFailure("خطا در ارسال پیغام خوش‌آمدگویی");
         }
     }
 
