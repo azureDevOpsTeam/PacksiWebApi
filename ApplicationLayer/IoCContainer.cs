@@ -34,6 +34,7 @@ namespace ApplicationLayer
             services.AddSingleton<IApplicationBuilder, ApplicationBuilder>();
             services.AddHttpContextAccessor();
             services.MediatRDependency();
+            services.RegisterTelegram();
             services.RegisterServicesAutomatically();
             services.FluentValidationConfiguration();
             services.Configure<DatabaseSettings>(configuration.GetSection("DatabaseSettings"));
