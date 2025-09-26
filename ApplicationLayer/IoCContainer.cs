@@ -20,6 +20,7 @@ using Serilog.Sinks.MSSqlServer;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using Telegram.Bot;
 
 #endregion
 
@@ -216,7 +217,7 @@ namespace ApplicationLayer
 
         private static void MediatRDependency(this IServiceCollection services)
         {
-            services.AddMediatR(m => 
+            services.AddMediatR(m =>
             {
                 m.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
                 // Register handlers from PresentationApp assembly for domain events
@@ -265,6 +266,12 @@ namespace ApplicationLayer
                     services.AddSingleton(type.ServiceType, type.ImplementationType);
                 }
             }
+        }
+
+        public static void RegisterTelegram(this IServiceCollection services)
+        {
+            services.AddSingleton<ITelegramBotClient>(new TelegramBotClient("8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A")
+);
         }
     }
 }
