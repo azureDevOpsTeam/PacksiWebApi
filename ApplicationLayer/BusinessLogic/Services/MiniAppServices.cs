@@ -20,7 +20,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using Telegram.Bot;
-using Telegram.Bot.Types;
 
 namespace ApplicationLayer.BusinessLogic.Services;
 
@@ -61,7 +60,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             //TODO For TEST
             if (string.IsNullOrEmpty(initData))
                 //initData = "query_id=AAEUWrBhAgAAABRasGE7BfSc&user=%7B%22id%22%3A5933914644%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FQGwtYapyXkY4-jZJkczPeUb_XKfimJozOKy8lZzBhtQc4cO4xBQzwdPwcb_QSNih.svg%22%7D&auth_date=1758478793&signature=10eA2rLc6hzlOEm7e1seE7MMFrC1PYW_MgsXFSbe8YaWPLi2WMIfWxZD_0X0r1XZPluYQPwKWQ8HAg_4gfSpAg&hash=8b77813ab3c7dd339a2fa3e4b67e75efc2ebe5379769f2228a302cc3d927809f";
-            initData = "query_id=AAEfymc9AAAAAB_KZz3-1lnV&user=%7B%22id%22%3A1030212127%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22Shahram0weisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FEVbiVIJZP-ipzuxmiuKkh1k1-dJF0U16tjKJdfQM7M4.svg%22%7D&auth_date=1757781398&signature=HOhywJXP-xaV5T3lOI4yIQNiPBgE_jzP5fEgTyi_oH61WoJE_5Qrvq6LXmlJ5R_RBA16BQlJExt9N4r2-dOrCg&hash=75baa2138205e2ac7d484e968ae1fec7f3b51ffe9d407f7fb0f95ea2e25ad426";
+                initData = "query_id=AAEfymc9AAAAAB_KZz3-1lnV&user=%7B%22id%22%3A1030212127%2C%22first_name%22%3A%22Shahram%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22Shahram0weisy%22%2C%22language_code%22%3A%22en%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FEVbiVIJZP-ipzuxmiuKkh1k1-dJF0U16tjKJdfQM7M4.svg%22%7D&auth_date=1757781398&signature=HOhywJXP-xaV5T3lOI4yIQNiPBgE_jzP5fEgTyi_oH61WoJE_5Qrvq6LXmlJ5R_RBA16BQlJExt9N4r2-dOrCg&hash=75baa2138205e2ac7d484e968ae1fec7f3b51ffe9d407f7fb0f95ea2e25ad426";
 
             if (string.IsNullOrWhiteSpace(initData) || string.IsNullOrWhiteSpace(botToken))
             {
@@ -112,11 +111,11 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     {
         try
         {
-            var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4";
-            var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", userId.ToString());
+            //TODO For TEST
+            var botToken = "8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A";
 
-            // ساخت پوشه همیشه
-            if (!Directory.Exists(directoryPath))
+            var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", userId.ToString());
+            if (Directory.Exists(directoryPath) == false)
                 Directory.CreateDirectory(directoryPath);
 
             // مرحله 1: گرفتن عکس پروفایل
@@ -124,43 +123,28 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
                 $"https://api.telegram.org/bot{botToken}/getUserProfilePhotos?user_id={userId}&limit=1"
             );
 
-            using var photosDoc = System.Text.Json.JsonDocument.Parse(photosResponse);
-            var result = photosDoc.RootElement.GetProperty("result");
-
-            int totalPhotos = result.GetProperty("total_count").GetInt32();
-            if (totalPhotos == 0)
-            {
-                _logger.LogInformation("کاربر {UserId} عکس پروفایل ندارد.", userId);
+            var photos = System.Text.Json.JsonDocument.Parse(photosResponse);
+            if (!photos.RootElement.GetProperty("result").GetProperty("photos").EnumerateArray().Any())
                 return null;
-            }
 
-            var photosArray = result.GetProperty("photos").EnumerateArray();
-            var firstPhoto = photosArray.FirstOrDefault()[0]; // گرفتن کوچکترین سایز
-            if (firstPhoto.ValueKind == System.Text.Json.JsonValueKind.Undefined)
-            {
-                _logger.LogWarning("کاربر {UserId} عکس پروفایل تعریف نشده است.", userId);
-                return null;
-            }
-
-            string fileId = firstPhoto.GetProperty("file_id").GetString();
+            var fileId = photos.RootElement
+                .GetProperty("result")
+                .GetProperty("photos")[0][0]
+                .GetProperty("file_id")
+                .GetString();
 
             // مرحله 2: گرفتن file_path
             var fileResponse = await _httpClient.GetStringAsync(
                 $"https://api.telegram.org/bot{botToken}/getFile?file_id={fileId}"
             );
 
-            using var fileDoc = System.Text.Json.JsonDocument.Parse(fileResponse);
-            string filePath = fileDoc.RootElement.GetProperty("result").GetProperty("file_path").GetString();
-
-            if (string.IsNullOrEmpty(filePath))
-            {
-                _logger.LogWarning("کاربر {UserId} file_path ندارد.", userId);
-                return null;
-            }
+            var fileJson = System.Text.Json.JsonDocument.Parse(fileResponse);
+            var filePath = fileJson.RootElement
+                .GetProperty("result")
+                .GetProperty("file_path")
+                .GetString();
 
             var extension = Path.GetExtension(filePath);
-            if (string.IsNullOrEmpty(extension))
-                extension = ".jpg"; // fallback
 
             var savePath = Path.Combine(directoryPath, $"{userId}{extension}");
 
@@ -169,15 +153,15 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             var fileBytes = await _httpClient.GetByteArrayAsync(fileUrl);
 
             await File.WriteAllBytesAsync(savePath, fileBytes);
+            var relativePath = string.Empty;
 
-            string relativePath = $"/uploads/{userId}/{userId}{extension}";
-            _logger.LogInformation("عکس پروفایل کاربر {UserId} با موفقیت ذخیره شد.", userId);
-
+            if (userId != 0 && !string.IsNullOrEmpty(extension))
+                relativePath = $"/uploads/{userId}/{userId}{extension}";
             return relativePath;
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            _logger.LogError(ex, "خطا در دانلود عکس پروفایل کاربر {UserId}", userId);
+            _logger.LogError(exception, "خطا در اعتبارسنجی کاربر");
             return null;
         }
     }
