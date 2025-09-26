@@ -34,7 +34,6 @@ namespace ApplicationLayer
             services.AddSingleton<IApplicationBuilder, ApplicationBuilder>();
             services.AddHttpContextAccessor();
             services.MediatRDependency();
-            services.RegisterTelegram();
             services.RegisterServicesAutomatically();
             services.FluentValidationConfiguration();
             services.Configure<DatabaseSettings>(configuration.GetSection("DatabaseSettings"));
@@ -267,11 +266,6 @@ namespace ApplicationLayer
                     services.AddSingleton(type.ServiceType, type.ImplementationType);
                 }
             }
-        }
-
-        public static void RegisterTelegram(this IServiceCollection services)
-        {
-            services.AddSingleton<ITelegramBotClient>(new TelegramBotClient("8109507045:AAG5iY_c1jLUSDeOOPL1N4bnXPWSvwVgx4A"));
         }
     }
 }
