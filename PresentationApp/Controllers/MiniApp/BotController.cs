@@ -1,8 +1,10 @@
 ﻿using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.DTOs.MiniApp;
+using ApplicationLayer.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Telegram.Bot.Types;
 
 namespace PresentationApp.Controllers.MiniApp;
 
@@ -16,7 +18,7 @@ public class BotController(IMediator mediator) : ControllerBase
 
     [HttpPost]
     [Route("Referral")]
-    public async Task<IActionResult> ReferralPost([FromBody] Telegram.Bot.Types.Update update)
+    public async Task<IActionResult> ReferralPost([FromBody] Update update)
     {
         if (update.Message?.Text != null && update.Message.Text.StartsWith("/start"))
         {
@@ -29,7 +31,13 @@ public class BotController(IMediator mediator) : ControllerBase
                 RegisterReferralDto model = new() { TelegramUserId = tgId, ReferralCode = referralCode };
                 await _mediator.Send(new MiniApp_RegisterReferralCommand(model));
             }
+
         }
         return Ok();
     }
+
+    [HttpPost]
+    [Route("SendMessage")]
+    public async Task<IActionResult> SendMessageAsync(long telegramId, string message)
+    => await ResultHelper.GetResultAsync(_mediator, new MiniApp_SendMessageToUserCommand(telegramId, message));
 }

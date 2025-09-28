@@ -20,6 +20,7 @@ using Serilog.Sinks.MSSqlServer;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
+using Telegram.Bot;
 
 #endregion
 
@@ -31,6 +32,7 @@ namespace ApplicationLayer
         {
             services.RegisterService(configuration);
             services.AddSingleton<IApplicationBuilder, ApplicationBuilder>();
+            services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(configuration["TelegramBot:Token"]));
             services.AddHttpContextAccessor();
             services.MediatRDependency();
             services.RegisterServicesAutomatically();

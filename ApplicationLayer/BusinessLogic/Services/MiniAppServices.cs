@@ -12,10 +12,8 @@ using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
@@ -43,7 +41,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
     private readonly IRepository<Suggestion> _suggestionRepository = suggestionRepository;
     private readonly IRepository<SuggestionAttachment> _suggestionAttachmentRepository = suggestionAttachmentRepository;
     private readonly IRepository<UserRating> _userRating = userRating;
-    private readonly IConfiguration _configuration = configuration;
     private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
     private readonly ILogger<MiniAppServices> _logger = logger;
     private readonly IMapper _mapper = mapper;
@@ -322,89 +319,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت درخواست‌ها");
         }
     }
-
-    //public async Task<Result<List<TripsDto>>> GetRequestTripsAsync(UserAccount user)
-    //{
-    //    try
-    //    {
-    //        var today = DateTime.Now.Date;
-    //        var userCountryId = await _userProfileRepository.Query()
-    //            .Where(p => p.UserAccountId == user.Id)
-    //            .Select(p => p.CountryOfResidenceId)
-    //            .FirstOrDefaultAsync();
-
-    //        var requestsRaw = await _requestRepository.Query()
-    //            .Where(current => current.UserAccountId != user.Id
-    //            && (current.OriginCity.CountryId == userCountryId || current.DestinationCity.CountryId == userCountryId))
-    //            //&& current.ArrivalDate.Date < today
-    //            //&& current.Status == RequestLifecycleStatus.Published)
-    //            .Include(r => r.UserAccount).ThenInclude(u => u.UserProfiles)
-    //            .Include(c => c.UserRatings)
-    //            .Include(r => r.Suggestions).ThenInclude(s => s.RequestStatusHistories)
-    //            .Include(r => r.Suggestions).ThenInclude(s => s.UserAccount).ThenInclude(ua => ua.UserProfiles)
-    //            .Include(r => r.RequestItemTypes)
-    //            .Include(r => r.OriginCity).ThenInclude(c => c.Country)
-    //            .Include(r => r.DestinationCity).ThenInclude(c => c.Country)
-    //            .Select(r => new
-    //            {
-    //                Request = r,
-    //                LastStatusValue = r.Suggestions.Where(sel => sel.UserAccountId == user.Id)
-    //                .SelectMany(sel => sel.RequestStatusHistories)
-    //                .OrderByDescending(h => h.Id)
-    //                .Select(h => (int?)h.Status)
-    //                .FirstOrDefault()
-    //            }).ToListAsync();
-
-    //        var requests = requestsRaw.Select(r => new
-    //        {
-    //            r.Request,
-    //            LastStatus = r.LastStatusValue.HasValue
-    //                ? RequestProcessStatus.FromValue(r.LastStatusValue.Value)
-    //                : RequestProcessStatus.Published
-    //        }).ToList();
-
-    //        var result = requests.Select(r =>
-    //        {
-    //            var dto = new TripsDto
-    //            {
-    //                RequestId = r.Request.Id,
-    //                UserAccountId = r.Request.UserAccountId,
-    //                FullName = r.Request.UserAccount.UserProfiles.FirstOrDefault().DisplayName
-    //                           ?? r.Request.UserAccount.UserProfiles.FirstOrDefault().FirstName,
-    //                //ArrivalDate = r.Request.ArrivalDate,
-    //                DepartureDate = r.Request.DepartureDate,
-    //                //ArrivalDatePersian = r.Request.ArrivalDate.HasValue ? DateTimeHelper.GetPersianDate(r.Request.ArrivalDate) : "",
-    //                DepartureDatePersian = DateTimeHelper.GetPersianDate(r.Request.DepartureDate),
-    //                Description = r.Request.Description,
-    //                DestinationCity = r.Request.DestinationCity.Name,
-    //                OriginCity = r.Request.OriginCity.Name,
-    //                ItemTypes = [.. r.Request.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).Name)],
-    //                ItemTypesFa = [.. r.Request.RequestItemTypes.Select(it => TransportableItemTypeEnum.FromValue(it.ItemType).PersianName)],
-    //                MaxHeightCm = r.Request.MaxHeightCm,
-    //                MaxLengthCm = r.Request.MaxLengthCm,
-    //                MaxWeightKg = r.Request.MaxWeightKg,
-    //                MaxWidthCm = r.Request.MaxWidthCm,
-    //                LastStatus = r.LastStatus,
-    //                TripType = r.Request.OriginCity.CountryId == userCountryId ? "outbound"
-    //                    : r.Request.DestinationCity.CountryId == userCountryId ? "inbound" : "",
-    //                UserRate = r.Request.UserRatings
-    //                .Where(ur => ur.RateeUserAccountId == r.Request.UserAccountId)
-    //                .Select(ur => (double?)ur.Rating)
-    //                .DefaultIfEmpty(0)
-    //                .Average(),
-    //            };
-
-    //            return dto;
-    //        }).ToList();
-
-    //        return Result<List<TripsDto>>.Success(result);
-    //    }
-    //    catch (Exception exception)
-    //    {
-    //        _logger.LogError(exception, "خطا در دریافت درخواست‌ها {UserId}", user.Id);
-    //        return Result<List<TripsDto>>.GeneralFailure("خطا در دریافت درخواست‌ها");
-    //    }
-    //}
 
     public async Task<Result<RequestInprogressDto>> GetInProgressRequestAsync(UserAccount user)
     {
@@ -1337,39 +1251,6 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
         }
     }
 
-    public async Task<Result<bool>> SendWelcomeMessageAsync(long telegramUserId, string? referralCode = null)
-    {
-        try
-        {
-            var welcomeMessage = "🎉 خوش آمدید به پکسی!\n\n" +
-                               "ما خوشحالیم که شما به خانواده پکسی پیوستید. " +
-                               "با استفاده از ربات ما می‌توانید:\n\n" +
-                               "✅ درخواست حمل و نقل ثبت کنید\n" +
-                               "✅ پیشنهادات مسافران را مشاهده کنید\n" +
-                               "✅ از امکانات ویژه استفاده کنید\n\n";
-
-            if (!string.IsNullOrEmpty(referralCode))
-            {
-                welcomeMessage += $"🎁 شما با کد معرف {referralCode} وارد شده‌اید و از مزایای ویژه بهره‌مند خواهید شد!\n\n";
-            }
-
-            welcomeMessage += "برای شروع، روی دکمه زیر کلیک کنید 👇";
-
-            await _botClient.SendMessage(
-                chatId: telegramUserId,
-                text: welcomeMessage
-            );
-
-            _logger.LogInformation("پیغام خوش‌آمدگویی با موفقیت به کاربر {TelegramUserId} ارسال شد", telegramUserId);
-            return Result<bool>.Success(true);
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "خطا در ارسال پیغام خوش‌آمدگویی به کاربر {TelegramUserId}", telegramUserId);
-            return Result<bool>.GeneralFailure("خطا در ارسال پیغام خوش‌آمدگویی");
-        }
-    }
-
     public Task<Result<List<RequestItemTypeDto>>> ItemTypeAsync()
     {
         try
@@ -1428,7 +1309,7 @@ public class MiniAppServices(HttpClient httpClient, IRepository<TelegramUserInfo
             if (parameters["user"] != null)
             {
                 var userJson = HttpUtility.UrlDecode(parameters["user"]);
-                result.User = JsonConvert.DeserializeObject<TelegramMiniAppUserDto>(userJson);
+                result.User = Newtonsoft.Json.JsonConvert.DeserializeObject<TelegramMiniAppUserDto>(userJson);
             }
 
             if (parameters["receiver"] != null)
