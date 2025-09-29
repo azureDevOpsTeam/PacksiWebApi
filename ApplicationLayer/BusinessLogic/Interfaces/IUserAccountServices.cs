@@ -17,7 +17,7 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
 
         Task<ServiceResult> AddProfileAsync(UserProfile model);
 
-        Task<ServiceResult> AddUserAccountAsync(UserAccount model);
+        Task<Result<UserAccount>> AddUserAccountAsync(UserAccount model);
 
         Task<ServiceResult> GetValidInvitationAsync(string inviteCode, CancellationToken cancellationToken);
 
@@ -33,7 +33,7 @@ namespace ApplicationLayer.BusinessLogic.Interfaces
 
         #region Mini App
 
-        Task<ServiceResult> MiniApp_AddUserAccountAsync(TelegramMiniAppUserDto model);
+        Task<ServiceResult> MiniApp_AddOrUpdateUserAccountAsync(TelegramMiniAppUserDto model);
 
         Task<ServiceResult> MiniApp_AddProfileAsync(UserProfile model);
 

@@ -1,5 +1,6 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.DTOs;
+using ApplicationLayer.DTOs.MiniApp;
 using DomainLayer.Common.Attributes;
 using DomainLayer.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,9 @@ using System.Text.Json;
 namespace ApplicationLayer.BusinessLogic.Services;
 
 [InjectAsScoped]
-public class BotMessageServices(IRepository<Country> countryRepository, IConfiguration configuration, ILogger<BotMessageServices> logger) : IBotMessageServices
+public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices userAccountServices, IRepository<Country> countryRepository, IConfiguration configuration, ILogger<BotMessageServices> logger) : IBotMessageServices
 {
-    public async Task<Result<bool>> SendWelcomeMessageAsync(long telegramUserId, string referralCode = null)
+    public async Task<Result<bool>> SendWelcomeMessageAsync(RegisterReferralDto model)
     {
         try
         {
@@ -25,23 +26,22 @@ public class BotMessageServices(IRepository<Country> countryRepository, IConfigu
                                "✅ پیشنهادات مسافران را مشاهده کنید\n" +
                                "✅ از امکانات ویژه استفاده کنید\n\n";
 
-            if (!string.IsNullOrEmpty(referralCode))
+            if (!string.IsNullOrEmpty(model.ReferralCode))
             {
-                welcomeMessage += $"🎁 شما با کد معرف {referralCode} وارد شده‌اید و از مزایای ویژه بهره‌مند خواهید شد!\n\n";
+                welcomeMessage += $"🎁 شما با کد معرف {model.ReferralCode} وارد شده‌اید و از مزایای ویژه بهره‌مند خواهید شد!\n\n";
             }
 
             var inlineKeyboard = new object[][]
             {
-                new object[]
-                {
-                    new { text = "تکمیل پروفایل", callback_data = "UpdateProfile" },
+                [
+                    new { text = "انتخاب مبدا", callback_data = "UpdateProfile" },
                     new { text = "لیست پروازها", web_app = new { url = "https://tg.packsi.net" } }
-                }
+                ]
             };
 
             var payload = new
             {
-                chat_id = telegramUserId,
+                chat_id = model.TelegramUserId,
                 text = welcomeMessage,
                 parse_mode = "HTML",
                 reply_markup = new
@@ -56,12 +56,37 @@ public class BotMessageServices(IRepository<Country> countryRepository, IConfigu
 
             response.EnsureSuccessStatusCode();
 
-            logger.LogInformation("پیغام خوش‌آمدگویی با موفقیت به کاربر {TelegramUserId} ارسال شد", telegramUserId);
+            var userAccount = await userAccountServices.GetUserAccountByTelegramIdAsync(model.TelegramUserId);
+            if (userAccount.Value == null)
+            {
+                var newUserAccount = new UserAccount
+                {
+                    TelegramId = model.TelegramUserId,
+                    UserName = model.UserName,
+                    ReferredByUserId = model.ReferredByUserId
+                };
+
+                var newResult = await userAccountServices.AddUserAccountAsync(newUserAccount);
+                if (newResult.IsSuccess)
+                {
+                    await unitOfWork.SaveChangesAsync();
+                    var newProfile = new UserProfile()
+                    {
+                        UserAccountId = newUserAccount.Id,
+                        FirstName = model.FirstName,
+                        LastName = model.LastName
+                    };
+                    await userAccountServices.AddProfileAsync(newProfile);
+                    await unitOfWork.SaveChangesAsync();
+                }
+            }
+
+            logger.LogInformation("پیغام خوش‌آمدگویی با موفقیت به کاربر {TelegramUserId} ارسال شد", model.TelegramUserId);
             return Result<bool>.Success(true);
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "خطا در ارسال پیغام خوش‌آمدگویی به کاربر {TelegramUserId}", telegramUserId);
+            logger.LogError(exception, "خطا در ارسال پیغام خوش‌آمدگویی به کاربر {TelegramUserId}", model.TelegramUserId);
             return Result<bool>.GeneralFailure("خطا در ارسال پیغام خوش‌آمدگویی");
         }
     }

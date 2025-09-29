@@ -1,5 +1,6 @@
-﻿using MediatR;
+﻿using ApplicationLayer.DTOs.MiniApp;
+using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Command;
 
-public record MiniApp_SendMessageToUserCommand(long TelegramId, string Message) : IRequest<HandlerResult>;
+public record MiniApp_SendMessageToUserCommand(RegisterReferralDto Model) : IRequest<HandlerResult>;

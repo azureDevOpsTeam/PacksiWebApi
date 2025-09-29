@@ -220,7 +220,7 @@ namespace ApplicationLayer.BusinessLogic.Services
             }
         }
 
-        public async Task<ServiceResult> AddUserAccountAsync(UserAccount model)
+        public async Task<Result<UserAccount>> AddUserAccountAsync(UserAccount model)
         {
             try
             {
@@ -228,15 +228,15 @@ namespace ApplicationLayer.BusinessLogic.Services
                 model.ExpireSecurityCode = DateTime.Now.AddMinutes(10);
                 var existUser = await _userAccountRepository.AnyAsync(current => current.UserName == model.PhoneNumber || current.PhoneNumber == model.PhoneNumber);
                 if (existUser)
-                    return new ServiceResult { RequestStatus = RequestStatus.Exists, Data = model, Message = CommonMessages.Exist };
+                    return Result<UserAccount>.DuplicateFailure();
 
                 await _userAccountRepository.AddAsync(model);
-                return new ServiceResult { RequestStatus = RequestStatus.Successful, Data = model, Message = CommonMessages.Successful };
+                return Result<UserAccount>.Success(model);
             }
             catch (Exception exception)
             {
                 _logger.LogError(message: exception.Message, CommonMessages.Failed);
-                return new ServiceResult { RequestStatus = RequestStatus.Failed, Data = model, Message = CommonMessages.Failed };
+                return Result<UserAccount>.GeneralFailure(CommonMessages.Failed);
             }
         }
 
@@ -349,7 +349,7 @@ namespace ApplicationLayer.BusinessLogic.Services
                     FirstName = user.UserProfiles.FirstOrDefault()?.FirstName,
                     LastName = user.UserProfiles.FirstOrDefault()?.LastName,
                     CountryOfResidenceId = user.UserProfiles.FirstOrDefault()?.CountryOfResidenceId,
-                    SetPreferredLocation = user.UserPreferredLocations.Any()
+                    SetPreferredLocation = user.UserPreferredLocations.Count != 0
                 };
 
                 return new ServiceResult().Successful(userInfo);
@@ -371,36 +371,69 @@ namespace ApplicationLayer.BusinessLogic.Services
 
         #region Mini App
 
-        public async Task<ServiceResult> MiniApp_AddUserAccountAsync(TelegramMiniAppUserDto model)
+        public async Task<ServiceResult> MiniApp_AddOrUpdateUserAccountAsync(TelegramMiniAppUserDto model)
         {
             try
             {
-                var existUser = await _userAccountRepository.AnyAsync(current => current.TelegramId == model.Id);
-                if (existUser)
-                    return new ServiceResult { RequestStatus = RequestStatus.Exists, Data = model, Message = CommonMessages.Exist };
-
                 var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
                 var rnd = new Random();
-                string invite = new([.. Enumerable.Range(0, 6).Select(_ => chars[rnd.Next(chars.Length)])]);
+                string inviteCode = new([.. Enumerable.Range(0, 6).Select(_ => chars[rnd.Next(chars.Length)])]);
 
-                UserAccount userAccount = new()
+                var getUserAccount = await GetUserAccountByTelegramIdAsync(model.Id);
+                if (getUserAccount.IsFailure)
+                    return new ServiceResult
+                    {
+                        RequestStatus = RequestStatus.Failed,
+                        Message = "کاربر با خطا مواجه شد."
+                    };
+
+                var userAccount = getUserAccount.Value;
+                if (getUserAccount != null)
                 {
-                    Avatar = model.PhotoUrl,
-                    TelegramId = model.Id,
-                    TelegramUserName = model.Username,
-                    ConfirmEmail = false,
-                    ConfirmPhoneNumber = false,
-                    ReferredByUserId = model.ReferredByUserId,
-                    InviteCode = invite
-                };
+                    userAccount.InviteCode = inviteCode;
+                    userAccount.Avatar = model.PhotoUrl;
+                    userAccount.TelegramUserName = model.Username;
+                    userAccount.ReferredByUserId = model.ReferredByUserId;
 
-                await _userAccountRepository.AddAsync(userAccount);
-                return new ServiceResult { RequestStatus = RequestStatus.Successful, Data = userAccount, Message = CommonMessages.Successful };
+                    await _userAccountRepository.UpdateAsync(userAccount);
+                    return new ServiceResult
+                    {
+                        RequestStatus = RequestStatus.Successful,
+                        Data = userAccount,
+                        Message = "کاربر با موفقیت آپدیت شد."
+                    };
+                }
+                else
+                {
+                    userAccount = new UserAccount
+                    {
+                        Avatar = model.PhotoUrl,
+                        TelegramId = model.Id,
+                        TelegramUserName = model.Username,
+                        ConfirmEmail = false,
+                        ConfirmPhoneNumber = false,
+                        ReferredByUserId = model.ReferredByUserId,
+                        InviteCode = inviteCode
+                    };
+
+                    await _userAccountRepository.AddAsync(userAccount);
+                    return new ServiceResult
+                    {
+                        RequestStatus = RequestStatus.Successful,
+                        Data = userAccount,
+                        Message = "کاربر با موفقیت اضافه شد."
+                    };
+                }
             }
             catch (Exception exception)
             {
-                _logger.LogError(message: exception.Message, CommonMessages.Failed);
-                return new ServiceResult { RequestStatus = RequestStatus.Failed, Data = model, Message = CommonMessages.Failed };
+                _logger.LogError(exception, "خطا در افزودن یا بروزرسانی کاربر");
+                return new ServiceResult
+                {
+                    RequestStatus = RequestStatus.Failed,
+                    Data = model,
+                    Message = CommonMessages.Failed
+                };
             }
         }
 
@@ -408,8 +441,9 @@ namespace ApplicationLayer.BusinessLogic.Services
         {
             try
             {
-                model.IsActive = true;
-                await _userProfileRepository.AddAsync(model);
+                var getUserProfile = await _userProfileRepository.Query().FirstOrDefaultAsync(current => current.UserAccountId == model.UserAccountId);
+                if (getUserProfile == null) await _userProfileRepository.AddAsync(model);
+
                 return new ServiceResult { RequestStatus = RequestStatus.Successful, Data = model, Message = CommonMessages.Successful };
             }
             catch (Exception exception)

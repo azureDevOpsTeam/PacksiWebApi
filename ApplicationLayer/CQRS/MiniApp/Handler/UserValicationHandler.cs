@@ -1,4 +1,4 @@
-using ApplicationLayer.BusinessLogic.Interfaces;
+ using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.CQRS.MiniApp.Query;
 using ApplicationLayer.Extensions;
 using ApplicationLayer.Extensions.ServiceMessages;
@@ -42,7 +42,7 @@ public class UserValicationHandler(IUnitOfWork unitOfWork, IMiniAppServices mini
                     validationResult.Value.User.ReferredByUserId = inviter.Value.TelegramId;
                 }
 
-                var resultAddUser = await _userAccountServices.MiniApp_AddUserAccountAsync(validationResult.Value.User);
+                var resultAddUser = await _userAccountServices.MiniApp_AddOrUpdateUserAccountAsync(validationResult.Value.User);
                 if (resultAddUser.RequestStatus != RequestStatus.Successful)
                 {
                     await _unitOfWork.RollbackAsync();

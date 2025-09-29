@@ -25,14 +25,18 @@ public class BotController(IMediator mediator) : ControllerBase
             var parts = update.Message.Text.Split(' ', 2);
             var referralCode = parts.Length > 1 ? parts[1] : null;
             var tgId = update.Message.From?.Id ?? 0;
+            var username = update.Message.From?.Username ?? null;
+            var firstName = update.Message.From?.FirstName ?? null;
+            var lastName = update.Message.From?.LastName ?? null;
+
+            RegisterReferralDto model = new() { TelegramUserId = tgId, ReferralCode = referralCode };
 
             if (!string.IsNullOrEmpty(referralCode) && tgId != 0)
             {
-                RegisterReferralDto model = new() { TelegramUserId = tgId, ReferralCode = referralCode };
                 await _mediator.Send(new MiniApp_RegisterReferralCommand(model));
             }
             else
-                await _mediator.Send(new MiniApp_SendMessageToUserCommand(tgId, null));
+                await _mediator.Send(new MiniApp_SendMessageToUserCommand(model));
         }
         else if (update.CallbackQuery != null)
         {
@@ -43,10 +47,6 @@ public class BotController(IMediator mediator) : ControllerBase
             {
                 case "UpdateProfile":
                     await _mediator.Send(new MiniApp_DepartureCountriesCommand(telegramUserId));
-                    break;
-
-                case "OpenWebApp":
-                    // اینجا لینک یا وب‌اپ رو بفرست
                     break;
 
                 default:
@@ -60,9 +60,4 @@ public class BotController(IMediator mediator) : ControllerBase
         }
         return Ok();
     }
-
-    [HttpPost]
-    [Route("SendMessage")]
-    public async Task<IActionResult> SendMessageAsync(long telegramId, string message)
-    => await ResultHelper.GetResultAsync(_mediator, new MiniApp_SendMessageToUserCommand(telegramId, message));
 }

@@ -10,7 +10,7 @@ public class MiniApp_SendMessageToUserHandler(IBotMessageServices botMessageServ
 {
     public async Task<HandlerResult> Handle(MiniApp_SendMessageToUserCommand requestDto, CancellationToken cancellationToken)
     {
-        var result = await botMessageServices.SendWelcomeMessageAsync(requestDto.TelegramId);
+        var result = await botMessageServices.SendWelcomeMessageAsync(requestDto.Model);
         return result.ToHandlerResult();
     }
 }

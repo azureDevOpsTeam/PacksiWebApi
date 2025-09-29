@@ -35,10 +35,11 @@ public class MiniApp_RegisterReferralCommandHandler(IUnitOfWork unitOfWork, IUse
         if (result.IsSuccess)
         {
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            
+
             try
             {
-                await botMessageServices.SendWelcomeMessageAsync(request.Model.TelegramUserId, request.Model.ReferralCode);
+                request.Model.ReferredByUserId = inviterTelegramId;
+                await botMessageServices.SendWelcomeMessageAsync(request.Model);
             }
             catch (Exception)
             {
