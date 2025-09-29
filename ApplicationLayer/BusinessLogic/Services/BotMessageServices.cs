@@ -53,7 +53,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
             {
                 chat_id = model.TelegramUserId,
                 text = welcomeMessage,
-                parse_mode = "MarkdownV2", 
+                parse_mode = "HTML", 
                 reply_markup = new
                 {
                     inline_keyboard = inlineKeyboard
