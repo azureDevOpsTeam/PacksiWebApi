@@ -12,13 +12,12 @@ using System.Text.Json;
 namespace ApplicationLayer.BusinessLogic.Services;
 
 [InjectAsScoped]
-public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices userAccountServices, IRepository<Country> countryRepository, IConfiguration configuration, ILogger<BotMessageServices> logger) : IBotMessageServices
+public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices userAccountServices, IRepository<Country> countryRepository, HttpClient httpClient, IConfiguration configuration, ILogger<BotMessageServices> logger) : IBotMessageServices
 {
     public async Task<Result<bool>> SendWelcomeMessageAsync(RegisterReferralDto model)
     {
         try
         {
-            using var client = new HttpClient();
             var welcomeMessage = "🎉 خوش آمدید به پکسی!\n\n" +
                                "ما خوشحالیم که شما به خانواده پکسی پیوستید. " +
                                "با استفاده از ربات ما می‌توانید:\n\n" +
@@ -52,7 +51,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
 
             var linkUrl = $"https://api.telegram.org/bot{configuration["TelegramBot:Token"]}/sendMessage";
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(linkUrl, content);
+            var response = await httpClient.PostAsync(linkUrl, content);
 
             response.EnsureSuccessStatusCode();
 

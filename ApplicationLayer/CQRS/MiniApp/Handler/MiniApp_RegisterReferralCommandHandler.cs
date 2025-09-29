@@ -17,40 +17,32 @@ public class MiniApp_RegisterReferralCommandHandler(IUnitOfWork unitOfWork, IUse
     {
         var existInvite = await _userAccountServices.GetExistReferralAsync(request.Model.TelegramUserId);
 
-        if (!existInvite.IsSuccess)
+        if (existInvite.IsFailure)
             return existInvite.ToHandlerResult();
 
         var getInviter = await _userAccountServices.GetUserAccountInviterAsync(request.Model.ReferralCode);
-        if (!getInviter.IsSuccess)
-            return getInviter.ToHandlerResult();
-
-        var inviterTelegramId = getInviter.Value.TelegramId;
-        if (!inviterTelegramId.HasValue)
-            return Result.GeneralFailure("Inviter has no TelegramId").ToHandlerResult();
-
-        if (inviterTelegramId.Value == request.Model.TelegramUserId)
-            return Result.GeneralFailure("Self-referral is not allowed").ToHandlerResult();
-
-        var result = await _userAccountServices.AddReferralUserAsync(inviterTelegramId.Value, request.Model);
-        if (result.IsSuccess)
+        if (getInviter.Value != null)
         {
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            var inviterTelegramId = getInviter.Value.TelegramId;
+            if (!inviterTelegramId.HasValue)
+                return Result.GeneralFailure("Inviter has no TelegramId").ToHandlerResult();
 
-            try
-            {
-                request.Model.ReferredByUserId = inviterTelegramId;
-                await botMessageServices.SendWelcomeMessageAsync(request.Model);
-            }
-            catch (Exception)
-            {
-            }
+            if (inviterTelegramId.Value == request.Model.TelegramUserId)
+                return Result.GeneralFailure("Self-referral is not allowed").ToHandlerResult();
+
+            var result = await _userAccountServices.AddReferralUserAsync(inviterTelegramId.Value, request.Model);
+            if (result.IsSuccess)
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            decimal bonusAmount = 0.01m;
+            var addTransaction = await _walletService.CreditAsync(getInviter.Value.Id, CurrencyEnum.USDT, bonusAmount, TransactionTypeEnum.Bonus);
+            if (addTransaction.IsFailure)
+                return addTransaction.ToHandlerResult();
+
+            return result.ToHandlerResult();
         }
+        await botMessageServices.SendWelcomeMessageAsync(request.Model);
 
-        decimal bonusAmount = 0.01m;
-        var addTransaction = await _walletService.CreditAsync(getInviter.Value.Id, CurrencyEnum.USDT, bonusAmount, TransactionTypeEnum.Bonus);
-        if (addTransaction.IsFailure)
-            return addTransaction.ToHandlerResult();
-
-        return result.ToHandlerResult();
+        return getInviter.ToHandlerResult();
     }
 }
