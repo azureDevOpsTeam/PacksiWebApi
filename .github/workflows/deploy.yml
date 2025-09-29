@@ -37,7 +37,7 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
           # Stop the service if running
-          sudo systemctl stop api || true
+          sudo systemctl stop api-packsi || true
           
           # Remove old files
           sudo rm -rf /var/www/api-app/*
@@ -67,6 +67,6 @@ jobs:
           
           # Reload systemd and start service
           sudo systemctl daemon-reload
-          sudo systemctl enable api
-          sudo systemctl start api
-          sudo systemctl status api
+          sudo systemctl enable api-packsi
+          sudo systemctl start api-packsi
+          sudo systemctl status api-packsi
