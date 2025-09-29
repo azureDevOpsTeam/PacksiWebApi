@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json;
+using Telegram.Bot.Extensions;
 
 namespace ApplicationLayer.BusinessLogic.Services;
 
@@ -24,7 +25,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
                 "✅ درخواست حمل و نقل ثبت کنید\n" +
                 "✅ پیشنهادات مسافران را ببینید و مقایسه کنید\n" +
                 "✅ از امکانات ویژه و امن استفاده کنید\n\n" +
-                "🌍 ابتدا کشورت رو انتخاب کن تا فقط سفرهای مرتبط رو ببینی!\n\n" +
+                "🌍 ابتدا کشور مبدا رو انتخاب کن تا فقط سفرهای مرتبط رو ببینی!\n\n" +
                 "✈️ **مسافری؟**\n" +
                 "سفرت رو ثبت کن و پیشنهادات کاربران رو بصورت خودکار دریافت کن\n" +
                 "یک یا چند بار رو با بهترین قیمت انتخاب کن و راحت به مقصد برسون!\n\n" +
@@ -52,7 +53,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
             {
                 chat_id = model.TelegramUserId,
                 text = welcomeMessage,
-                parse_mode = "HTML", // یا حذفش کن
+                parse_mode = "MarkdownV2", 
                 reply_markup = new
                 {
                     inline_keyboard = inlineKeyboard
