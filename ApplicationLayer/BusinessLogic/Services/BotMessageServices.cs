@@ -74,10 +74,14 @@ public class BotMessageServices(IRepository<Country> countryRepository, IConfigu
 
         var countries = await countryRepository.Query().AsNoTracking().ToListAsync();
         var inlineKeyboard = countries
-            .Select(c => new[]
+            .Select((c, index) => new { c, index })
+            .GroupBy(x => x.index / 3)
+            .Select(g => g.Select(x => new
             {
-                new { text = c.Name, callback_data = $"country_{c.Id}" }
-            }).ToArray();
+                text = x.c.Name,
+                callback_data = $"country_{x.c.Id}"
+            }).ToArray())
+            .ToArray();
 
         var payload = new
         {
