@@ -45,10 +45,6 @@ public class BotController(IMediator mediator) : ControllerBase
                     await _mediator.Send(new MiniApp_DepartureCountriesCommand(telegramUserId));
                     break;
 
-                case "confirmPhoneNumber":
-                    // اینجا متد تایید شماره رو صدا بزن
-                    break;
-
                 case "OpenWebApp":
                     // اینجا لینک یا وب‌اپ رو بفرست
                     break;

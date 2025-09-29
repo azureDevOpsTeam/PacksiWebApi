@@ -30,6 +30,15 @@ public class BotMessageServices(IRepository<Country> countryRepository, IConfigu
                 welcomeMessage += $"🎁 شما با کد معرف {referralCode} وارد شده‌اید و از مزایای ویژه بهره‌مند خواهید شد!\n\n";
             }
 
+            var inlineKeyboard = new object[][]
+            {
+                new object[]
+                {
+                    new { text = "تکمیل پروفایل", callback_data = "UpdateProfile" },
+                    new { text = "لیست پروازها", web_app = new { url = "https://tg.packsi.net" } }
+                }
+            };
+
             var payload = new
             {
                 chat_id = telegramUserId,
@@ -37,17 +46,7 @@ public class BotMessageServices(IRepository<Country> countryRepository, IConfigu
                 parse_mode = "HTML",
                 reply_markup = new
                 {
-                    inline_keyboard = new[]
-                    {
-                        new[]
-                        {
-                            new { text = "تایید شماره موبایل", callback_data = "confirmPhoneNumber" },
-                            new { text = "تکمیل پروفایل", callback_data = "UpdateProfile" }
-                        },
-                        [
-                            new { text = "لیست سفرها و پیشنهادات", callback_data = "OpenWebApp" }
-                        ]
-                    }
+                    inline_keyboard = inlineKeyboard
                 }
             };
 
@@ -91,7 +90,9 @@ public class BotMessageServices(IRepository<Country> countryRepository, IConfigu
             reply_markup = new
             {
                 inline_keyboard = inlineKeyboard
-            }
+            },
+            resize_keyboard = true,
+            one_time_keyboard = true
         };
 
         var linkUrl = $"https://api.telegram.org/bot{configuration["TelegramBot:Token"]}/sendMessage";
