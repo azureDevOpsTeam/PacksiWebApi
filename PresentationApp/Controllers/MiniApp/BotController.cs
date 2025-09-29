@@ -17,8 +17,8 @@ public class BotController(IMediator mediator) : ControllerBase
     private readonly IMediator _mediator = mediator;
 
     [HttpPost]
-    [Route("Referral")]
-    public async Task<IActionResult> ReferralPost([FromBody] Update update)
+    [Route("Start")]
+    public async Task<IActionResult> StartPost([FromBody] Update update)
     {
         if (update.Message?.Text != null && update.Message.Text.StartsWith("/start"))
         {
@@ -31,7 +31,36 @@ public class BotController(IMediator mediator) : ControllerBase
                 RegisterReferralDto model = new() { TelegramUserId = tgId, ReferralCode = referralCode };
                 await _mediator.Send(new MiniApp_RegisterReferralCommand(model));
             }
+            else
+                await _mediator.Send(new MiniApp_SendMessageToUserCommand(tgId, null));
+        }
+        else if (update.CallbackQuery != null)
+        {
+            var callbackData = update.CallbackQuery.Data;
+            var telegramUserId = update.CallbackQuery.From.Id;
 
+            switch (callbackData)
+            {
+                case "UpdateProfile":
+                    await _mediator.Send(new MiniApp_DepartureCountriesCommand(telegramUserId));
+                    break;
+
+                case "confirmPhoneNumber":
+                    // اینجا متد تایید شماره رو صدا بزن
+                    break;
+
+                case "OpenWebApp":
+                    // اینجا لینک یا وب‌اپ رو بفرست
+                    break;
+
+                default:
+                    if (callbackData.StartsWith("country_"))
+                    {
+                        var countryId = int.Parse(callbackData.Replace("country_", ""));
+                        // ذخیره کشور انتخابی کاربر
+                    }
+                    break;
+            }
         }
         return Ok();
     }

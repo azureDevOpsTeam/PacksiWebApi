@@ -1,6 +1,8 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
 using ApplicationLayer.DTOs;
 using DomainLayer.Common.Attributes;
+using DomainLayer.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text;
@@ -9,7 +11,7 @@ using System.Text.Json;
 namespace ApplicationLayer.BusinessLogic.Services;
 
 [InjectAsScoped]
-public class BotMessageServices(IConfiguration configuration, ILogger<BotMessageServices> logger) : IBotMessageServices
+public class BotMessageServices(IRepository<Country> countryRepository, IConfiguration configuration, ILogger<BotMessageServices> logger) : IBotMessageServices
 {
     public async Task<Result<bool>> SendWelcomeMessageAsync(long telegramUserId, string referralCode = null)
     {
@@ -33,26 +35,25 @@ public class BotMessageServices(IConfiguration configuration, ILogger<BotMessage
                 chat_id = telegramUserId,
                 text = welcomeMessage,
                 parse_mode = "HTML",
-                //reply_markup = new
-                //{
-                //    inline_keyboard = new[]
-                //    {
-                //        new[]
-                //        {
-                //            new { text = "تایید شماره موبایل", callback_data = "confirmPhoneNumber" },
-                //            new { text = "تکمیل پروفایل", callback_data = "UpdateProfile" }
-                //        },
-                //        [
-                //            new { text = "لیست سفرها و پیشنهادات", callback_data = "OpenWebApp" }
-                //        ]
-                //    }
-                //}
+                reply_markup = new
+                {
+                    inline_keyboard = new[]
+                    {
+                        new[]
+                        {
+                            new { text = "تایید شماره موبایل", callback_data = "confirmPhoneNumber" },
+                            new { text = "تکمیل پروفایل", callback_data = "UpdateProfile" }
+                        },
+                        [
+                            new { text = "لیست سفرها و پیشنهادات", callback_data = "OpenWebApp" }
+                        ]
+                    }
+                }
             };
 
             var linkUrl = $"https://api.telegram.org/bot{configuration["TelegramBot:Token"]}/sendMessage";
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(linkUrl, content
-            );
+            var response = await client.PostAsync(linkUrl, content);
 
             response.EnsureSuccessStatusCode();
 
@@ -64,5 +65,38 @@ public class BotMessageServices(IConfiguration configuration, ILogger<BotMessage
             logger.LogError(exception, "خطا در ارسال پیغام خوش‌آمدگویی به کاربر {TelegramUserId}", telegramUserId);
             return Result<bool>.GeneralFailure("خطا در ارسال پیغام خوش‌آمدگویی");
         }
+    }
+
+    public async Task<Result<bool>> DepartureCountriesAsync(long telegramUserId)
+    {
+        using var client = new HttpClient();
+        var welcomeMessage = "از لیست کشورهای زیر ، کشور محل سکونت را انتخاب کنید";
+
+        var countries = await countryRepository.Query().AsNoTracking().ToListAsync();
+        var inlineKeyboard = countries
+            .Select(c => new[]
+            {
+                new { text = c.Name, callback_data = $"country_{c.Id}" }
+            }).ToArray();
+
+        var payload = new
+        {
+            chat_id = telegramUserId,
+            text = welcomeMessage,
+            parse_mode = "HTML",
+            reply_markup = new
+            {
+                inline_keyboard = inlineKeyboard
+            }
+        };
+
+        var linkUrl = $"https://api.telegram.org/bot{configuration["TelegramBot:Token"]}/sendMessage";
+        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+        var response = await client.PostAsync(linkUrl, content);
+
+        response.EnsureSuccessStatusCode();
+
+        logger.LogInformation("پیغام خوش‌آمدگویی با موفقیت به کاربر {TelegramUserId} ارسال شد", telegramUserId);
+        return Result<bool>.Success(true);
     }
 }
