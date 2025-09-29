@@ -1,6 +1,6 @@
 ﻿using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.DTOs.MiniApp;
-using ApplicationLayer.Extensions;
+using ApplicationLayer.DTOs.User;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -53,7 +53,8 @@ public class BotController(IMediator mediator) : ControllerBase
                     if (callbackData.StartsWith("country_"))
                     {
                         var countryId = int.Parse(callbackData.Replace("country_", ""));
-                        // ذخیره کشور انتخابی کاربر
+                        CountryOfResidenceDto locationDto = new() { TelegramId = telegramUserId, CountryOfResidenceId = countryId };
+                        await _mediator.Send(new AddUserPreferredLocationWithStartCommand(locationDto));
                     }
                     break;
             }

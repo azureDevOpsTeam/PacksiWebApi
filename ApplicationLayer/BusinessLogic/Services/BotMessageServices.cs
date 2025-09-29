@@ -44,8 +44,8 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
             {
                 new object[]
                 {
-                    new { text = "انتخاب مبدا", callback_data = "UpdateProfile" },
-                    new { text = "لیست پروازها", web_app = new { url = "https://tg.packsi.net" } }
+                    new { text = "لیست پروازها", web_app = new { url = "https://tg.packsi.net" } },
+                    new { text = "انتخاب مبدا", callback_data = "UpdateProfile" }
                 }
             };
 
@@ -53,7 +53,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
             {
                 chat_id = model.TelegramUserId,
                 text = welcomeMessage,
-                parse_mode = "HTML", 
+                parse_mode = "HTML",
                 reply_markup = new
                 {
                     inline_keyboard = inlineKeyboard
@@ -97,7 +97,6 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
 
             logger.LogInformation("Telegram API Error: {StatusCode} - {Response}", response.StatusCode, respText);
             return Result<bool>.GeneralFailure("خطا در ارسال پیغام خوش‌آمدگویی");
-
         }
         catch (Exception exception)
         {

@@ -1,4 +1,5 @@
 ﻿using ApplicationLayer.BusinessLogic.Interfaces;
+using ApplicationLayer.DTOs;
 using ApplicationLayer.DTOs.User;
 using ApplicationLayer.Extensions.ServiceMessages;
 using ApplicationLayer.Extensions.SmartEnums;
@@ -11,14 +12,13 @@ using Microsoft.Extensions.Logging;
 namespace ApplicationLayer.BusinessLogic.Services
 {
     [InjectAsScoped]
-    public class CurrentUserService(IRepository<UserPreferredLocation> locationRepository, IUserAccountServices userAccountServices, IRepository<UserProfile> userProfileRepository, IMiniAppServices miniAppServices, IRepository<City> cityRepository, ILogger<RefreshTokenService> logger, IUserContextService userContextService) : ICurrentUserService
+    public class CurrentUserService(IRepository<UserPreferredLocation> locationRepository, IUserAccountServices userAccountServices, IRepository<UserProfile> userProfileRepository, IMiniAppServices miniAppServices, IRepository<City> cityRepository, ILogger<CurrentUserService> logger, IUserContextService userContextService) : ICurrentUserService
     {
         private readonly IMiniAppServices _miniAppServices = miniAppServices;
         private readonly IUserAccountServices _userAccountServices = userAccountServices;
         private readonly IRepository<UserProfile> _userProfileRepository = userProfileRepository;
         private readonly IRepository<UserPreferredLocation> _locationRepo = locationRepository;
         private readonly IRepository<City> _cityRepository = cityRepository;
-        private readonly ILogger<RefreshTokenService> _logger = logger;
 
         public async Task<ServiceResult> AddUserPreferredLocationAsync(PreferredLocationDto model)
         {
@@ -57,15 +57,37 @@ namespace ApplicationLayer.BusinessLogic.Services
             catch (Exception exception)
             {
                 return new ServiceResult().Failed(
-                    _logger,
+                    logger,
                     exception,
                     CommonExceptionMessage.AddFailed("لوکیشن‌های منتخب")
                 );
             }
         }
 
+        #region MINI APP
 
-        #region MINI APP 
+        public async Task<Result> MiniApp_AddUserPreferredLocationAsync(CountryOfResidenceDto model)
+        {
+            try
+            {
+                var user = await _userAccountServices.GetUserAccountByTelegramIdAsync(model.TelegramId);
+                if (user == null)
+                    return Result.NotFound();
+
+                var userProfile = await _userProfileRepository.Query().FirstOrDefaultAsync(current => current.UserAccountId == user.Value.Id);
+                if (userProfile != null)
+                    userProfile.CountryOfResidenceId = model.CountryOfResidenceId;
+
+                await _userProfileRepository.UpdateAsync(userProfile);
+                return Result.Success();
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "خطا در ثبت کشور مبدا {TelegramUserId}", model.TelegramId);
+                return Result.GeneralFailure("خطا در ثبت کشور مبدا");
+            }
+        }
+
         public async Task<ServiceResult> MiniApp_AddUserPreferredLocationAsync(PreferredLocationDto model)
         {
             try
@@ -79,40 +101,45 @@ namespace ApplicationLayer.BusinessLogic.Services
                 if (model.CountryOfResidenceId.HasValue)
                     userProfile.CountryOfResidenceId = model.CountryOfResidenceId.Value;
 
-                var cities = await _cityRepository.Query()
-                    .Include(c => c.Country)
-                    .Where(c => model.CityIds.Contains(c.Id))
-                    .ToListAsync();
+                await _userProfileRepository.UpdateAsync(userProfile);
 
-                if (cities == null || cities.Count == 0)
-                    return new ServiceResult().NotFound();
-
-                List<UserPreferredLocation> preferredLocations = new();
-
-                foreach (var city in cities)
+                if (model.CityIds.Count > 0)
                 {
-                    preferredLocations.Add(new UserPreferredLocation
-                    {
-                        UserAccountId = user.Value.Id,
-                        CityId = city.Id,
-                        CountryId = city.CountryId
-                    });
-                }
+                    var cities = await _cityRepository.Query()
+                        .Include(c => c.Country)
+                        .Where(c => model.CityIds.Contains(c.Id))
+                        .ToListAsync();
 
-                _locationRepo.AddRange(preferredLocations);
+                    if (cities == null || cities.Count == 0)
+                        return new ServiceResult().NotFound();
+
+                    List<UserPreferredLocation> preferredLocations = new();
+
+                    foreach (var city in cities)
+                    {
+                        preferredLocations.Add(new UserPreferredLocation
+                        {
+                            UserAccountId = user.Value.Id,
+                            CityId = city.Id,
+                            CountryId = city.CountryId
+                        });
+                    }
+
+                    _locationRepo.AddRange(preferredLocations);
+                }
 
                 return new ServiceResult
                 {
                     RequestStatus = RequestStatus.Successful,
                     Message = CommonMessages.Successful
                 };
-
             }
             catch (Exception excepotion)
             {
-                return new ServiceResult().Failed(_logger, excepotion, CommonExceptionMessage.AddFailed("لوکیشن های منتخب"));
+                return new ServiceResult().Failed(logger, excepotion, CommonExceptionMessage.AddFailed("لوکیشن های منتخب"));
             }
         }
-        #endregion
+
+        #endregion MINI APP
     }
 }
