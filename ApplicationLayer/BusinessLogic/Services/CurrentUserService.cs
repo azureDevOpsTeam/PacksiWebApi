@@ -76,9 +76,10 @@ namespace ApplicationLayer.BusinessLogic.Services
 
                 var userProfile = await _userProfileRepository.Query().FirstOrDefaultAsync(current => current.UserAccountId == user.Value.Id);
                 if (userProfile != null)
+                {
                     userProfile.CountryOfResidenceId = model.CountryOfResidenceId;
-
-                await _userProfileRepository.UpdateAsync(userProfile);
+                    await _userProfileRepository.UpdateAsync(userProfile);
+                }
                 return Result.Success();
             }
             catch (Exception exception)
