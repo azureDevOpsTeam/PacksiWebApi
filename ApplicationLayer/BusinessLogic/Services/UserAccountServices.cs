@@ -226,7 +226,13 @@ namespace ApplicationLayer.BusinessLogic.Services
             {
                 model.SecurityCode = GenerateSecurityCode();
                 model.ExpireSecurityCode = DateTime.Now.AddMinutes(10);
-                var existUser = await _userAccountRepository.AnyAsync(current => current.UserName == model.PhoneNumber || current.PhoneNumber == model.PhoneNumber);
+
+                var existUser = false;
+
+                if (!string.IsNullOrEmpty(model.PhoneNumber))
+                    existUser = _userAccountRepository.Query()
+                        .Any(current => current.UserName == model.PhoneNumber || current.PhoneNumber == model.PhoneNumber);
+
                 if (existUser)
                     return Result<UserAccount>.DuplicateFailure();
 

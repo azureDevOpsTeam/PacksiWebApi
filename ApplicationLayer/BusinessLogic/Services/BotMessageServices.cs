@@ -19,11 +19,11 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
         try
         {
             var welcomeMessage = "🎉 خوش آمدید به پکسی!\n\n" +
-                               "ما خوشحالیم که شما به خانواده پکسی پیوستید. " +
-                               "با استفاده از ربات ما می‌توانید:\n\n" +
-                               "✅ درخواست حمل و نقل ثبت کنید\n" +
-                               "✅ پیشنهادات مسافران را مشاهده کنید\n" +
-                               "✅ از امکانات ویژه استفاده کنید\n\n";
+                     "ما خوشحالیم که شما به خانواده پکسی پیوستید. " +
+                     "با استفاده از ربات ما می‌توانید:\n\n" +
+                     "✅ درخواست حمل و نقل ثبت کنید\n" +
+                     "✅ پیشنهادات مسافران را مشاهده کنید\n" +
+                     "✅ از امکانات ویژه استفاده کنید\n\n";
 
             if (!string.IsNullOrEmpty(model.ReferralCode))
             {
@@ -32,17 +32,18 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
 
             var inlineKeyboard = new object[][]
             {
-                [
+                new object[]
+                {
                     new { text = "انتخاب مبدا", callback_data = "UpdateProfile" },
                     new { text = "لیست پروازها", web_app = new { url = "https://tg.packsi.net" } }
-                ]
+                }
             };
 
             var payload = new
             {
                 chat_id = model.TelegramUserId,
                 text = welcomeMessage,
-                parse_mode = "HTML",
+                parse_mode = "HTML", // یا حذفش کن
                 reply_markup = new
                 {
                     inline_keyboard = inlineKeyboard
@@ -53,35 +54,40 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
             var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
             var response = await httpClient.PostAsync(linkUrl, content);
 
-            response.EnsureSuccessStatusCode();
-
-            var userAccount = await userAccountServices.GetUserAccountByTelegramIdAsync(model.TelegramUserId);
-            if (userAccount.Value == null)
+            var respText = await response.Content.ReadAsStringAsync();
+            if (response.IsSuccessStatusCode)
             {
-                var newUserAccount = new UserAccount
+                var userAccount = await userAccountServices.GetUserAccountByTelegramIdAsync(model.TelegramUserId);
+                if (userAccount.Value == null)
                 {
-                    TelegramId = model.TelegramUserId,
-                    UserName = model.UserName,
-                    ReferredByUserId = model.ReferredByUserId
-                };
-
-                var newResult = await userAccountServices.AddUserAccountAsync(newUserAccount);
-                if (newResult.IsSuccess)
-                {
-                    await unitOfWork.SaveChangesAsync();
-                    var newProfile = new UserProfile()
+                    var newUserAccount = new UserAccount
                     {
-                        UserAccountId = newUserAccount.Id,
-                        FirstName = model.FirstName,
-                        LastName = model.LastName
+                        TelegramId = model.TelegramUserId,
+                        UserName = model.UserName,
+                        ReferredByUserId = model.ReferredByUserId
                     };
-                    await userAccountServices.AddProfileAsync(newProfile);
-                    await unitOfWork.SaveChangesAsync();
+
+                    var newResult = await userAccountServices.AddUserAccountAsync(newUserAccount);
+                    if (newResult.IsSuccess)
+                    {
+                        await unitOfWork.SaveChangesAsync();
+                        var newProfile = new UserProfile()
+                        {
+                            UserAccountId = newUserAccount.Id,
+                            FirstName = model.FirstName,
+                            LastName = model.LastName
+                        };
+                        await userAccountServices.AddProfileAsync(newProfile);
+                        await unitOfWork.SaveChangesAsync();
+                    }
                 }
+                logger.LogInformation("پیغام خوش‌آمدگویی با موفقیت به کاربر {TelegramUserId} ارسال شد", model.TelegramUserId);
+                return Result<bool>.Success(true);
             }
 
-            logger.LogInformation("پیغام خوش‌آمدگویی با موفقیت به کاربر {TelegramUserId} ارسال شد", model.TelegramUserId);
-            return Result<bool>.Success(true);
+            logger.LogInformation("Telegram API Error: {StatusCode} - {Response}", response.StatusCode, respText);
+            return Result<bool>.GeneralFailure("خطا در ارسال پیغام خوش‌آمدگویی");
+
         }
         catch (Exception exception)
         {
