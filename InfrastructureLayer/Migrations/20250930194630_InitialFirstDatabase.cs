@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace InfrastructureLayer.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialFirstDb : Migration
+    public partial class InitialFirstDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -1069,6 +1069,43 @@ namespace InfrastructureLayer.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Order",
+                schema: "dbo",
+                columns: table => new
+                {
+                    OrderId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SuggestionId = table.Column<int>(type: "int", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Currency = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    PaymentTrackingCode = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    WalletAddress = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Network = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TxId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    CreatedByUserId = table.Column<int>(type: "int", nullable: true),
+                    CreatedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: false),
+                    ModifiedByIp = table.Column<string>(type: "char(15)", nullable: true),
+                    ModifiedByUserId = table.Column<int>(type: "int", nullable: true),
+                    ModifiedDateTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Order", x => x.OrderId);
+                    table.ForeignKey(
+                        name: "FK_Order_Suggestion_SuggestionId",
+                        column: x => x.SuggestionId,
+                        principalSchema: "dbo",
+                        principalTable: "Suggestion",
+                        principalColumn: "SuggestionId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RequestStatusHistory",
                 schema: "dbo",
                 columns: table => new
@@ -1225,6 +1262,12 @@ namespace InfrastructureLayer.Migrations
                 schema: "dbo",
                 table: "Message",
                 column: "SenderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Order_SuggestionId",
+                schema: "dbo",
+                table: "Order",
+                column: "SuggestionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshToken_UserAccountId",
@@ -1429,6 +1472,10 @@ namespace InfrastructureLayer.Migrations
 
             migrationBuilder.DropTable(
                 name: "Message",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
+                name: "Order",
                 schema: "dbo");
 
             migrationBuilder.DropTable(

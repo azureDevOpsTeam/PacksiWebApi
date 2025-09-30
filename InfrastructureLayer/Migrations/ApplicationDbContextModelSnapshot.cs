@@ -634,6 +634,76 @@ namespace InfrastructureLayer.Migrations
                     b.ToTable("Message", "dbo");
                 });
 
+            modelBuilder.Entity("DomainLayer.Entities.Order", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("OrderId");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<string>("CreatedByIp")
+                        .HasColumnType("char(15)");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedDateTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Currency")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModifiedByIp")
+                        .HasColumnType("char(15)");
+
+                    b.Property<int?>("ModifiedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset?>("ModifiedDateTime")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Network")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentTrackingCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SuggestionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TxId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WalletAddress")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SuggestionId");
+
+                    b.ToTable("Order", "dbo");
+                });
+
             modelBuilder.Entity("DomainLayer.Entities.PostPricing", b =>
                 {
                     b.Property<int>("Id")
@@ -2112,6 +2182,17 @@ namespace InfrastructureLayer.Migrations
                     b.Navigation("Sender");
                 });
 
+            modelBuilder.Entity("DomainLayer.Entities.Order", b =>
+                {
+                    b.HasOne("DomainLayer.Entities.Suggestion", "Suggestion")
+                        .WithMany("Orders")
+                        .HasForeignKey("SuggestionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Suggestion");
+                });
+
             modelBuilder.Entity("DomainLayer.Entities.RefreshToken", b =>
                 {
                     b.HasOne("DomainLayer.Entities.UserAccount", "UserAccount")
@@ -2444,6 +2525,8 @@ namespace InfrastructureLayer.Migrations
 
             modelBuilder.Entity("DomainLayer.Entities.Suggestion", b =>
                 {
+                    b.Navigation("Orders");
+
                     b.Navigation("RequestStatusHistories");
 
                     b.Navigation("SuggestionAttachments");

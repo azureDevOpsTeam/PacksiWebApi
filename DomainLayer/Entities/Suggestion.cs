@@ -27,4 +27,6 @@ public class Suggestion : BaseEntityModel, IAuditableEntity
     public ICollection<RequestStatusHistory> RequestStatusHistories { get; set; } = [];
 
     public ICollection<SuggestionAttachment> SuggestionAttachments { get; set; } = [];
+
+    public ICollection<Order> Orders { get; set; } = [];
 }
