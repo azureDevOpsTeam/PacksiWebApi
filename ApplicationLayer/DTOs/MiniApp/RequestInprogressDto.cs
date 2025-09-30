@@ -73,12 +73,16 @@ public class ActiveSuggestionDto
         return (context, status) switch
         {
             (OfferContext.Received, var s) when s == RequestProcessStatus.Selected.Value => "btnSuggtion",
-            (OfferContext.Received, var s) when s == RequestProcessStatus.ConfirmedBySender.Value => "btnPickedUp",
+            (OfferContext.Received, var s) when s == RequestProcessStatus.ConfirmedBySender.Value => "lblReadyToPayment",
+            (OfferContext.Received, var s) when s == RequestProcessStatus.CashPayment.Value => "btnPickedUp",
+            (OfferContext.Received, var s) when s == RequestProcessStatus.IsPaid.Value => "btnPickedUp",
             (OfferContext.Received, var s) when s == RequestProcessStatus.PickedUp.Value => "btnPassengerConfirmedDelivery",
             (OfferContext.Received, var s) when s == RequestProcessStatus.PassengerConfirmedDelivery.Value => "lblWaitToConfirmDelivery",
 
             (OfferContext.Sent, var s) when s == RequestProcessStatus.Selected.Value => "lblWaitForAcceptSuggetion",
-            (OfferContext.Sent, var s) when s == RequestProcessStatus.ConfirmedBySender.Value => "lblReadyToPickeUp",
+            (OfferContext.Sent, var s) when s == RequestProcessStatus.ConfirmedBySender.Value => "btnPayment",
+            (OfferContext.Received, var s) when s == RequestProcessStatus.CashPayment.Value => "lblWaitForGet",
+            (OfferContext.Received, var s) when s == RequestProcessStatus.IsPaid.Value => "lblWaitForGet",
             (OfferContext.Sent, var s) when s == RequestProcessStatus.PickedUp.Value => "lblReadyToDelivery",
             (OfferContext.Sent, var s) when s == RequestProcessStatus.PassengerConfirmedDelivery.Value => "btnConfirmDelivery",
 
