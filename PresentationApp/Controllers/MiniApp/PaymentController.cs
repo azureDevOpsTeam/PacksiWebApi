@@ -14,8 +14,8 @@ public class PaymentController(IMediator mediator) : ControllerBase
 {
     private readonly IMediator _mediator = mediator;
 
-    [HttpPost]
-    [Route("PaySuggestedPrice")]
-    public async Task<IActionResult> PaySuggestedPriceAsync(MiniApp_PaySuggestedPriceQuery model)
-        => await ResultHelper.GetResultAsync(_mediator, model);
+    //[HttpPost]
+    //[Route("PaySuggestedPrice")]
+    //public async Task<IActionResult> PaySuggestedPriceAsync(MiniApp_PaySuggestedPriceQuery model)
+    //    => await ResultHelper.GetResultAsync(_mediator, model);
 }
