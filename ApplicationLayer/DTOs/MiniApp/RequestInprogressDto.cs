@@ -64,7 +64,7 @@ public class ActiveSuggestionDto
     public int DeliveryCode { get; set; }
 
     [JsonIgnore]
-    public OfferContext Context { get; set; }  // پر میشه در کوئری
+    public OfferContext Context { get; set; }
 
     public string OperationButton => GetOperationButton(Context, Status);
 
