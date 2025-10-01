@@ -49,7 +49,7 @@ public class BotController(IMediator mediator) : ControllerBase
                     await _mediator.Send(new MiniApp_DepartureCountriesCommand(telegramUserId));
                     break;
                 case "SetPreferred":
-                    await _mediator.Send(new MiniApp_DepartureCountriesCommand(telegramUserId));
+                    await _mediator.Send(new MiniApp_SetPreferredCountriesCommand(telegramUserId));
                     break;
 
                 default:
