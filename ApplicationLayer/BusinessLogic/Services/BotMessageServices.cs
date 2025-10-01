@@ -144,7 +144,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
                 new object[]
                 {
                     new { text = "ادامه در برنامه ربات", web_app = new { url = "https://tg.packsi.net" } },
-                    new { text = "انتخاب مقصد", callback_data = "SetDeparture" }
+                    new { text = "انتخاب مقصد", callback_data = "SetPreferred" }
                 }
         };
 
