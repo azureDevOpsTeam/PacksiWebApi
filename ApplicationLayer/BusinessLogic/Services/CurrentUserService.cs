@@ -79,8 +79,9 @@ namespace ApplicationLayer.BusinessLogic.Services
                 {
                     userProfile.CountryOfResidenceId = model.CountryOfResidenceId;
                     await _userProfileRepository.UpdateAsync(userProfile);
+                    return Result.Success();
                 }
-                return Result.Success();
+                return Result.NotFound();
             }
             catch (Exception exception)
             {
