@@ -13,7 +13,7 @@ public class MiniApp_DepartureCountriesHandler(IUserAccountServices userAccountS
         if (resultValidation.IsFailure || resultValidation.Value == null)
             return resultValidation.ToHandlerResult();
 
-        var result = await botMessageServices.StepTwoAsync(requestDto.TelegramId);
+        var result = await botMessageServices.DepartureCountriesAsync(requestDto.TelegramId);
         return result.ToHandlerResult();
     }
 }

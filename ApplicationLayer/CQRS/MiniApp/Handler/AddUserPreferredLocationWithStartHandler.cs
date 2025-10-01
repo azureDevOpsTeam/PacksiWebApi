@@ -5,7 +5,7 @@ using MediatR;
 
 namespace ApplicationLayer.CQRS.MiniApp.Handler;
 
-public class AddUserPreferredLocationWithStartHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService) : IRequestHandler<AddUserPreferredLocationWithStartCommand, HandlerResult>
+public class AddUserPreferredLocationWithStartHandler(IUnitOfWork unitOfWork, ICurrentUserService currentUserService, IBotMessageServices botMessageServices) : IRequestHandler<AddUserPreferredLocationWithStartCommand, HandlerResult>
 {
     public async Task<HandlerResult> Handle(AddUserPreferredLocationWithStartCommand requestDto, CancellationToken cancellationToken)
     {
@@ -13,6 +13,7 @@ public class AddUserPreferredLocationWithStartHandler(IUnitOfWork unitOfWork, IC
         if (result.IsSuccess)
             await unitOfWork.SaveChangesAsync(cancellationToken);
 
+        await botMessageServices.StepTwoAsync(requestDto.Model.TelegramId);
         return result.ToHandlerResult();
     }
 }
