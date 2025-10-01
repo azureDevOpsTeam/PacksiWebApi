@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace ApplicationLayer.BusinessLogic.Services
 {
     [InjectAsScoped]
-    public class CurrentUserService(IRepository<UserPreferredLocation> locationRepository, IUserAccountServices userAccountServices, IRepository<UserProfile> userProfileRepository, IMiniAppServices miniAppServices, IRepository<City> cityRepository, ILogger<CurrentUserService> logger, IUserContextService userContextService) : ICurrentUserService
+    public class CurrentUserService(IRepository<UserPreferredLocation> locationRepository, IUserAccountServices userAccountServices, IBotMessageServices botMessageServices, IRepository<UserProfile> userProfileRepository, IMiniAppServices miniAppServices, IRepository<City> cityRepository, ILogger<CurrentUserService> logger, IUserContextService userContextService) : ICurrentUserService
     {
         private readonly IMiniAppServices _miniAppServices = miniAppServices;
         private readonly IUserAccountServices _userAccountServices = userAccountServices;
@@ -79,6 +79,9 @@ namespace ApplicationLayer.BusinessLogic.Services
                 {
                     userProfile.CountryOfResidenceId = model.CountryOfResidenceId;
                     await _userProfileRepository.UpdateAsync(userProfile);
+
+                    await botMessageServices.PreferredCountriesAsync(model.TelegramId);
+
                     return Result.Success();
                 }
                 return Result.NotFound();

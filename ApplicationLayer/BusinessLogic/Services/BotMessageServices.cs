@@ -8,7 +8,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using System.Text.Json;
-using Telegram.Bot.Extensions;
 
 namespace ApplicationLayer.BusinessLogic.Services;
 
@@ -97,7 +96,8 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
     public async Task<Result<bool>> DepartureCountriesAsync(long telegramUserId)
     {
         using var client = new HttpClient();
-        var welcomeMessage = "از لیست کشورهای زیر ، کشور محل سکونت را انتخاب کنید";
+        var welcomeMessage = "مرحله اول\n\n" +
+        "از لیست کشورهای زیر ، کشور میدا را انتخاب کنید";
 
         var countries = await countryRepository.Query().AsNoTracking().ToListAsync();
         var inlineKeyboard = countries
@@ -109,6 +109,65 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
                 callback_data = $"country_{x.c.Id}"
             }).ToArray())
             .ToArray();
+
+        var payload = new
+        {
+            chat_id = telegramUserId,
+            text = welcomeMessage,
+            parse_mode = "HTML",
+            reply_markup = new
+            {
+                inline_keyboard = inlineKeyboard
+            },
+            resize_keyboard = true,
+            one_time_keyboard = true
+        };
+
+        var linkUrl = $"https://api.telegram.org/bot{configuration["TelegramBot:Token"]}/sendMessage";
+        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+        var response = await client.PostAsync(linkUrl, content);
+
+        response.EnsureSuccessStatusCode();
+
+        logger.LogInformation("پیغام خوش‌آمدگویی با موفقیت به کاربر {TelegramUserId} ارسال شد", telegramUserId);
+        return Result<bool>.Success(true);
+    }
+
+    public async Task<Result<bool>> PreferredCountriesAsync(long telegramUserId)
+    {
+        using var client = new HttpClient();
+        var welcomeMessage = "مرحله دوم\n\n" +
+            "از لیست کشورهای زیر ، کشورهی مورد نیاز را انتخاب کنید\n\n" +
+            "میتواند چند انتخاب داشته باشید";
+
+        var departureCountry = await userAccountServices.GetUserAccountByTelegramIdAsync(telegramUserId);
+
+        var preferredLocationIds = departureCountry.Value.UserPreferredLocations
+            .Select(p => p.Id)
+            .ToList() ?? new List<int>();
+
+        var countries = await countryRepository.Query()
+            .Where(current =>
+                current.Id != departureCountry.Value.UserProfiles.FirstOrDefault().CountryOfResidenceId &&
+                !preferredLocationIds.Contains(current.Id)
+            )
+            .AsNoTracking()
+            .ToListAsync();
+
+        var inlineKeyboard = new object[]
+        {
+                new []
+                {
+                    new { text = "ادامه در برنامه ", web_app = new { url = "https://tg.packsi.net" } }
+                }
+        }.Concat(countries
+         .Select((c, index) => new { c, index })
+         .GroupBy(x => x.index / 3)
+         .Select(g => g.Select(x => new
+         {
+             text = x.c.Name,
+             callback_data = $"country_{x.c.Id}"
+         }).ToArray())).ToArray();
 
         var payload = new
         {
