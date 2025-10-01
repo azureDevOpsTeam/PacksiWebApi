@@ -1,6 +1,7 @@
 ﻿using ApplicationLayer.CQRS.MiniApp.Command;
 using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.User;
+using ApplicationLayer.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -48,6 +49,7 @@ public class BotController(IMediator mediator) : ControllerBase
                 case "SetDeparture":
                     await _mediator.Send(new MiniApp_DepartureCountriesCommand(telegramUserId));
                     break;
+
                 case "SetPreferred":
                     await _mediator.Send(new MiniApp_SetPreferredCountriesCommand(telegramUserId));
                     break;
@@ -61,7 +63,7 @@ public class BotController(IMediator mediator) : ControllerBase
                     }
                     else if (callbackData.StartsWith("preferred_country_"))
                     {
-                        var countryId = int.Parse(callbackData.Replace("departure_country_", ""));
+                        var countryId = int.Parse(callbackData.Replace("preferred_country_", ""));
                         CountryOfResidenceDto locationDto = new() { TelegramId = telegramUserId, CountryOfResidenceId = countryId };
                         await _mediator.Send(new AddUserPreferredLocationWithStartCommand(locationDto));
                     }
@@ -70,4 +72,9 @@ public class BotController(IMediator mediator) : ControllerBase
         }
         return Ok();
     }
+
+    [HttpPost]
+    [Route("Start2")]
+    public async Task<IActionResult> StartPost([FromBody] long telegramUserId)
+        => await ResultHelper.GetResultAsync(_mediator, new MiniApp_SetPreferredCountriesCommand(telegramUserId));
 }
