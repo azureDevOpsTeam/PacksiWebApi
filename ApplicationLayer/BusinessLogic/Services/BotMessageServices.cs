@@ -19,6 +19,10 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
     {
         try
         {
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var rnd = new Random();
+            string inviteCode = new([.. Enumerable.Range(0, 6).Select(_ => chars[rnd.Next(chars.Length)])]);
+
             var welcomeMessage = "🎉 پکسی - packsi!\n\n" +
                 "لطفا توضیحات را مطالعه کنید! 🌟\n";
             if (!string.IsNullOrEmpty(model.ReferralCode))
@@ -58,7 +62,8 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
                     {
                         TelegramId = model.TelegramUserId,
                         UserName = model.UserName,
-                        ReferredByUserId = model.ReferredByUserId
+                        ReferredByUserId = model.ReferredByUserId,
+                        InviteCode = inviteCode
                     };
 
                     var newResult = await userAccountServices.AddUserAccountAsync(newUserAccount);
