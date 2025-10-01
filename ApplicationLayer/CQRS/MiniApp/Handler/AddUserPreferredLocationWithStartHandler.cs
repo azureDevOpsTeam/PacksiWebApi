@@ -9,7 +9,7 @@ public class AddUserPreferredLocationWithStartHandler(IUnitOfWork unitOfWork, IC
 {
     public async Task<HandlerResult> Handle(AddUserPreferredLocationWithStartCommand requestDto, CancellationToken cancellationToken)
     {
-        var result = await currentUserService.MiniApp_AddUserPreferredLocationAsync(requestDto.Model);
+        var result = await currentUserService.MiniApp_AddDepartureLocationAsync(requestDto.Model);
         if (result.IsSuccess)
             await unitOfWork.SaveChangesAsync(cancellationToken);
 

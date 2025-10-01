@@ -45,14 +45,23 @@ public class BotController(IMediator mediator) : ControllerBase
 
             switch (callbackData)
             {
-                case "UpdateProfile":
+                case "SetDeparture":
+                    await _mediator.Send(new MiniApp_DepartureCountriesCommand(telegramUserId));
+                    break;
+                case "SetPreferred":
                     await _mediator.Send(new MiniApp_DepartureCountriesCommand(telegramUserId));
                     break;
 
                 default:
-                    if (callbackData.StartsWith("country_"))
+                    if (callbackData.StartsWith("departure_country_"))
                     {
-                        var countryId = int.Parse(callbackData.Replace("country_", ""));
+                        var countryId = int.Parse(callbackData.Replace("departure_country_", ""));
+                        CountryOfResidenceDto locationDto = new() { TelegramId = telegramUserId, CountryOfResidenceId = countryId };
+                        await _mediator.Send(new AddUserPreferredLocationWithStartCommand(locationDto));
+                    }
+                    else if (callbackData.StartsWith("preferred_country_"))
+                    {
+                        var countryId = int.Parse(callbackData.Replace("departure_country_", ""));
                         CountryOfResidenceDto locationDto = new() { TelegramId = telegramUserId, CountryOfResidenceId = countryId };
                         await _mediator.Send(new AddUserPreferredLocationWithStartCommand(locationDto));
                     }

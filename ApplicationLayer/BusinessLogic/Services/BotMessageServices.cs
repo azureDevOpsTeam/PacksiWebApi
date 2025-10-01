@@ -32,7 +32,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
                 new object[]
                 {
                     new { text = "لیست پروازها", web_app = new { url = "https://tg.packsi.net" } },
-                    new { text = "انتخاب مبدا", callback_data = "UpdateProfile" }
+                    new { text = "انتخاب مبدا", callback_data = "SetDeparture" }
                 }
             };
 
@@ -97,7 +97,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
     {
         using var client = new HttpClient();
         var welcomeMessage = "مرحله اول\n\n" +
-        "از لیست کشورهای زیر ، کشور میدا را انتخاب کنید";
+        "از لیست کشورهای زیر ، کشور مبدا را انتخاب کنید";
 
         var countries = await countryRepository.Query().AsNoTracking().ToListAsync();
         var inlineKeyboard = countries
@@ -106,7 +106,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
             .Select(g => g.Select(x => new
             {
                 text = x.c.Name,
-                callback_data = $"country_{x.c.Id}"
+                callback_data = $"departure_country_{x.c.Id}"
             }).ToArray())
             .ToArray();
 
@@ -133,12 +133,46 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
         return Result<bool>.Success(true);
     }
 
+    public async Task<Result<bool>> StepTwoAsync(RegisterReferralDto model)
+    {
+        var welcomeMessage = "🎉 مرحله دوم!\n\n" +
+            "در این مرحله میتوانید کشورهایی مدنظر خود را انتخاب کنید ! 🌟\n" +
+            "با انتخاب این کشور ، پروازها مطابق با مبدا و مقصدهای مورد نظر شما لیست میشوند";
+
+        var inlineKeyboard = new object[][]
+        {
+                new object[]
+                {
+                    new { text = "ادامه در برنامه ربات", web_app = new { url = "https://tg.packsi.net" } },
+                    new { text = "انتخاب مقصد", callback_data = "SetDeparture" }
+                }
+        };
+
+        var payload = new
+        {
+            chat_id = model.TelegramUserId,
+            text = welcomeMessage,
+            parse_mode = "HTML",
+            reply_markup = new
+            {
+                inline_keyboard = inlineKeyboard
+            }
+        };
+
+        var linkUrl = $"https://api.telegram.org/bot{configuration["TelegramBot:Token"]}/sendMessage";
+        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+        var response = await httpClient.PostAsync(linkUrl, content);
+
+        var respText = await response.Content.ReadAsStringAsync();
+        if (response.IsSuccessStatusCode)
+        { }
+        return Result<bool>.Success(true);
+    }
+
     public async Task<Result<bool>> PreferredCountriesAsync(long telegramUserId)
     {
         using var client = new HttpClient();
-        var welcomeMessage = "مرحله دوم\n\n" +
-            "از لیست کشورهای زیر ، کشورهی مورد نیاز را انتخاب کنید\n\n" +
-            "میتواند چند انتخاب داشته باشید";
+        var welcomeMessage = "از لیست کشورهای زیر ، کشور مورد نظر را انتخاب کنید\n\n";
 
         var departureCountry = await userAccountServices.GetUserAccountByTelegramIdAsync(telegramUserId);
 
@@ -166,7 +200,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
          .Select(g => g.Select(x => new
          {
              text = x.c.Name,
-             callback_data = $"country_{x.c.Id}"
+             callback_data = $"preferred_country_{x.c.Id}"
          }).ToArray())).ToArray();
 
         var payload = new

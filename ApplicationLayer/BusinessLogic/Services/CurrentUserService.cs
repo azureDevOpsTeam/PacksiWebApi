@@ -12,7 +12,12 @@ using Microsoft.Extensions.Logging;
 namespace ApplicationLayer.BusinessLogic.Services
 {
     [InjectAsScoped]
-    public class CurrentUserService(IRepository<UserPreferredLocation> locationRepository, IUserAccountServices userAccountServices, IBotMessageServices botMessageServices, IRepository<UserProfile> userProfileRepository, IMiniAppServices miniAppServices, IRepository<City> cityRepository, ILogger<CurrentUserService> logger, IUserContextService userContextService) : ICurrentUserService
+    public class CurrentUserService(IRepository<UserPreferredLocation> locationRepository,
+        IUserAccountServices userAccountServices, IBotMessageServices botMessageServices,
+        IRepository<UserProfile> userProfileRepository, IMiniAppServices miniAppServices,
+        IRepository<UserPreferredLocation> preferredRepository,
+        IRepository<City> cityRepository, ILogger<CurrentUserService> logger,
+        IUserContextService userContextService) : ICurrentUserService
     {
         private readonly IMiniAppServices _miniAppServices = miniAppServices;
         private readonly IUserAccountServices _userAccountServices = userAccountServices;
@@ -66,7 +71,7 @@ namespace ApplicationLayer.BusinessLogic.Services
 
         #region MINI APP
 
-        public async Task<Result> MiniApp_AddUserPreferredLocationAsync(CountryOfResidenceDto model)
+        public async Task<Result> MiniApp_AddDepartureLocationAsync(CountryOfResidenceDto model)
         {
             try
             {
@@ -80,6 +85,45 @@ namespace ApplicationLayer.BusinessLogic.Services
                     userProfile.CountryOfResidenceId = model.CountryOfResidenceId;
                     await _userProfileRepository.UpdateAsync(userProfile);
 
+                    await botMessageServices.PreferredCountriesAsync(model.TelegramId);
+
+                    return Result.Success();
+                }
+                return Result.NotFound();
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "خطا در ثبت کشور مبدا {TelegramUserId}", model.TelegramId);
+                return Result.GeneralFailure("خطا در ثبت کشور مبدا");
+            }
+        }
+
+        public async Task<Result> MiniApp_AddUserPreferredLocationAsync(CountryOfResidenceDto model)
+        {
+            try
+            {
+                var user = await _userAccountServices.GetUserAccountByTelegramIdAsync(model.TelegramId);
+                if (user == null)
+                    return Result.NotFound();
+
+                var userProfile = await preferredRepository.Query().AnyAsync(current => current.UserAccountId == user.Value.Id && current.CountryId == model.CountryOfResidenceId);
+                if (!userProfile)
+                {
+                    List<UserPreferredLocation> userPreferredLocations = new();
+                    var cities = await _cityRepository.Query()
+                        .Include(c => c.Country)
+                        .Where(c => c.CountryId == model.CountryOfResidenceId)
+                        .ToListAsync();
+
+                    foreach (var city in cities)
+                    {
+                        userPreferredLocations.Add(new UserPreferredLocation
+                        {
+                            CountryId = model.CountryOfResidenceId,
+                            CityId = city.Id
+                        });
+                    }
+                    await preferredRepository.AddRangeAsync(userPreferredLocations);
                     await botMessageServices.PreferredCountriesAsync(model.TelegramId);
 
                     return Result.Success();
