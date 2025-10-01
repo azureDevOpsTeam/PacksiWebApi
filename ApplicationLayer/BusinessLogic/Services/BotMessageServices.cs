@@ -133,7 +133,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
         return Result<bool>.Success(true);
     }
 
-    public async Task<Result<bool>> StepTwoAsync(RegisterReferralDto model)
+    public async Task<Result<bool>> StepTwoAsync(long telegramUserId)
     {
         var welcomeMessage = "🎉 مرحله دوم!\n\n" +
             "در این مرحله میتوانید کشورهایی مدنظر خود را انتخاب کنید ! 🌟\n" +
@@ -150,7 +150,7 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
 
         var payload = new
         {
-            chat_id = model.TelegramUserId,
+            chat_id = telegramUserId,
             text = welcomeMessage,
             parse_mode = "HTML",
             reply_markup = new
