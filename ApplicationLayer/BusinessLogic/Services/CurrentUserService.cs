@@ -84,9 +84,6 @@ namespace ApplicationLayer.BusinessLogic.Services
                 {
                     userProfile.CountryOfResidenceId = model.CountryOfResidenceId;
                     await _userProfileRepository.UpdateAsync(userProfile);
-
-                    await botMessageServices.PreferredCountriesAsync(model.TelegramId);
-
                     return Result.Success();
                 }
                 return Result.NotFound();
