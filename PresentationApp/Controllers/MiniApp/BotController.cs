@@ -59,7 +59,7 @@ public class BotController(IMediator mediator) : ControllerBase
                     {
                         var countryId = int.Parse(callbackData.Replace("departure_country_", ""));
                         CountryOfResidenceDto locationDto = new() { TelegramId = telegramUserId, CountryOfResidenceId = countryId };
-                        await _mediator.Send(new AddUserPreferredLocationWithStartCommand(locationDto));
+                        await _mediator.Send(new AddUserDepartureLocationWithStartCommand(locationDto));
                     }
                     else if (callbackData.StartsWith("preferred_country_"))
                     {

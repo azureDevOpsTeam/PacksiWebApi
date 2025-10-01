@@ -225,4 +225,11 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
         logger.LogInformation("پیغام خوش‌آمدگویی با موفقیت به کاربر {TelegramUserId} ارسال شد", telegramUserId);
         return Result<bool>.Success(true);
     }
+
+    public async Task DeleteMessageAsync(long chatId, int messageId)
+    {
+        var url = $"https://api.telegram.org/bot{configuration["TelegramBot:Token"]}/deleteMessage?chat_id={chatId}&message_id={messageId}";
+        using var client = new HttpClient();
+        await client.GetAsync(url);
+    }
 }
