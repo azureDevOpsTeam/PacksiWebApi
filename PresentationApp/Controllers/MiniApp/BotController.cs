@@ -1,7 +1,7 @@
 ﻿using ApplicationLayer.CQRS.MiniApp.Command;
+using ApplicationLayer.CQRS.MiniApp.Query;
 using ApplicationLayer.DTOs.MiniApp;
 using ApplicationLayer.DTOs.User;
-using ApplicationLayer.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -46,35 +46,43 @@ public class BotController(IMediator mediator) : ControllerBase
 
             switch (callbackData)
             {
-                case "SetDeparture":
-                    await _mediator.Send(new MiniApp_DepartureCountriesCommand(telegramUserId));
+                case "UserGuidePassenger":
+                    await _mediator.Send(new MiniApp_UserGuideQuery(telegramUserId, 1));
                     break;
 
-                case "SetPreferred":
-                    await _mediator.Send(new MiniApp_SetPreferredCountriesCommand(telegramUserId));
+                case "UserGuideSender":
+                    await _mediator.Send(new MiniApp_UserGuideQuery(telegramUserId, 2));
                     break;
 
-                default:
-                    if (callbackData.StartsWith("departure_country_"))
-                    {
-                        var countryId = int.Parse(callbackData.Replace("departure_country_", ""));
-                        CountryOfResidenceDto locationDto = new() { TelegramId = telegramUserId, CountryOfResidenceId = countryId };
-                        await _mediator.Send(new AddUserDepartureLocationWithStartCommand(locationDto));
-                    }
-                    else if (callbackData.StartsWith("preferred_country_"))
-                    {
-                        var countryId = int.Parse(callbackData.Replace("preferred_country_", ""));
-                        CountryOfResidenceDto locationDto = new() { TelegramId = telegramUserId, CountryOfResidenceId = countryId };
-                        await _mediator.Send(new AddUserPreferredLocationWithStartCommand(locationDto));
-                    }
-                    break;
+                //case "SetDeparture":
+                //    await _mediator.Send(new MiniApp_DepartureCountriesCommand(telegramUserId));
+                //    break;
+
+                //case "SetPreferred":
+                //    await _mediator.Send(new MiniApp_SetPreferredCountriesCommand(telegramUserId));
+                //    break;
+
+                //default:
+                //    if (callbackData.StartsWith("departure_country_"))
+                //    {
+                //        var countryId = int.Parse(callbackData.Replace("departure_country_", ""));
+                //        CountryOfResidenceDto locationDto = new() { TelegramId = telegramUserId, CountryOfResidenceId = countryId };
+                //        await _mediator.Send(new AddUserDepartureLocationWithStartCommand(locationDto));
+                //    }
+                //    else if (callbackData.StartsWith("preferred_country_"))
+                //    {
+                //        var countryId = int.Parse(callbackData.Replace("preferred_country_", ""));
+                //        CountryOfResidenceDto locationDto = new() { TelegramId = telegramUserId, CountryOfResidenceId = countryId };
+                //        await _mediator.Send(new AddUserPreferredLocationWithStartCommand(locationDto));
+                //    }
+                //    break;
             }
         }
         return Ok();
     }
 
-    [HttpPost]
-    [Route("Start2")]
-    public async Task<IActionResult> StartPost([FromBody] long telegramUserId)
-        => await ResultHelper.GetResultAsync(_mediator, new MiniApp_SetPreferredCountriesCommand(telegramUserId));
+    //[HttpPost]
+    //[Route("Start2")]
+    //public async Task<IActionResult> StartPost([FromBody] long telegramUserId)
+    //    => await ResultHelper.GetResultAsync(_mediator, new MiniApp_SetPreferredCountriesCommand(telegramUserId));
 }
