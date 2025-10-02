@@ -83,10 +83,13 @@ public class BotMessageServices(IUnitOfWork unitOfWork, IUserAccountServices use
             {
                 new object[]
                 {
-                    new { text = "ورود به برنامه", web_app = new { url = "https://tg.packsi.net" } },
                     new { text = "راهنمای مسافر", callback_data = "UserGuidePassenger" },
                     new { text = "راهنمای ارسال کننده", callback_data = "UserGuideSender" }
                     //new { text = "انتخاب مبدا", callback_data = "SetDeparture" }
+                },
+                new object[]
+                {
+                    new { text = "ورود به برنامه", web_app = new { url = "https://tg.packsi.net" } },
                 }
             };
 
